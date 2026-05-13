@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDRD Ecosystem Hub</title>
+    <style>
+        :root {
+            --mdrd-color: #0056b3;
+            --node-color: #ffffff;
+            --node-border: #cbd5e1;
+            --text-dark: #333333;
+            --bg-color: #f8f9fa;
+            --active-glow: #3b82f6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--bg-color);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #1e293b;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        p.instructions {
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .network-area {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 450px;
+            margin: 0 auto;
+        }
+
+        /* Connecting Lines */
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        line {
+            stroke: #cbd5e1;
+            stroke-width: 3;
+            transition: all 0.4s ease;
+        }
+
+        line.active {
+            stroke: var(--active-glow);
+            stroke-width: 5;
+            filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
+        }
+
+        /* Nodes */
+        .node {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            background: var(--node-color);
+            border: 3px solid var(--node-border);
+            border-radius: 50%;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            color: #475569;
+            cursor: pointer;
+            z-index: 2;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .node:hover {
+            transform: translate(-50%, -55%);
+            border-color: #94a3b8;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .node.active {
+            border-color: var(--active-glow);
+            color: var(--active-glow);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .node-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        /* Central Hub */
+        .hub {
+            background: var(--mdrd-color);
+            color: white;
+            border: 4px solid #bfdbfe;
+            width: 110px;
+            height: 110px;
+            font-size: 16px;
+            cursor: default;
+        }
+        .hub:hover {
+            transform: translate(-50%, -50%);
+        }
+
+        /* Information Panel */
+        .info-panel {
+            margin-top: 30px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid var(--active-glow);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .info-title {
+            margin: 0 0 10px 0;
+            color: var(--active-glow);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-desc {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #334155;
+        }
+
+        /* Responsive placement logic */
+        .pos-center { top: 50%; left: 50%; }
+        .pos-1 { top: 15%; left: 50%; } 
+        .pos-2 { top: 32%; left: 85%; } 
+        .pos-3 { top: 68%; left: 85%; } 
+        .pos-4 { top: 85%; left: 50%; } 
+        .pos-5 { top: 68%; left: 15%; } 
+        .pos-6 { top: 32%; left: 15%; } 
+
+        @media (max-width: 600px) {
+            .node { width: 75px; height: 75px; font-size: 11px; }
+            .node-icon { font-size: 18px; }
+            .hub { width: 90px; height: 90px; font-size: 14px; }
+            .pos-2 { left: 90%; }
+            .pos-3 { left: 90%; }
+            .pos-5 { left: 10%; }
+            .pos-6 { left: 10%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>The Hospital Ecosystem</h2>
+    <p class="instructions">Click a department to explore how they interact with the MDRD.</p>
+
+    <div class="network-area">
+        <svg id="lines-svg">
+            <line x1="50%" y1="50%" x2="50%" y2="15%" id="line-or"></line>
+            <line x1="50%" y1="50%" x2="85%" y2="32%" id="line-ipac"></line>
+            <line x1="50%" y1="50%" x2="85%" y2="68%" id="line-biomed"></line>
+            <line x1="50%" y1="50%" x2="50%" y2="85%" id="line-evs"></line>
+            <line x1="50%" y1="50%" x2="15%" y2="68%" id="line-logistics"></line>
+            <line x1="50%" y1="50%" x2="15%" y2="32%" id="line-edu"></line>
+        </svg>
+
+        <div class="node hub pos-center">
+            <span class="node-icon">⚕️</span>
+            MDRD
+        </div>
+
+        <div class="node pos-1" onclick="activateNode('or')" id="node-or">
+            <span class="node-icon">🔪</span>
+            Operating Room
+        </div>
+
+        <div class="node pos-2" onclick="activateNode('ipac')" id="node-ipac">
+            <span class="node-icon">🛡️</span>
+            IPAC
+        </div>
+
+        <div class="node pos-3" onclick="activateNode('biomed')" id="node-biomed">
+            <span class="node-icon">⚙️</span>
+            BioMed
+        </div>
+
+        <div class="node pos-4" onclick="activateNode('evs')" id="node-evs">
+            <span class="node-icon">🧹</span>
+            EVS
+        </div>
+
+        <div class="node pos-5" onclick="activateNode('logistics')" id="node-logistics">
+            <span class="node-icon">📦</span>
+            Logistics
+        </div>
+
+        <div class="node pos-6" onclick="activateNode('edu')" id="node-edu">
+            <span class="node-icon">📚</span>
+            Education
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <h3 class="info-title" id="info-title">👋 Select a Department</h3>
+        <p class="info-desc" id="info-desc">Click any of the surrounding departments to see how they collaborate with the Medical Device Reprocessing Department to keep patients safe.</p>
+    </div>
+</div>
+
+<script>
+    // FIX: Using single quotes for the main strings so double quotes inside work perfectly!
+    const data = {
+        'or': {
+            title: "🔪 Operating Room (OR) / Surgical Services",
+            desc: "<strong>Role:</strong> Supplies reusable surgical instruments that require cleaning and sterilization. Communicates special handling instructions for complex or delicate instruments, and provides immediate-use feedback if instruments are not properly cleaned or returned.<br><br><strong>Interaction:</strong> OR staff are responsible for pre-treatment (e.g., keeping instruments moist). The MDRT collaborates with the OR on turn-around times and instrument set accuracy."
+        },
+        'ipac': {
+            title: "🛡️ Infection Prevention & Control (IPAC)",
+            desc: "<strong>Role:</strong> Establishes policies and protocols related to infection prevention, including cleaning and disinfection practices. Investigates breaches or outbreaks linked to medical device reprocessing.<br><br><strong>Interaction:</strong> Advises on the selection of disinfectants and PPE. Participates in audits and quality improvement initiatives."
+        },
+        'biomed': {
+            title: "⚙️ Biomedical / Clinical Engineering",
+            desc: "<strong>Role:</strong> Maintains and repairs automated washers, disinfectors, and other decontamination equipment. Assists with equipment validation, calibration, and troubleshooting.<br><br><strong>Interaction:</strong> Works closely with MDRD to ensure machines are operating within validated parameters. Supports equipment procurement and technical specifications."
+        },
+        'evs': {
+            title: "🧹 Environmental Services (EVS)",
+            desc: "<strong>Role:</strong> Responsible for cleaning and disinfecting the decontamination area itself, including floors, walls, and non-critical surfaces.<br><br><strong>Interaction:</strong> EVS and MDRD coordinate on schedules to avoid disrupting sterile workflows. EVS follows strict protocols for cleaning high-risk zones in healthcare facilities."
+        },
+        'logistics': {
+            title: "📦 Logistics / Supply Chain",
+            desc: "<strong>Role:</strong> Manages inventory of detergents, disinfectants, PPE, and reprocessing supplies. Tracks consumables and facilitates timely restocking.<br><br><strong>Interaction:</strong> Collaborates with the MDRT to forecast supply needs. Ensures availability of manufacturer-recommended chemicals."
+        },
+        'edu': {
+            title: "📚 Education & Staff Development",
+            desc: "<strong>Role:</strong> Provides ongoing training in decontamination protocols, safety, and compliance. Ensures MDR staff maintain competencies and certifications.<br><br><strong>Interaction:</strong> Works with department leads to schedule refresher courses and onboarding. May coordinate mock audits or simulations."
+        }
+    };
+
+    function activateNode(nodeId) {
+        document.querySelectorAll('.node').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('line').forEach(el => el.classList.remove('active'));
+
+        document.getElementById('node-' + nodeId).classList.add('active');
+        document.getElementById('line-' + nodeId).classList.add('active');
+
+        const infoData = data[nodeId];
+        document.getElementById('info-title').innerHTML = infoData.title;
+        document.getElementById('info-desc').innerHTML = infoData.desc;
+    }
+</script>
+
+</body>
+</html>
