@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decontamination Explorer</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --dirty-red: #d9534f;
+            --clean-green: #28a745;
+            --bg-light: #f8f9fa;
+            --text-dark: #333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            background-color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .controls {
+            background-color: var(--bg-light);
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #ddd;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--primary);
+            color: white;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #004494; }
+        button.active { background-color: #ffc107; color: black; }
+        
+        .floorplan {
+            display: flex;
+            height: 400px;
+            position: relative;
+            background: #eee;
+        }
+        .room {
+            flex: 1;
+            position: relative;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 2px solid #999;
+        }
+        .clean-area { background-color: #e6f4ea; border-right: 4px solid #666;}
+        .decon-area { background-color: #fce8e6; }
+        
+        h3 { margin-top: 0; text-align: center; color: #555; }
+        
+        /* Elements */
+        .door {
+            position: absolute;
+            top: 50%;
+            left: -4px; /* On the wall */
+            width: 8px;
+            height: 60px;
+            background: #888;
+            transform: translateY(-50%);
+            z-index: 10;
+        }
+        .equipment {
+            background: white;
+            border: 2px solid #999;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            position: absolute;
+            transition: all 0.3s ease;
+        }
+        .sink { top: 20px; right: 20px; width: 100px; height: 60px; }
+        .washer { bottom: 20px; left: -60px; width: 120px; height: 80px; z-index: 5; background: #fff3cd; }
+        .receiving { bottom: 20px; right: 20px; width: 80px; height: 40px; }
+        
+        /* Overlays - Hidden by default */
+        .overlay { display: none; }
+        .overlay.active { display: block; }
+        
+        /* Airflow Arrows */
+        .arrow {
+            position: absolute;
+            font-size: 30px;
+            color: #17a2b8;
+            animation: flow 2s infinite linear;
+        }
+        @keyframes flow {
+            0% { transform: translateX(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(50px); opacity: 0; }
+        }
+        .exhaust {
+            position: absolute;
+            top: -20px;
+            right: 40px;
+            font-size: 24px;
+            color: #d9534f;
+            animation: floatUp 2s infinite linear;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-30px); opacity: 0; }
+        }
+
+        /* Climate */
+        .climate-box {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        /* Workflow Highlight */
+        .highlight {
+            box-shadow: 0 0 15px 5px var(--clean-green);
+            border-color: var(--clean-green);
+            background-color: #d4edda;
+        }
+
+        .info-panel {
+            padding: 20px;
+            background-color: white;
+            font-size: 16px;
+            line-height: 1.5;
+            min-height: 80px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <button id="btn-airflow" onclick="toggleState('airflow', this)">1. Negative Air Pressure</button>
+        <button id="btn-climate" onclick="toggleState('climate', this)">2. Climate Control</button>
+        <button id="btn-workflow" onclick="toggleState('workflow', this)">3. One-Way Workflow</button>
+    </div>
+
+    <div class="floorplan">
+        <!-- Clean Room -->
+        <div class="room clean-area">
+            <h3>Clean Hallway / Assembly</h3>
+            
+            <!-- Airflow visual for clean side -->
+            <div class="overlay airflow">
+                <div class="arrow" style="top: 45%; right: 20px;">➔</div>
+                <div class="arrow" style="top: 55%; right: 20px;">➔</div>
+            </div>
+        </div>
+
+        <!-- Decon Room -->
+        <div class="room decon-area">
+            <div class="door"></div>
+            <h3>Decontamination Area</h3>
+            
+            <div class="equipment receiving" id="eq-receiving">Soiled Receiving</div>
+            <div class="equipment sink" id="eq-sink">Manual Sinks</div>
+            <div class="equipment washer" id="eq-washer">Washer Disinfector<br>(Pass-Through)</div>
+
+            <!-- Airflow visual for decon side -->
+            <div class="overlay airflow">
+                <div class="arrow" style="top: 45%; left: 20px;">➔</div>
+                <div class="arrow" style="top: 55%; left: 20px;">➔</div>
+                <div class="exhaust">↑ Exhaust</div>
+            </div>
+
+            <!-- Climate visual -->
+            <div class="overlay climate">
+                <div class="climate-box">
+                    🌡️ Temp: 18°C - 20°C<br><br>
+                    💧 Humidity: 30% - 60%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="info-text">
+        <strong>Welcome to the Interactive Decontamination Explorer.</strong><br> Click the buttons above to visualize the invisible rules that keep the Medical Device Reprocessing Department safe.
+    </div>
+</div>
+
+<script>
+    const data = {
+        'airflow': {
+            title: "Negative Air Pressure",
+            text: "Notice how the arrows flow <strong>into</strong> the Decontamination room from the clean hallway. The room acts like a vacuum. Contaminated air is never pushed back into the hospital; it is pulled into an exhaust vent and safely pushed outside the building."
+        },
+        'climate': {
+            title: "Climate Control",
+            text: "It can get hot working in full PPE! The room must be kept cool (18°C - 20°C) and at a specific humidity (30% - 60%). This prevents bacteria from multiplying rapidly and ensures cleaning chemicals work exactly as the manufacturer intended."
+        },
+        'workflow': {
+            title: "One-Way Workflow",
+            text: "Instruments move in one direction only: from <strong>Dirty to Clean</strong>.<br>1. Arrive at Soiled Receiving.<br>2. Scrubbed in Manual Sinks.<br>3. Placed into the Washer-Disinfector.<br>4. Exits on the Clean side. <br><em>Dirty items never cross paths with clean items!</em>"
+        }
+    };
+
+    let workflowStep = 0;
+    let workflowInterval;
+
+    function toggleState(stateId, btnElement) {
+        // Reset all buttons and overlays
+        document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.overlay').forEach(overlay => overlay.classList.remove('active'));
+        document.querySelectorAll('.equipment').forEach(eq => eq.classList.remove('highlight'));
+        clearInterval(workflowInterval);
+
+        // Activate clicked button
+        btnElement.classList.add('active');
+
+        // Update info text
+        const infoPanel = document.getElementById('info-text');
+        infoPanel.innerHTML = `<strong>${data[stateId].title}</strong>: ${data[stateId].text}`;
+
+        // Handle specific states
+        if (stateId === 'airflow' || stateId === 'climate') {
+            document.querySelectorAll(`.${stateId}`).forEach(el => el.classList.add('active'));
+        } else if (stateId === 'workflow') {
+            runWorkflowAnimation();
+        }
+    }
+
+    function runWorkflowAnimation() {
+        const steps = ['eq-receiving', 'eq-sink', 'eq-washer'];
+        workflowStep = 0;
+        
+        function highlightNext() {
+            document.querySelectorAll('.equipment').forEach(eq => eq.classList.remove('highlight'));
+            document.getElementById(steps[workflowStep]).classList.add('highlight');
+            workflowStep++;
+            if (workflowStep >= steps.length) workflowStep = 0; // Loop back
+        }
+        
+        highlightNext(); // Run first immediately
+        workflowInterval = setInterval(highlightNext, 1500); // Change every 1.5 seconds
+    }
+</script>
+
+</body>
+</html>
