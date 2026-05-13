@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spaulding Classification Sorter</title>
+    <style>
+        :root {
+            --critical: #dc3545; /* Red */
+            --semi: #fd7e14;     /* Orange */
+            --non: #28a745;      /* Green */
+            --bg-light: #f8f9fa;
+            --text-dark: #333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 15px;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 700px;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            background-color: var(--bg-light);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .progress {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        /* The Active Card */
+        .card-container {
+            min-height: 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 30px;
+            width: 80%;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            color: #0056b3;
+        }
+        .card p {
+            margin: 0;
+            font-size: 16px;
+            color: #555;
+        }
+
+        /* Sorting Buttons */
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn-category {
+            padding: 15px 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.2s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+        .btn-category:active { transform: scale(0.96); }
+        .btn-category:hover { filter: brightness(1.1); }
+        
+        .btn-critical { background-color: var(--critical); }
+        .btn-semi { background-color: var(--semi); }
+        .btn-non { background-color: var(--non); }
+
+        /* Feedback Panel */
+        .feedback {
+            min-height: 80px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .feedback.success {
+            display: block;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .feedback.error {
+            display: block;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* End Screen */
+        .end-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+        }
+        .btn-restart {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+            100% { transform: translateX(0); }
+        }
+        .shake { animation: shake 0.4s; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app-container">
+    <h2>Spaulding Classification Sorter</h2>
+    <div class="progress" id="progress-text">Item 1 of 6</div>
+
+    <!-- Active Item to Sort -->
+    <div class="card-container" id="active-card-container">
+        <div class="card" id="device-card">
+            <h3 id="device-name">Loading...</h3>
+            <p id="device-desc">...</p>
+        </div>
+    </div>
+
+    <!-- Sorting Drop Zones -->
+    <div class="categories" id="categories-panel">
+        <button class="btn-category btn-critical" onclick="checkAnswer('Critical')">
+            CRITICAL<br><small>(Sterilization)</small>
+        </button>
+        <button class="btn-category btn-semi" onclick="checkAnswer('Semi-Critical')">
+            SEMI-CRITICAL<br><small>(High-Level Disinfection)</small>
+        </button>
+        <button class="btn-category btn-non" onclick="checkAnswer('Non-Critical')">
+            NON-CRITICAL<br><small>(Low-Level Disinfection)</small>
+        </button>
+    </div>
+
+    <!-- Immediate Feedback -->
+    <div class="feedback" id="feedback-panel"></div>
+
+    <!-- End of Game Screen -->
+    <div class="end-screen" id="end-screen">
+        <h2>Great Job!</h2>
+        <p>You have successfully classified all the medical devices.</p>
+        <p>Remember: The Spaulding Classification dictates the minimum level of reprocessing required to keep patients safe.</p>
+        <button class="btn-restart" onclick="initGame()">Practice Again</button>
+    </div>
+</div>
+
+<script>
+    // The Data Set
+    const deviceDatabase = [
+        { 
+            name: "Surgical Scalpel Handle", 
+            desc: "Enters sterile tissue and the vascular system.", 
+            category: "Critical",
+            feedback: "Correct! Because it enters sterile tissue, a scalpel is CRITICAL and must undergo complete Sterilization."
+        },
+        { 
+            name: "Blood Pressure Cuff", 
+            desc: "Touches only intact skin on the patient's arm.", 
+            category: "Non-Critical",
+            feedback: "Correct! Intact skin is a strong barrier. This is NON-CRITICAL and requires Low-Level Disinfection (LLD)."
+        },
+        { 
+            name: "Flexible Colonoscope", 
+            desc: "Touches mucous membranes in the digestive tract.", 
+            category: "Semi-Critical",
+            feedback: "Correct! Devices touching mucous membranes are SEMI-CRITICAL and require at least High-Level Disinfection (HLD)."
+        },
+        { 
+            name: "Bone Saw Tool", 
+            desc: "Cuts through bone during orthopedic surgery.", 
+            category: "Critical",
+            feedback: "Correct! Bone is sterile tissue. This is CRITICAL and must be Sterilized."
+        },
+        { 
+            name: "Stethoscope", 
+            desc: "Used to listen to heartbeats through intact skin.", 
+            category: "Non-Critical",
+            feedback: "Correct! Since it only touches intact skin, it is NON-CRITICAL (Low-Level Disinfection)."
+        },
+        { 
+            name: "Video Laryngoscope Blade", 
+            desc: "Inserted into the airway (mucous membranes) to help a insert ET tube so the patientc can breathe.", 
+            category: "Semi-Critical",
+            feedback: "Correct! The airway consists of mucous membranes, making this SEMI-CRITICAL (High-Level Disinfection)."
+        }
+    ];
+
+    let currentQueue = [];
+    let currentIndex = 0;
+
+    const deviceNameEl = document.getElementById('device-name');
+    const deviceDescEl = document.getElementById('device-desc');
+    const feedbackPanel = document.getElementById('feedback-panel');
+    const progressText = document.getElementById('progress-text');
+    const cardEl = document.getElementById('device-card');
+    const cardContainer = document.getElementById('active-card-container');
+    const categoriesPanel = document.getElementById('categories-panel');
+    const endScreen = document.getElementById('end-screen');
+
+    // Shuffle array function to randomize the order each time
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function initGame() {
+        currentQueue = shuffle([...deviceDatabase]);
+        currentIndex = 0;
+        
+        // Reset UI
+        cardContainer.style.display = 'flex';
+        categoriesPanel.style.display = 'grid';
+        endScreen.style.display = 'none';
+        feedbackPanel.className = 'feedback';
+        
+        loadCard();
+    }
+
+    function loadCard() {
+        if (currentIndex >= currentQueue.length) {
+            showEndScreen();
+            return;
+        }
+        
+        const item = currentQueue[currentIndex];
+        deviceNameEl.textContent = item.name;
+        deviceDescEl.textContent = item.desc;
+        progressText.textContent = `Item ${currentIndex + 1} of ${currentQueue.length}`;
+        
+        feedbackPanel.style.display = 'none';
+        feedbackPanel.className = 'feedback';
+    }
+
+    function checkAnswer(selectedCategory) {
+        const item = currentQueue[currentIndex];
+        
+        if (selectedCategory === item.category) {
+            // Success
+            feedbackPanel.textContent = item.feedback;
+            feedbackPanel.className = 'feedback success';
+            
+            // Disable buttons temporarily
+            categoriesPanel.style.pointerEvents = 'none';
+            
+            // Wait 2.5 seconds, then load next
+            setTimeout(() => {
+                currentIndex++;
+                loadCard();
+                categoriesPanel.style.pointerEvents = 'auto';
+            }, 2500);
+
+        } else {
+            // Error
+            feedbackPanel.innerHTML = `<strong>Incorrect.</strong> Hint: Look closely at what type of tissue the device touches.`;
+            feedbackPanel.className = 'feedback error';
+            
+            // Trigger CSS Shake animation
+            cardEl.classList.remove('shake');
+            void cardEl.offsetWidth; // trigger reflow
+            cardEl.classList.add('shake');
+        }
+    }
+
+    function showEndScreen() {
+        cardContainer.style.display = 'none';
+        categoriesPanel.style.display = 'none';
+        progressText.textContent = "Complete!";
+        feedbackPanel.style.display = 'none';
+        endScreen.style.display = 'flex';
+    }
+
+    // Start the game on load
+    initGame();
+</script>
+
+</body>
+</html>
