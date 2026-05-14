@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDR Regulatory Pyramid</title>
+    <style>
+        :root {
+            --hc-color: #1e3a8a;       /* Dark Blue - Federal */
+            --csa-color: #2563eb;      /* Blue - National */
+            --pidac-color: #0ea5e9;    /* Light Blue - Provincial */
+            --ifu-color: #0284c7;      /* Sky Blue - Device */
+            --sop-color: #38bdf8;      /* Light Sky - Local */
+            
+            --bg-color: #f8fafc;
+            --text-dark: #334155;
+            --text-light: #f8fafc;
+            --highlight: #f59e0b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: var(--bg-color);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #0f172a;
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+
+        p.instructions {
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        /* Pyramid Container */
+        .pyramid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        /* Pyramid Layers */
+        .layer {
+            height: 60px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Widths to create the pyramid effect */
+        .layer-1 { width: 40%; background-color: var(--hc-color); }
+        .layer-2 { width: 55%; background-color: var(--csa-color); }
+        .layer-3 { width: 70%; background-color: var(--pidac-color); }
+        .layer-4 { width: 85%; background-color: var(--ifu-color); }
+        .layer-5 { width: 100%; background-color: var(--sop-color); }
+
+        .layer:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .layer.active {
+            border: 3px solid var(--highlight);
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+            z-index: 10;
+        }
+
+        .layer-label {
+            position: relative;
+            z-index: 2;
+            letter-spacing: 0.5px;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            width: 100%;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border-top: 6px solid #cbd5e1;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            min-height: 200px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .info-title {
+            margin: 0;
+            font-size: 22px;
+            color: #1e293b;
+        }
+
+        .info-badge {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-section {
+            margin-bottom: 15px;
+        }
+
+        .info-section h4 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .info-section p {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #334155;
+        }
+
+        .impact-box {
+            background: #fffbeb;
+            border-left: 4px solid var(--highlight);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 20px;
+        }
+
+        .impact-box h4 {
+            color: #b45309;
+            margin: 0 0 5px 0;
+            font-size: 15px;
+        }
+
+        .impact-box p {
+            margin: 0;
+            color: #92400e;
+            font-weight: 500;
+        }
+
+        @media (max-width: 600px) {
+            .layer { font-size: 14px; height: 50px; }
+            .layer-1 { width: 50%; }
+            .layer-2 { width: 65%; }
+            .info-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>The Hierarchy of Reprocessing Rules</h2>
+    <p class="instructions">Click a layer of the pyramid to see how broad laws turn into your daily tasks.</p>
+
+    <div class="pyramid">
+        <div class="layer layer-1" id="layer-hc" onclick="activateLayer('hc')">
+            <span class="layer-label">Health Canada</span>
+        </div>
+        <div class="layer layer-2" id="layer-csa" onclick="activateLayer('csa')">
+            <span class="layer-label">CSA Group (Z314)</span>
+        </div>
+        <div class="layer layer-3" id="layer-pidac" onclick="activateLayer('pidac')">
+            <span class="layer-label">PIDAC / Provincial</span>
+        </div>
+        <div class="layer layer-4" id="layer-ifu" onclick="activateLayer('ifu')">
+            <span class="layer-label">Manufacturer IFU</span>
+        </div>
+        <div class="layer layer-5" id="layer-sop" onclick="activateLayer('sop')">
+            <span class="layer-label">Facility SOPs</span>
+        </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="info-panel" id="info-panel">
+        <div class="info-header">
+            <h3 class="info-title" id="info-title">👋 Select a Level</h3>
+            <span class="info-badge" id="info-badge">Overview</span>
+        </div>
+        
+        <div class="info-section">
+            <h4 id="desc-title" style="display:none;">What They Do</h4>
+            <p id="info-desc">Click any level of the pyramid above to explore who writes the rules for medical device reprocessing and how it directly affects your work in the decontamination area.</p>
+        </div>
+
+        <div class="impact-box" id="impact-box" style="display: none;">
+            <h4>⚠️ How this impacts the MDRT:</h4>
+            <p id="info-impact"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const data = {
+        'hc': {
+            title: "Health Canada",
+            badge: "Federal Regulator",
+            color: "#1e3a8a",
+            desc: "Health Canada is the federal department responsible for national health. They approve medical devices and chemical disinfectants for sale in Canada. They issue Drug Identification Numbers (DIN) for approved chemicals.",
+            impact: "You cannot use a chemical disinfectant in a Canadian hospital unless it has a DIN from Health Canada. They ensure the chemicals you use are legal, safe, and actually work."
+        },
+        'csa': {
+            title: "CSA Group (Z314)",
+            badge: "National Standard",
+            color: "#2563eb",
+            desc: "The Canadian Standards Association (CSA) writes the universal rulebook for how medical device reprocessing must be performed. The Z314 standard covers everything from staff training to facility design.",
+            impact: "CSA Z314 dictates the environment you work in. For example, it is the reason your decontamination room must have negative air pressure and why your sinks must use a specific quality of water."
+        },
+        'pidac': {
+            title: "PIDAC / Provincial Bodies",
+            badge: "Best Practice Guidelines",
+            color: "#0ea5e9",
+            desc: "Provincial groups like PIDAC (Ontario) or BCCDC (British Columbia) provide evidence-based guidelines on infection prevention and control (IPAC) specifically tailored for healthcare settings.",
+            impact: "These guidelines shape your hospital's overall infection control culture, including when you must perform hand hygiene, how to don/doff your PPE, and how to handle disease outbreaks."
+        },
+        'ifu': {
+            title: "Manufacturer IFU",
+            badge: "Device Instructions",
+            color: "#0284c7",
+            desc: "The Instructions for Use (IFU) are the exact, step-by-step cleaning directions provided by the company that built the medical device. The IFU is considered a legally binding document.",
+            impact: "The IFU tells you exactly which brush size to use, which enzymatic cleaner is safe for the metals, and exactly how many minutes the device must soak. You must always 'Follow the IFU'."
+        },
+        'sop': {
+            title: "Facility SOPs",
+            badge: "Local Policy",
+            color: "#38bdf8",
+            desc: "Standard Operating Procedures (SOPs) are the local rules written by your specific hospital or clinic. They take all the rules from the levels above and turn them into a specific workflow for your building.",
+            impact: "This is the step-by-step manual you follow every single day at the sink. SOPs ensure that you and your coworkers are cleaning instruments consistently, safely, and legally."
+        }
+    };
+
+    function activateLayer(layerId) {
+        // Remove active class from all layers
+        document.querySelectorAll('.layer').forEach(el => el.classList.remove('active'));
+        
+        // Add active class to clicked layer
+        document.getElementById('layer-' + layerId).classList.add('active');
+
+        // Get data for selected layer
+        const layerData = data[layerId];
+
+        // Update Panel Content
+        document.getElementById('info-title').innerText = layerData.title;
+        document.getElementById('info-badge').innerText = layerData.badge;
+        document.getElementById('desc-title').style.display = 'block';
+        document.getElementById('info-desc').innerText = layerData.desc;
+        
+        document.getElementById('impact-box').style.display = 'block';
+        document.getElementById('info-impact').innerText = layerData.impact;
+
+        // Change the top border color of the panel to match the layer
+        document.getElementById('info-panel').style.borderColor = layerData.color;
+    }
+</script>
+
+</body>
+</html>
