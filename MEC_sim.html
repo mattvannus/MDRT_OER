@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEC Testing & Logging Simulator</title>
+    <title>MEC Testing & Logging Simulator (Stacked)</title>
     <style>
         :root {
             --primary: #0284c7; /* Sky Blue */
@@ -26,7 +26,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 700px; /* Reduced max-width since it's stacked */
             width: 100%;
             background: white;
             border-radius: 12px;
@@ -52,14 +52,16 @@
             font-size: 15px;
         }
 
+        /* Changed from side-by-side to stacked column */
         .layout {
             display: flex;
+            flex-direction: column;
             gap: 30px;
         }
 
-        /* LEFT SIDE: TESTING STATION */
+        /* TOP: TESTING STATION */
         .testing-station {
-            flex: 1;
+            width: 100%;
             background: #f1f5f9;
             border-radius: 12px;
             padding: 20px;
@@ -68,6 +70,7 @@
             flex-direction: column;
             align-items: center;
             position: relative;
+            box-sizing: border-box;
         }
 
         .station-title {
@@ -162,6 +165,7 @@
             transition: background 0.2s;
             margin-bottom: 15px;
             width: 100%;
+            max-width: 400px;
         }
 
         .btn-dip:hover { background: #0369a1; }
@@ -170,6 +174,7 @@
         /* Reference Chart */
         .color-chart {
             width: 100%;
+            max-width: 400px;
             background: white;
             border-radius: 8px;
             padding: 10px;
@@ -182,15 +187,16 @@
         .box-pass { background: var(--pass-color); }
         .box-fail { background: var(--fail-color); }
 
-        /* RIGHT SIDE: LOGBOOK */
+        /* BOTTOM: LOGBOOK */
         .logbook {
-            flex: 1;
+            width: 100%;
             background: white;
             border-radius: 12px;
             padding: 20px;
             border: 2px dashed #94a3b8;
             display: flex;
             flex-direction: column;
+            box-sizing: border-box;
         }
 
         .form-group {
@@ -248,10 +254,6 @@
         }
         .feedback.success { background: #d1fae5; color: #065f46; border: 1px solid #34d399; display: block;}
         .feedback.error { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; display: block;}
-
-        @media (max-width: 768px) {
-            .layout { flex-direction: column; }
-        }
     </style>
 </head>
 <body>
@@ -259,7 +261,7 @@
 <div class="container">
     <div class="header">
         <h2>MEC Testing & Documentation Log</h2>
-        <p>1. Dip the test strip. 2. Read the color result. 3. Accurately document your findings in the logbook.</p>
+        <p>1. Dip the test strip. 2. Read the color result. 3. Accurately document your findings in the logbook below.</p>
     </div>
 
     <div class="layout">
@@ -405,7 +407,7 @@
         }
 
         // If everything is correct
-        showFeedback("success", "✅ Perfect! Your log is accurate. You followed protocol perfectly and maintained patient safety. Click 'Dip Test Strip' to try another batch.");
+        showFeedback("success", "✅ Perfect! Your log is accurate. You followed protocol perfectly and maintained patient safety. Click 'Test Another Batch' to try again.");
         
         // Reset for next try
         document.getElementById('btn-dip').disabled = false;
