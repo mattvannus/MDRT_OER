@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Matchmaker</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --success: #059669;
+            --error: #dc2626;
+            --bg-light: #f8fafc;
+            --text-dark: #1e293b;
+            --border-color: #cbd5e1;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h2 { margin: 0 0 10px 0; color: #0f172a; }
+        p.instructions { color: #64748b; margin-bottom: 25px; font-size: 16px; }
+
+        .progress {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Active Scenario Card */
+        .scenario-card {
+            background: #f1f5f9;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #334155;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        /* Machine Selection Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn-machine {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 8px;
+            padding: 20px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(2, 132, 199, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-machine:hover {
+            background: #f0f9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(2, 132, 199, 0.2);
+        }
+        
+        .btn-icon { font-size: 28px; }
+
+        /* Feedback Panel */
+        .feedback {
+            min-height: 60px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .feedback.success { background: #d1fae5; color: #065f46; border: 1px solid #34d399; opacity: 1; }
+        .feedback.error { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; opacity: 1; }
+
+        /* End Screen */
+        .end-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 0;
+        }
+
+        .btn-restart {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-restart:hover { background: #0369a1; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+        }
+        .shake { animation: shake 0.4s; }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Mechanical Equipment Matchmaker</h2>
+    <p class="instructions" id="instruction-text">Read the scenario below and select the correct machine for the job.</p>
+
+    <div id="game-area">
+        <div class="progress" id="progress-text">Scenario 1 of 5</div>
+        
+        <div class="scenario-card" id="scenario-card">
+            Loading...
+        </div>
+
+        <div class="grid" id="btn-grid">
+            <button class="btn-machine" onclick="checkAnswer('washer')">
+                <span class="btn-icon">🌊</span> Washer-Disinfector
+            </button>
+            <button class="btn-machine" onclick="checkAnswer('ultrasonic')">
+                <span class="btn-icon">🔊</span> Ultrasonic Cleaner
+            </button>
+            <button class="btn-machine" onclick="checkAnswer('aer')">
+                <span class="btn-icon">🔬</span> AER (Endoscope Reprocessor)
+            </button>
+            <button class="btn-machine" onclick="checkAnswer('cart')">
+                <span class="btn-icon">🛒</span> Cart Washer
+            </button>
+        </div>
+
+        <div class="feedback" id="feedback-panel"></div>
+    </div>
+
+    <div class="end-screen" id="end-screen">
+        <h2 style="font-size: 32px;">🎉 Great Job!</h2>
+        <p style="font-size: 18px; color: #475569; margin-bottom: 20px;">You successfully matched all the medical devices to their proper reprocessing equipment.</p>
+        <button class="btn-restart" onclick="initGame()">Practice Again</button>
+    </div>
+</div>
+
+<script>
+    const scenarios = [
+        {
+            text: "A heavily soiled stainless steel surgical tray containing standard scissors and clamps.",
+            correct: "washer",
+            successMsg: "Correct! Standard surgical instruments are processed in a Washer-Disinfector using impingement and thermal disinfection."
+        },
+        {
+            text: "A flexible colonoscope that has just been manually brushed at the sink.",
+            correct: "aer",
+            successMsg: "Correct! Flexible endoscopes require the precise flushing and chemical High-Level Disinfection provided by an AER."
+        },
+        {
+            text: "A complex orthopedic drill bit with tiny, hard-to-reach crevices filled with bone dust.",
+            correct: "ultrasonic",
+            successMsg: "Correct! The cavitation bubbles in an Ultrasonic Cleaner act like a microscopic vacuum to pull soil out of tiny crevices."
+        },
+        {
+            text: "A large metal trolley used to transport dirty instruments from the Operating Room.",
+            correct: "cart",
+            successMsg: "Correct! A Cart Washer is the only machine large enough to handle transport trolleys and rigid container shells."
+        },
+        {
+            text: "A delicate micro-surgical eye instrument with microscopic box locks that cannot be scrubbed by hand.",
+            correct: "ultrasonic",
+            successMsg: "Correct! The gentle but powerful implosions of an Ultrasonic Cleaner are perfect for delicate instruments that are too small for manual brushes."
+        }
+    ];
+
+    let currentQueue = [];
+    let currentIndex = 0;
+    let isProcessing = false;
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function initGame() {
+        currentQueue = shuffle([...scenarios]);
+        currentIndex = 0;
+        isProcessing = false;
+        
+        document.getElementById('game-area').style.display = 'block';
+        document.getElementById('end-screen').style.display = 'none';
+        document.getElementById('instruction-text').style.display = 'block';
+        document.getElementById('feedback-panel').className = 'feedback';
+        
+        loadScenario();
+    }
+
+    function loadScenario() {
+        if (currentIndex >= currentQueue.length) {
+            showEndScreen();
+            return;
+        }
+        
+        const item = currentQueue[currentIndex];
+        document.getElementById('scenario-card').innerText = item.text;
+        document.getElementById('progress-text').innerText = `Scenario ${currentIndex + 1} of ${currentQueue.length}`;
+        
+        const feedback = document.getElementById('feedback-panel');
+        feedback.className = 'feedback';
+        feedback.innerText = '';
+        isProcessing = false;
+    }
+
+    function checkAnswer(selectedMachine) {
+        if (isProcessing) return;
+        
+        const item = currentQueue[currentIndex];
+        const feedback = document.getElementById('feedback-panel');
+        const card = document.getElementById('scenario-card');
+        
+        if (selectedMachine === item.correct) {
+            // Correct
+            isProcessing = true;
+            feedback.innerHTML = `<strong>✅ ${item.successMsg}</strong>`;
+            feedback.className = 'feedback success';
+            
+            setTimeout(() => {
+                currentIndex++;
+                loadScenario();
+            }, 3000);
+
+        } else {
+            // Incorrect
+            feedback.innerHTML = `<strong>❌ Incorrect.</strong> Review the scenario and try again.`;
+            feedback.className = 'feedback error';
+            
+            card.classList.remove('shake');
+            void card.offsetWidth; // trigger reflow
+            card.classList.add('shake');
+        }
+    }
+
+    function showEndScreen() {
+        document.getElementById('game-area').style.display = 'none';
+        document.getElementById('instruction-text').style.display = 'none';
+        document.getElementById('end-screen').style.display = 'flex';
+    }
+
+    // Start game on load
+    initGame();
+</script>
+
+</body>
+</html>
