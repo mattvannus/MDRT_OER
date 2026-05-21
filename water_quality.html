@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Quality Explorer</title>
+    <style>
+        :root {
+            --tap-color: #dc2626; /* Red - Danger */
+            --di-color: #f59e0b;  /* Amber - Caution */
+            --ro-color: #059669;  /* Green - Excellent */
+            
+            --bg-light: #f8fafc;
+            --text-dark: #1e293b;
+            --border-color: #cbd5e1;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 850px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h2 {
+            margin: 0 0 10px 0;
+            color: #0f172a;
+        }
+
+        .header p {
+            margin: 0;
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        /* Toggle Buttons */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn-water {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid var(--border-color);
+            background: white;
+            color: #64748b;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-water:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-tap.active { border-color: var(--tap-color); background: #fee2e2; color: #991b1b; box-shadow: 0 4px 10px rgba(220, 38, 38, 0.2); }
+        .btn-di.active { border-color: var(--di-color); background: #fef3c7; color: #b45309; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2); }
+        .btn-ro.active { border-color: var(--ro-color); background: #d1fae5; color: #065f46; box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2); }
+
+        /* Main Content Layout */
+        .layout {
+            display: flex;
+            gap: 30px;
+        }
+
+        /* Left Side: Visual Simulator */
+        .simulator {
+            flex: 1;
+            background: var(--bg-light);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sim-title {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        /* The Surgical Instrument Surface */
+        .instrument-surface {
+            width: 100%;
+            height: 250px;
+            border-radius: 8px;
+            border: 3px solid #94a3b8;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            /* Default Base: Shiny Steel */
+            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 50%, #94a3b8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        /* Water Effects Overlays */
+        .effect-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Tap Water: Hard scale (white dots) and rust (brown patches) */
+        .effect-tap {
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.8) 2px, transparent 3px),
+                radial-gradient(circle at 70% 60%, rgba(255,255,255,0.9) 3px, transparent 4px),
+                radial-gradient(circle at 40% 80%, rgba(255,255,255,0.7) 2px, transparent 3px),
+                radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.4) 15px, transparent 25px),
+                radial-gradient(circle at 30% 70%, rgba(139, 69, 19, 0.3) 20px, transparent 35px);
+        }
+
+        /* DI Water: No hard scale, but a slight dull microbial film (faint greenish/yellow tint) */
+        .effect-di {
+            background: linear-gradient(135deg, rgba(234, 255, 208, 0.2) 0%, rgba(200, 220, 200, 0.3) 100%);
+            box-shadow: inset 0 0 30px rgba(100, 150, 100, 0.2);
+        }
+
+        /* RO Water: Extremely shiny and clean */
+        .effect-ro {
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%, rgba(255,255,255,0.2) 100%);
+            box-shadow: inset 0 0 40px rgba(255,255,255,0.8);
+        }
+
+        .surface-label {
+            position: relative;
+            z-index: 10;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Right Side: Data Panel */
+        .data-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .placeholder {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-style: italic;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .details {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .data-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .data-card h4 {
+            margin: 0 0 5px 0;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .data-card p {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.5;
+            color: var(--text-dark);
+        }
+
+        .badge-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Water Quality Explorer</h2>
+        <p>Select a water type to see its chemical makeup and its physical effect on a surgical instrument.</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn-water btn-tap" id="btn-tap" onclick="selectWater('tap')">🚰 Tap Water</button>
+        <button class="btn-water btn-di" id="btn-di" onclick="selectWater('di')">⚗️ DI Water</button>
+        <button class="btn-water btn-ro" id="btn-ro" onclick="selectWater('ro')">💧 RO Water</button>
+    </div>
+
+    <div class="layout">
+        <div class="simulator">
+            <h3 class="sim-title">Instrument Surface Result</h3>
+            <div class="instrument-surface">
+                <div class="effect-overlay effect-tap" id="overlay-tap"></div>
+                <div class="effect-overlay effect-di" id="overlay-di"></div>
+                <div class="effect-overlay effect-ro" id="overlay-ro"></div>
+                
+                <div class="surface-label" id="surface-label">Waiting for selection...</div>
+            </div>
+        </div>
+
+        <div class="data-panel">
+            <div class="placeholder" id="placeholder">
+                👈 Select a water type to view its properties.
+            </div>
+
+            <div class="details" id="details-panel">
+                <div class="badge-row">
+                    <div class="badge" id="badge-tds">TDS: --</div>
+                    <div class="badge" id="badge-purity" style="background: #475569;">Purity: --</div>
+                </div>
+
+                <div class="data-card">
+                    <h4>⚠️ Impurities Present</h4>
+                    <p id="data-impurities">...</p>
+                </div>
+
+                <div class="data-card">
+                    <h4>🔍 Visual Effect on Instrument</h4>
+                    <p id="data-effect">...</p>
+                </div>
+
+                <div class="data-card">
+                    <h4>✅ Ideal Use in MDRD</h4>
+                    <p id="data-use" style="font-weight: bold;">...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const waterData = {
+        'tap': {
+            btnClass: 'btn-tap',
+            color: 'var(--tap-color)',
+            tds: '> 200 ppm',
+            purity: 'Low',
+            label: 'Scale & Rust Formation',
+            impurities: 'High levels of dissolved minerals (Calcium, Magnesium), Chlorides, and potential microorganisms.',
+            effect: 'Leaves hard white chalky mineral spots (scale) when water evaporates. Chlorides attack the stainless steel, causing irreversible rust and pitting.',
+            use: 'Initial flushing of gross soil at the sink only. NEVER use for the final rinse.'
+        },
+        'di': {
+            btnClass: 'btn-di',
+            color: 'var(--di-color)',
+            tds: '< 10 ppm',
+            purity: 'Moderate',
+            label: 'No Scale, but Microbial Risk',
+            impurities: 'Minerals and salts are removed, but bacteria and endotoxins can easily pass through or grow inside the DI resin tanks.',
+            effect: 'Leaves no white mineral spots (prevents scaling), but may leave a microscopic biofilm of endotoxins if the filters are not meticulously maintained.',
+            use: 'Better than tap water for final rinsing in washers, but inferior to Reverse Osmosis.'
+        },
+        'ro': {
+            btnClass: 'btn-ro',
+            color: 'var(--ro-color)',
+            tds: '< 5 ppm',
+            purity: 'Extremely High',
+            label: 'Spot-Free & Pristine',
+            impurities: 'Almost entirely pure. The RO membrane strips out minerals, salts, bacteria, and endotoxins.',
+            effect: 'Leaves the instrument perfectly clean, spot-free, and protects the passive layer of the stainless steel. No biofilms or scale.',
+            use: 'The gold standard. Must be used for the final rinse of all critical and semi-critical medical devices.'
+        }
+    };
+
+    function selectWater(type) {
+        // 1. Reset Buttons
+        document.querySelectorAll('.btn-water').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-${type}`).classList.add('active');
+
+        // 2. Hide Placeholder, Show Details
+        document.getElementById('placeholder').style.display = 'none';
+        const details = document.getElementById('details-panel');
+        details.style.display = 'none';
+        void details.offsetWidth; // trigger reflow for animation
+        details.style.display = 'block';
+
+        // 3. Populate Data
+        const data = waterData[type];
+        
+        const badgeTds = document.getElementById('badge-tds');
+        badgeTds.innerText = `TDS: ${data.tds}`;
+        badgeTds.style.background = data.color;
+
+        const badgePurity = document.getElementById('badge-purity');
+        badgePurity.innerText = `Purity: ${data.purity}`;
+
+        document.getElementById('data-impurities').innerText = data.impurities;
+        document.getElementById('data-effect').innerText = data.effect;
+        document.getElementById('data-use').innerText = data.use;
+        
+        // 4. Update Visual Simulator
+        // Hide all overlays
+        document.querySelectorAll('.effect-overlay').forEach(el => el.style.opacity = '0');
+        
+        // Show specific overlay
+        document.getElementById(`overlay-${type}`).style.opacity = '1';
+        
+        // Update Label
+        const label = document.getElementById('surface-label');
+        label.innerText = data.label;
+        label.style.opacity = '1';
+    }
+</script>
+
+</body>
+</html>
