@@ -1,0 +1,25 @@
+<!-- Simplified logic representation for a branching simulator -->
+<div id="triage-sim" style="border: 2px solid #0284c7; padding: 20px; border-radius: 8px;">
+    <h3>Decontamination Triage Console</h3>
+    <p id="scenario-text"><strong>Scenario:</strong> You receive a complex, multi-lumened robotic instrument. The surface has dried blood. What is your first priority?</p>
+    
+    <div id="choices">
+        <button onclick="checkAnswer(false)">A: Toss directly into the Washer-Disinfector.</button><br>
+        <button onclick="checkAnswer(true)">B: Perform manual brush-flushing of lumens before mechanical loading.</button>
+    </div>
+
+    <p id="feedback" style="font-weight: bold; margin-top: 15px;"></p>
+</div>
+
+<script>
+    function checkAnswer(isCorrect) {
+        const fb = document.getElementById('feedback');
+        if(isCorrect) {
+            fb.style.color = "green";
+            fb.innerText = "Correct! Mechanical washers often fail to reach internal lumens. Manual pre-cleaning is mandatory for complex devices per CSA Z314-23.";
+        } else {
+            fb.style.color = "red";
+            fb.innerText = "Incorrect. 'Shadowing' inside complex lumens prevents mechanical spray from reaching the bioburden. Always perform manual pre-cleaning.";
+        }
+    }
+</script>

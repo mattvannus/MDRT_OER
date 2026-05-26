@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart Washer Workflow Simulator</title>
+    <style>
+        :root {
+            --dirty-side: #fee2e2; /* light red */
+            --dirty-border: #ef4444;
+            --clean-side: #d1fae5; /* light green */
+            --clean-border: #10b981;
+            --washer-bg: #e2e8f0;
+            --washer-border: #64748b;
+            --primary: #0284c7;
+            --text-dark: #1e293b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid #cbd5e1;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .header h2 { margin: 0 0 10px 0; color: #0f172a; font-size: 24px; }
+        .header p { margin: 0; color: #64748b; font-size: 15px; }
+
+        /* Workflow Visualizer */
+        .workflow-area {
+            display: flex;
+            height: 250px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #94a3b8;
+            position: relative;
+            margin-bottom: 20px;
+            background: white;
+        }
+
+        .zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 15px;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 1;
+        }
+
+        .zone.dirty { background: var(--dirty-side); color: #991b1b; border-right: 4px solid var(--washer-border); }
+        .zone.clean { background: var(--clean-side); color: #065f46; border-left: 4px solid var(--washer-border); }
+        
+        .washer-chamber {
+            flex: 1;
+            background: var(--washer-bg);
+            color: #334155;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chamber-title { margin-top: 15px; font-weight: bold; z-index: 2;}
+
+        /* The Case Cart */
+        .cart-wrapper {
+            position: absolute;
+            bottom: 20px;
+            left: 10%; /* Starts in dirty zone */
+            width: 80px;
+            height: 100px;
+            transition: all 1.5s ease-in-out;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            transform-origin: bottom center;
+        }
+
+        .cart-body {
+            width: 100%;
+            height: 80px;
+            background: #cbd5e1;
+            border: 2px solid #475569;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .cart-wheels {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            margin-top: 2px;
+        }
+
+        .wheel {
+            width: 12px;
+            height: 12px;
+            background: #334155;
+            border-radius: 50%;
+        }
+
+        /* Washer Effects */
+        .water-spray {
+            position: absolute;
+            top: 40px; bottom: 0; left: 0; right: 0;
+            background: repeating-linear-gradient(180deg, rgba(14, 165, 233, 0.4) 0px, transparent 10px);
+            background-size: 100% 20px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .thermal-glow {
+            position: absolute;
+            top: 0; bottom: 0; left: 0; right: 0;
+            background: rgba(239, 68, 68, 0.3);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 3;
+            transition: opacity 1s;
+        }
+
+        @keyframes spray {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 40px; }
+        }
+
+        .active-spray { animation: spray 0.2s linear infinite; opacity: 1; }
+        .active-tilt { transform: rotate(-8deg); } /* Tilts the cart slightly */
+
+        /* Control Panel */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 15px;
+            font-size: 15px;
+            font-weight: bold;
+            border: 2px solid var(--primary);
+            background: white;
+            color: var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover:not(:disabled) { background: #f0f9ff; }
+        .btn:disabled { border-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; background: #f8fafc; }
+        .btn.completed { background: var(--clean-side); border-color: var(--clean-border); color: #065f46; }
+
+        .btn-large {
+            grid-column: span 2;
+            background: var(--primary);
+            color: white;
+        }
+        .btn-large:hover:not(:disabled) { background: #0369a1; color: white; }
+
+        /* Information Readout */
+        .info-panel {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 15px 20px;
+            min-height: 80px;
+        }
+
+        .info-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; color: #0f172a; }
+        .info-text { font-size: 15px; color: #475569; margin: 0; line-height: 1.5; }
+
+        @media (max-width: 600px) {
+            .controls { grid-template-columns: 1fr; }
+            .btn-large { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Cart Washer Workflow & Safety Simulator</h2>
+        <p>Follow strict safety protocols to move a case cart from the dirty utility area to the clean assembly area.</p>
+    </div>
+
+    <div class="workflow-area">
+        <div class="zone dirty">Dirty Utility</div>
+        <div class="washer-chamber">
+            <div class="chamber-title">Cart Washer</div>
+            <div class="thermal-glow" id="thermal-glow"></div>
+            <div class="water-spray" id="water-spray"></div>
+        </div>
+        <div class="zone clean">Clean Assembly</div>
+
+        <div class="cart-wrapper" id="cart">
+            <div class="cart-body">🛒</div>
+            <div class="cart-wheels">
+                <div class="wheel"></div>
+                <div class="wheel"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="btn-ppe" onclick="donPPE()">1. Don PPE</button>
+        <button class="btn" id="btn-check" onclick="checkChamber()">2. Verify Chamber Empty</button>
+        <button class="btn btn-large" id="btn-load" onclick="loadCart()" disabled>3. Load Cart & Start Cycle</button>
+        <button class="btn btn-large" id="btn-unload" onclick="unloadCart()" style="display:none;">4. Unload to Clean Side</button>
+        <button class="btn btn-large" id="btn-reset" onclick="resetSim()" style="display:none; background:#64748b; border-color:#64748b;">Reset Simulator</button>
+    </div>
+
+    <div class="info-panel">
+        <div class="info-title" id="info-title">Awaiting Safety Protocols</div>
+        <p class="info-text" id="info-text">Cart washers process large, bulky items. Because of their size and the chemicals used, strict safety measures must be followed before loading.</p>
+    </div>
+</div>
+
+<script>
+    let ppeOn = false;
+    let chamberChecked = false;
+    const cart = document.getElementById('cart');
+    const waterSpray = document.getElementById('water-spray');
+    const thermalGlow = document.getElementById('thermal-glow');
+    
+    function donPPE() {
+        ppeOn = true;
+        const btn = document.getElementById('btn-ppe');
+        btn.classList.add('completed');
+        btn.innerText = "PPE Donned ✅";
+        btn.disabled = true;
+        updateInfo("PPE Donned", "MDRTs must wear proper Personal Protective Equipment when loading/unloading to prevent exposure to residual chemical vapours, splashing, or hot steam.");
+        checkReady();
+    }
+
+    function checkChamber() {
+        chamberChecked = true;
+        const btn = document.getElementById('btn-check');
+        btn.classList.add('completed');
+        btn.innerText = "Chamber Verified ✅";
+        btn.disabled = true;
+        updateInfo("Confined Space Hazard", "Because a cart washer is large enough for a person to enter, you must physically verify the chamber is empty before starting a cycle. Never enter without Lockout/Tagout procedures.");
+        checkReady();
+    }
+
+    function checkReady() {
+        if (ppeOn && chamberChecked) {
+            document.getElementById('btn-load').disabled = false;
+        }
+    }
+
+    function loadCart() {
+        document.getElementById('btn-load').disabled = true;
+        updateInfo("Loading Cart", "The cart is moved into the chamber. It must be positioned properly so spray arms are not blocked.");
+        
+        // Move to center (Washer)
+        cart.style.left = "calc(50% - 40px)";
+
+        setTimeout(() => {
+            runCycle();
+        }, 1500);
+    }
+
+    function runCycle() {
+        updateInfo("Phase 1 & 2: Pre-Rinse & Detergent Wash", "Powerful spray arms and chemical detergents target gross soil. Notice the tilt mechanism: the floor or rack angles the cart slightly so dirty water drains off flat surfaces and doesn't pool.");
+        
+        // Activate spray and tilt cart
+        waterSpray.classList.add('active-spray');
+        cart.classList.add('active-tilt');
+
+        // Thermal Phase
+        setTimeout(() => {
+            updateInfo("Phase 3: Thermal Disinfection", "The water temperature is raised significantly (typically >82°C) to achieve thermal disinfection on these large non-critical items.");
+            thermalGlow.style.opacity = "1";
+        }, 4000);
+
+        // Dry Phase
+        setTimeout(() => {
+            updateInfo("Phase 4: Drying", "The spray stops, the cart levels out, and hot air removes excess moisture.");
+            waterSpray.classList.remove('active-spray');
+            thermalGlow.style.opacity = "0";
+            cart.classList.remove('active-tilt');
+        }, 8000);
+
+        // Cycle Complete
+        setTimeout(() => {
+            updateInfo("Cycle Complete", "The wash cycle is finished. The doors on the clean side can now be opened.");
+            document.getElementById('btn-load').style.display = 'none';
+            document.getElementById('btn-unload').style.display = 'block';
+        }, 10000);
+    }
+
+    function unloadCart() {
+        document.getElementById('btn-unload').disabled = true;
+        updateInfo("One-Way Workflow Enforced", "The cart is unloaded directly into the Clean Assembly area. Cart washers act as a physical barrier in the wall, ensuring soiled items never cross paths with clean items.");
+        
+        // Move to right (Clean Side)
+        cart.style.left = "calc(90% - 40px)";
+
+        setTimeout(() => {
+            document.getElementById('btn-unload').style.display = 'none';
+            document.getElementById('btn-reset').style.display = 'block';
+        }, 1500);
+    }
+
+    function resetSim() {
+        ppeOn = false;
+        chamberChecked = false;
+        
+        cart.style.left = "10%";
+        
+        document.getElementById('btn-ppe').disabled = false;
+        document.getElementById('btn-ppe').classList.remove('completed');
+        document.getElementById('btn-ppe').innerText = "1. Don PPE";
+        
+        document.getElementById('btn-check').disabled = false;
+        document.getElementById('btn-check').classList.remove('completed');
+        document.getElementById('btn-check').innerText = "2. Verify Chamber Empty";
+
+        const loadBtn = document.getElementById('btn-load');
+        loadBtn.style.display = 'block';
+        loadBtn.disabled = true;
+
+        document.getElementById('btn-reset').style.display = 'none';
+        document.getElementById('btn-unload').disabled = false;
+
+        updateInfo("Awaiting Safety Protocols", "Cart washers process large, bulky items. Because of their size and the chemicals used, strict safety measures must be followed before loading.");
+    }
+
+    function updateInfo(title, text) {
+        document.getElementById('info-title').innerText = title;
+        document.getElementById('info-text').innerText = text;
+    }
+</script>
+
+</body>
+</html>

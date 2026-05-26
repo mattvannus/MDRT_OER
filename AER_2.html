@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AER Concept Hub</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --accent: #38bdf8;
+            --border: #cbd5e1;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            color: var(--dark);
+            background-color: transparent;
+        }
+
+        .aer-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .aer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        /* Machine Visual Representation */
+        .aer-chassis {
+            background: #1e293b;
+            border: 8px solid #475569;
+            border-radius: 16px;
+            height: 420px;
+            position: relative;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .aer-lid-window {
+            background: rgba(56, 189, 248, 0.15);
+            border: 3px solid #64748b;
+            border-radius: 8px;
+            height: 240px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+        }
+
+        .fluid-glow {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0;
+            transition: all 0.5s ease;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Dynamic Fluid Effects based on cycle choices */
+        .fluid-glow.detergent-fluid { background: rgba(34, 197, 94, 0.25); opacity: 1; }
+        .fluid-glow.disinfectant-fluid { background: rgba(234, 179, 8, 0.25); opacity: 1; }
+        .fluid-glow.rinse-fluid { background: rgba(14, 165, 233, 0.3); opacity: 1; }
+
+        .scope-graphic {
+            font-size: 80px;
+            z-index: 3;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+            transform: scale(1);
+            transition: transform 0.3s ease;
+        }
+
+        .spray-overlay {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(255,255,255,0.15) 0px, repeating-linear-gradient 10px, transparent 20px);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .spraying .spray-overlay {
+            opacity: 1;
+            animation: moveSpray 0.1s linear infinite;
+        }
+
+        @keyframes moveSpray {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 20px; }
+        }
+
+        /* Screen Header Dashboard */
+        .aer-dashboard {
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 6px;
+            padding: 12px;
+            color: #38bdf8;
+            font-family: monospace;
+            font-size: 14px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .dash-line { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .dash-status { font-weight: bold; color: #ffffff; text-transform: uppercase; }
+
+        /* Navigation Systems right side */
+        .aer-interface {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .menu-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 5px 0;
+        }
+
+        .cycle-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: #ffffff;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dark);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+
+        .control-btn.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-action {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .btn-action:hover:not(:disabled) { background: var(--primary-hover); }
+        .btn-action:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
+
+        /* Explanation Deck Panel */
+        .info-deck {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #334155;
+            min-height: 90px;
+        }
+
+        @media (max-width: 768px) {
+            .aer-grid { grid-template-columns: 1fr; }
+            .aer-chassis { height: 360px; }
+            .aer-lid-window { height: 180px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="aer-container">
+    <div class="aer-interface">
+        <p style="margin: 0; color: #64748b; font-size: 15px; line-height: 1.5;">Click each cycle phase on the right to simulate fluid circulation and look at how automated mechanics standardise semi-critical tool validation.</p>
+    </div>
+
+    <div class="aer-grid">
+        <!-- Chamber Deck Visual Component -->
+        <div class="aer-chassis">
+            <div class="aer-dashboard">
+                <div class="dash-line"><span>SYSTEM MODE:</span><span id="dash-mode" class="dash-status">STANDBY</span></div>
+                <div class="dash-line"><span>MANIFOLD PRESSURE:</span><span id="dash-psi">0.0 PSI</span></div>
+                <div class="dash-line"><span>SOLUTION FLUID:</span><span id="dash-chem">NONE</span></div>
+            </div>
+
+            <div class="aer-lid-window" id="window">
+                <div class="fluid-glow" id="fluid"></div>
+                <div class="spray-overlay"></div>
+                <div class="scope-graphic" id="scope">➰</div>
+            </div>
+        </div>
+
+        <!-- Interactive Control Operations Panel -->
+        <div class="aer-interface">
+            <div>
+                <h4 class="menu-title">Select Cycle Phase to Probe</h4>
+                <div class="cycle-selector">
+                    <button class="control-btn" id="btn-0" onclick="previewPhase(0)">1. Enzymatic Channel Wash</button>
+                    <button class="control-btn" id="btn-1" onclick="previewPhase(1)">2. High-Level Disinfection (HLD)</button>
+                    <button class="control-btn" id="btn-2" onclick="previewPhase(2)">3. Pure Water Final Rinse</button>
+                    <button class="control-btn" id="btn-3" onclick="previewPhase(3)">4. Forced Air &amp; Alcohol Purge</button>
+                </div>
+            </div>
+
+            <div class="info-deck" id="deck-display">
+                <strong style="display:block; margin-bottom:5px; color:#0f172a;" id="deck-title">Awaiting Selection</strong>
+                <span id="deck-body">Select one of the validated process stages above to analyze the parameter metrics and internal mechanical changes inside the machine chamber.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const data = [
+        {
+            mode: "CHEMICAL WASH",
+            psi: "32.4 PSI",
+            chem: "ENZYMATIX 2%",
+            fluidClass: "detergent-fluid",
+            spraying: true,
+            scale: "scale(1.05)",
+            title: "🧪 Enzymatic Channel Wash Phase",
+            body: "The reprocessor automatically doses fluid mechanics with proteolytic enzymes. It forces the solution directly through the internal endoscope channels at high pressure to loosen microscopic proteins, mucous tracks, and bioburden residues from channel walls."
+        },
+        {
+            mode: "HIGH LEVEL DISINFECT",
+            psi: "18.1 PSI",
+            chem: "PERACETIC ACID",
+            fluidClass: "disinfectant-fluid",
+            spraying: true,
+            scale: "scale(1.02)",
+            title: "☣️ High-Level Disinfection (HLD)",
+            body: "The core chemical sterilization phase. The AER completely floods the exterior tank while pumping liquid disinfectant through all lumen tubes for an exact contact window, eliminating all vegetative microbes, fungi, and viruses."
+        },
+        {
+            mode: "PURIFIED RINSING",
+            psi: "28.0 PSI",
+            chem: "RO/DI WATER",
+            fluidClass: "rinse-fluid",
+            spraying: true,
+            scale: "scale(1.0)",
+            title: "💧 Pure Water Final Rinse Phase",
+            body: "To protect patient tissues from chemical exposure, the system purges all chemical tracks. It circulates highly filtered or bacteria-free water through the lines to rinse away residual disinfectant chemicals completely."
+        },
+        {
+            mode: "FORCED DRY PURGE",
+            psi: "42.5 PSI",
+            chem: "70% ISOPROPANOL / AIR",
+            fluidClass: "none",
+            spraying: false,
+            scale: "scale(0.98)",
+            title: "💨 Forced Air & Alcohol Purge",
+            body: " Lingering moisture supports bacterial regrowth inside storage cases. The reprocessor shoots alcohol through the lines, followed by high-pressure HEPA-filtered air, drying internal channels completely."
+        }
+    ];
+
+    function previewPhase(idx) {
+        // Manage selected visual look
+        for(let i=0; i<4; i++) {
+            document.getElementById(`btn-${i}`).classList.remove('selected');
+        }
+        document.getElementById(`btn-${idx}`).classList.add('selected');
+
+        const item = data[idx];
+
+        // Update dashboard readings
+        document.getElementById('dash-mode').innerText = item.mode;
+        document.getElementById('dash-psi').innerText = item.psi;
+        document.getElementById('dash-chem').innerText = item.chem;
+
+        // Manage fluid layer classes smoothly
+        const fluid = document.getElementById('fluid');
+        fluid.className = "fluid-glow";
+        if(item.fluidClass !== "none") {
+            fluid.classList.add(item.fluidClass);
+        }
+
+        // Manage spraying animations
+        const windowEl = document.getElementById('window');
+        if(item.spraying) {
+            windowEl.classList.add('spraying');
+        } else {
+            windowEl.classList.remove('spraying');
+        }
+
+        // Scale scope slightly to imply fluid friction pressure changes
+        document.getElementById('scope').style.transform = item.scale;
+
+        // Populate deck panel information text
+        document.getElementById('deck-title').innerText = item.title;
+        document.getElementById('deck-body').innerHTML = item.body;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AER Workflow Simulator</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg-light: #f8fafc;
+            --border-color: #cbd5e1;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent;
+            margin: 0;
+            padding: 15px;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 850px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--bg-light);
+        }
+
+        .header h2 { margin: 0 0 8px 0; font-size: 24px; color: var(--text-dark); }
+        .header p { margin: 0; color: var(--text-muted); font-size: 15px; }
+
+        /* Workflow Stations Grid */
+        .stations {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .station {
+            background: var(--bg-light);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .station.active {
+            border-color: var(--primary);
+            background: #f0f9ff;
+            box-shadow: 0 0 15px rgba(2, 132, 199, 0.15);
+        }
+
+        .station.completed {
+            border-color: var(--success);
+            background: #d1fae5;
+        }
+
+        .station-icon { font-size: 40px; margin-bottom: 10px; }
+        .station-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        .station-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; min-height: 40px;}
+
+        /* The Scope Indicator */
+        .scope-indicator {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-dark);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 10;
+        }
+        .station.has-scope .scope-indicator { opacity: 1; }
+
+        /* Action Buttons */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+            background: var(--primary);
+        }
+        .btn:hover:not(:disabled) { background: var(--primary-hover); }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        
+        /* AER Internal Panel (Hidden until loaded) */
+        .aer-panel {
+            display: none;
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 20px;
+            color: white;
+            margin-top: 20px;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        .aer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #475569; padding-bottom: 10px;}
+        .aer-title { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px;}
+        
+        .aer-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn-aer { background: #475569; border: 2px solid transparent; }
+        .btn-aer:hover:not(:disabled) { background: #64748b; }
+        .btn-aer.connected { background: var(--success); border-color: white; }
+        
+        .btn-start { background: var(--primary); }
+        .btn-start:hover:not(:disabled) { background: var(--primary-hover); }
+        .btn-start.running { background: #f59e0b; animation: pulse 1.5s infinite; }
+
+        /* Feedback Console */
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            border: 2px solid transparent;
+            line-height: 1.5;
+        }
+
+        .feedback.neutral { background: var(--bg-light); border-color: var(--border-color); color: var(--text-dark); }
+        .feedback.error { background: #fee2e2; border-color: var(--error); color: #991b1b; }
+        .feedback.success { background: #d1fae5; border-color: var(--success); color: #065f46; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .stations { grid-template-columns: 1fr; }
+            .aer-controls { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Flexible Endoscope Reprocessing Workflow</h2>
+        <p>AERs are highly advanced, but they cannot clean a dirty scope. Guide the endoscope through the mandatory safety steps.</p>
+    </div>
+
+    <!-- Stations -->
+    <div class="stations">
+        <!-- 1. Leak Test -->
+        <div class="station has-scope active" id="stat-leak">
+            <div class="scope-indicator">🐍 Endoscope Here</div>
+            <div class="station-icon">🫧</div>
+            <div class="station-title">1. Leak Testing</div>
+            <div class="station-desc">Pressurize the scope to check for microscopic holes in the casing.</div>
+            <button class="btn" id="btn-leak" onclick="doLeakTest()">Perform Leak Test</button>
+        </div>
+
+        <!-- 2. Manual Clean -->
+        <div class="station" id="stat-clean">
+            <div class="scope-indicator">🐍 Endoscope Here</div>
+            <div class="station-icon">🪥</div>
+            <div class="station-title">2. Decon Sink</div>
+            <div class="station-desc">Manually brush and flush all channels with enzymatic detergent.</div>
+            <button class="btn" id="btn-clean" onclick="doManualClean()">Brush & Flush Scope</button>
+        </div>
+
+        <!-- 3. AER -->
+        <div class="station" id="stat-aer">
+            <div class="scope-indicator">🐍 Endoscope Here</div>
+            <div class="station-icon">🔬</div>
+            <div class="station-title">3. AER Machine</div>
+            <div class="station-desc">Automated High-Level Disinfection (HLD) and final rinse.</div>
+            <button class="btn" id="btn-load" onclick="doLoadAER()">Load Scope into AER</button>
+        </div>
+    </div>
+
+    <!-- AER Internal Controls (Hidden Initially) -->
+    <div class="aer-panel" id="aer-panel">
+        <div class="aer-header">
+            <h3 class="aer-title">🔬 AER Control Panel</h3>
+            <span id="aer-status">Status: SCOPE LOADED</span>
+        </div>
+        <div class="aer-controls">
+            <button class="btn btn-aer" id="btn-connect" onclick="connectChannels()">🔌 Connect Channel Hoses</button>
+            <button class="btn btn-start" id="btn-start" onclick="startCycle()">▶️ Start HLD Cycle</button>
+        </div>
+    </div>
+
+    <!-- Feedback Console -->
+    <div class="feedback neutral" id="feedback">
+        <strong>System Ready:</strong> A soiled flexible endoscope has arrived from the procedure room. Select your first action.
+    </div>
+</div>
+
+<script>
+    // State Tracking
+    const state = {
+        leakTested: false,
+        manuallyCleaned: false,
+        inAER: false,
+        channelsConnected: false,
+        cycleRunning: false,
+        cycleComplete: false
+    };
+
+    const feedbackEl = document.getElementById('feedback');
+    const aerPanel = document.getElementById('aer-panel');
+
+    function updateScopeLocation(activeStationId) {
+        document.querySelectorAll('.station').forEach(el => el.classList.remove('has-scope', 'active'));
+        document.getElementById(activeStationId).classList.add('has-scope', 'active');
+    }
+
+    function showFeedback(msg, type) {
+        feedbackEl.innerHTML = msg;
+        feedbackEl.className = `feedback ${type}`;
+    }
+
+    function doLeakTest() {
+        if(state.leakTested) {
+            showFeedback("⚠️ The scope has already passed the leak test. Move to the next step.", "neutral");
+            return;
+        }
+        
+        state.leakTested = true;
+        document.getElementById('stat-leak').classList.add('completed');
+        document.getElementById('btn-leak').innerText = "Leak Test Passed ✅";
+        document.getElementById('btn-leak').disabled = true;
+        
+        updateScopeLocation('stat-clean');
+        showFeedback("<strong>✅ Excellent.</strong> The scope passed the leak test. There are no holes in the casing, so it is safe to submerge in fluid without damaging the internal electronics.", "success");
+    }
+
+    function doManualClean() {
+        if(!state.leakTested) {
+            showFeedback("<strong>❌ CRITICAL ERROR:</strong> You cannot put the scope in the sink! If there is a hole in the casing, water will flood the internal electronics and destroy the scope. Leak test it first.", "error");
+            return;
+        }
+        if(state.manuallyCleaned) return;
+
+        state.manuallyCleaned = true;
+        document.getElementById('stat-clean').classList.add('completed');
+        document.getElementById('btn-clean').innerText = "Manual Clean Done ✅";
+        document.getElementById('btn-clean').disabled = true;
+
+        updateScopeLocation('stat-aer');
+        showFeedback("<strong>✅ Excellent.</strong> You meticulously brushed and flushed all channels, removing the gross bioburden and biofilm. The scope is now ready for high-level disinfection.", "success");
+    }
+
+    function doLoadAER() {
+        if(!state.leakTested) {
+            showFeedback("<strong>❌ CRITICAL ERROR:</strong> The scope was never leak tested! Putting it in the AER will force fluid into the electronics and destroy it.", "error");
+            return;
+        }
+        if(!state.manuallyCleaned) {
+            showFeedback("<strong>❌ CRITICAL ERROR:</strong> The AER is a disinfection machine, not a cleaning machine. If you load a scope with gross soil still inside the channels, the chemicals cannot penetrate the dirt. The patient will be infected.", "error");
+            return;
+        }
+
+        state.inAER = true;
+        document.getElementById('stat-aer').classList.add('completed');
+        document.getElementById('btn-load').innerText = "Scope Loaded ✅";
+        document.getElementById('btn-load').disabled = true;
+
+        aerPanel.style.display = "block";
+        showFeedback("<strong>Scope Loaded.</strong> The lid is open. You must properly configure the machine before starting the cycle.", "neutral");
+    }
+
+    function connectChannels() {
+        if(state.channelsConnected) return;
+        state.channelsConnected = true;
+        
+        const btn = document.getElementById('btn-connect');
+        btn.classList.add('connected');
+        btn.innerText = "All Channels Connected ✅";
+        
+        showFeedback("<strong>✅ Crucial Step Complete.</strong> You connected the AER's manifold hoses to every single port on the endoscope. The machine can now successfully pump chemicals through the long internal lumens.", "success");
+    }
+
+    function startCycle() {
+        if(!state.channelsConnected) {
+            showFeedback("<strong>❌ FATAL ERROR:</strong> You forgot to connect the channel hoses! The AER would wash the *outside* of the scope, but the inside of the tubes would remain completely contaminated. Connect the hoses first.", "error");
+            return;
+        }
+
+        const btn = document.getElementById('btn-start');
+        btn.classList.add('running');
+        btn.innerText = "Cycle Running...";
+        btn.disabled = true;
+        document.getElementById('btn-connect').disabled = true;
+        document.getElementById('aer-status').innerText = "Status: CYCLE IN PROGRESS";
+
+        showFeedback("<strong>🔄 Cycle Started...</strong> The AER is now flushing enzymatic detergent, circulating High-Level Disinfectant, performing a pure water rinse, and drying the channels with an alcohol flush.", "neutral");
+
+        setTimeout(() => {
+            btn.classList.remove('running');
+            btn.style.background = "var(--success)";
+            btn.innerText = "Cycle Complete ✅";
+            document.getElementById('aer-status').innerText = "Status: SAFE FOR USE";
+            
+            showFeedback("<strong>🎉 Workflow Complete!</strong> You safely guided the flexible endoscope through the entire mandatory sequence. By not skipping the manual steps, you ensured the AER could do its job perfectly. Patient safety is secured.", "success");
+        }, 5000);
+    }
+</script>
+
+</body>
+</html>

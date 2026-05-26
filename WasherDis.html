@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Washer-Disinfector Cycle Simulator</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg-light: #f8fafc;
+            --text-dark: #0f172a;
+            --border-color: #cbd5e1;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .header h2 { margin: 0 0 10px 0; color: #0f172a; font-size: 24px; }
+        .header p { margin: 0; color: #64748b; font-size: 15px; }
+
+        /* Simulator Layout stacked vertically for Pressbooks mobile stability */
+        .layout {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* Chamber Window View */
+        .chamber-view {
+            width: 100%;
+            height: 280px;
+            background: #1e293b;
+            border: 6px solid #475569;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+        }
+
+        /* Spray Arms */
+        .spray-arm {
+            width: 80%;
+            height: 12px;
+            background: #94a3b8;
+            border-radius: 4px;
+            position: absolute;
+            left: 10%;
+        }
+        .spray-arm.top { top: 20px; }
+        .spray-arm.bottom { bottom: 20px; }
+
+        /* Jets and Spray Animation */
+        .spray-mist {
+            position: absolute;
+            top: 32px;
+            bottom: 32px;
+            width: 80%;
+            left: 10%;
+            background: transparent;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .active-spray .spray-mist {
+            opacity: 1;
+            background: linear-gradient(to bottom, 
+                rgba(255,255,255,0.4) 0%, 
+                transparent 40%, 
+                transparent 60%, 
+                rgba(255,255,255,0.4) 100%);
+            background-size: 100% 20px;
+            animation: impinge 0.1s linear infinite;
+        }
+
+        @keyframes impinge {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 20px; }
+        }
+
+        /* Virtual Instrument Rig */
+        .instrument-rack {
+            width: 60%;
+            height: 80px;
+            border: 3px solid #64748b;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            font-size: 35px;
+            z-index: 5;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(2px);
+            position: relative;
+        }
+
+        /* Heating Glow effect for thermal phase */
+        .thermal-glow {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #ef4444;
+            opacity: 0;
+            mix-blend-mode: color-burn;
+            transition: opacity 1s ease;
+            pointer-events: none;
+        }
+
+        /* Technical Readouts Panel */
+        .readout-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 16px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .readout-box text-align: center; { }
+        .readout-box span { display: block; font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+        .readout-val { font-size: 20px; font-weight: bold; }
+
+        /* Controls Panel */
+        .controls-area {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .btn-start {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        .btn-start:hover { background: #0369a1; }
+        .btn-start:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        /* Timeline Tracker */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-top: 10px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 14px; left: 0; right: 0;
+            height: 4px; background: #e2e8f0;
+            z-index: 1;
+        }
+        .time-node {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #cbd5e1;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 14px;
+            z-index: 2; color: #64748b;
+            transition: all 0.3s ease;
+        }
+        .time-node.active { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 0 10px rgba(2, 132, 199, 0.5); }
+        .time-node.complete { border-color: var(--success); background: var(--success); color: white; }
+
+        /* EAL Pedagogical Information Deck */
+        .info-deck {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            background: #fdfdfd;
+            min-height: 110px;
+            box-sizing: border-box;
+        }
+        .deck-title {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .deck-body { font-size: 15px; line-height: 1.6; color: #475569; margin: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Automated Washer-Disinfector Simulator</h2>
+        <p>Observe the technical changes in temperature, chemistry, and pressure during a validated cycle.</p>
+    </div>
+
+    <div class="layout">
+        <!-- Mechanical Chamber View -->
+        <div class="chamber-view" id="chamber">
+            <div class="thermal-glow" id="glow"></div>
+            <div class="spray-arm top"></div>
+            <div class="spray-mist"></div>
+            
+            <div class="instrument-rack">
+                ✂️ 🗜️ 🩺
+            </div>
+            
+            <div class="spray-arm bottom"></div>
+        </div>
+
+        <!-- Real-Time Readouts -->
+        <div class="readout-grid">
+            <div class="readout-box" style="text-align: center;">
+                <span>Current Phase</span>
+                <div class="readout-val" id="val-phase">STANDBY</div>
+            </div>
+            <div class="readout-box" style="text-align: center;">
+                <span>Chamber Temp</span>
+                <div class="readout-val" id="val-temp">20°C</div>
+            </div>
+            <div class="readout-box" style="text-align: center;">
+                <span>Impingement Force</span>
+                <div class="readout-val" id="val-pressure">0 PSI</div>
+            </div>
+        </div>
+
+        <!-- Timeline & Interaction Panel -->
+        <div class="controls-area">
+            <button class="btn-start" id="btn-cycle" onclick="runSimulation()">Start Validated Reprocessing Cycle</button>
+            
+            <div class="timeline">
+                <div class="time-node" id="node-0">1</div>
+                <div class="time-node" id="node-1">2</div>
+                <div class="time-node" id="node-2">3</div>
+                <div class="time-node" id="node-3">4</div>
+                <div class="time-node" id="node-4">5</div>
+            </div>
+        </div>
+
+        <!-- Pedagogical Info Deck -->
+        <div class="info-deck" id="info-deck">
+            <h4 class="deck-title">ℹ️ System Awaiting Cycle Initiation</h4>
+            <p class="deck-body">Click the blue button above to launch the computerized multi-phase instrument validation sequence. Keep your eyes on the parameter changes across phases.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const phases = [
+        {
+            name: "1. PRE-RINSE",
+            temp: "22°C",
+            pressure: "25 PSI",
+            spray: true,
+            glow: 0,
+            title: "💧 Pre-Rinse Phase (Cold Utility Water)",
+            body: "<strong>Why cold water?</strong> Blood contains complex proteins. If you flush with hot water first, it will literally cook and coagulate the proteins, locking them permanently onto the surgical steel. Cold water safely dissolves and carries away gross soils."
+        },
+        {
+            name: "2. DETERGENT WASH",
+            temp: "60°C",
+            pressure: "45 PSI",
+            spray: true,
+            glow: 0.1,
+            title: "🧪 Chemical Detergent Wash Phase",
+            body: "The computer injects specialized enzymatic or high-pH alkaline cleaning chemistries. The combination of chemical properties, high heat, and intense mechanical **impingement** breaks down fats, tissues, and cellular bioburden on the devices."
+        },
+        {
+            name: "3. RINSE",
+            temp: "65°C",
+            pressure: "35 PSI",
+            spray: true,
+            glow: 0,
+            title: "🌊 Pure Rinsing Phase",
+            body: "The chamber drains and re-fills with purified water to completely eliminate any lingering chemical detergents or scale residue. This prevents chemical tracking or spotting from migrating to the sterile side of the assembly area."
+        },
+        {
+            name: "4. THERMAL DISINFECTION",
+            temp: "90°C",
+            pressure: "15 PSI",
+            spray: true,
+            glow: 0.6,
+            title: "🔥 Thermal Disinfection Validation Phase",
+            body: "<strong>Crucial Safety standard:</strong> Pressurized water is held at a high thermal range (minimum 90°C) to denature bacterial cell structures. This achieves reliable high-level sanitization without toxic residues, preparing devices for safe handling."
+        },
+        {
+            name: "5. HEPA DRY",
+            temp: "110°C",
+            pressure: "0 PSI",
+            spray: false,
+            glow: 0.2,
+            title: "💨 Forced Air HEPA Drying Phase",
+            body: "The mechanical sprays shut off as hot, sterile HEPA-filtered air runs completely through the loads. Extracting 100% of moisture is mandatory—residual water droplets can support bacterial regrowth or cause bioburden vectors before or during sterilization packs."
+        }
+    ];
+
+    function runSimulation() {
+        const btn = document.getElementById('btn-cycle');
+        btn.disabled = true;
+        btn.innerText = "Reprocessing Cycle Active...";
+        
+        let currentPhase = 0;
+        
+        function executeNextPhase() {
+            if (currentPhase >= phases.length) {
+                // Cycle complete
+                document.getElementById('val-phase').innerText = "CYCLE COMPLETE";
+                document.getElementById('val-temp').innerText = "Cooling";
+                document.getElementById('val-pressure').innerText = "0 PSI";
+                document.getElementById('chamber').className = "chamber-view";
+                document.getElementById('glow').style.opacity = "0";
+                
+                document.getElementById('node-4').className = "time-node complete";
+                
+                document.getElementById('info-deck').innerHTML = `
+                    <h4 class="deck-title" style="color:var(--success);">✅ Validation Sequence Successful</h4>
+                    <p class="deck-body">The load has completely cleared its validated cleaning parameters. It is now highly disinfected and structurally safe for technicians to transfer directly to the clean assembly side of the department.</p>
+                `;
+                btn.disabled = false;
+                btn.innerText = "Start Validated Reprocessing Cycle";
+                return;
+            }
+
+            const p = phases[currentPhase];
+            
+            // Update Digital Readouts
+            document.getElementById('val-phase').innerText = p.name;
+            document.getElementById('val-temp').innerText = p.temp;
+            document.getElementById('val-pressure').innerText = p.pressure;
+            
+            // Update Graphics
+            const chamber = document.getElementById('chamber');
+            if (p.spray) {
+                chamber.classList.add('active-spray');
+            } else {
+                chamber.classList.remove('active-spray');
+            }
+            document.getElementById('glow').style.opacity = p.glow;
+
+            // Update Timeline Nodes
+            for(let i=0; i<5; i++) {
+                const node = document.getElementById(`node-${i}`);
+                if (i < currentPhase) node.className = "time-node complete";
+                else if (i === currentPhase) node.className = "time-node active";
+                else node.className = "time-node";
+            }
+
+            // Update EAL Text Panel
+            document.getElementById('info-deck').innerHTML = `
+                <h4 class="deck-title">⚙️ ${p.title}</h4>
+                <p class="deck-body">${p.body}</p>
+            `;
+
+            currentPhase++;
+            setTimeout(executeNextPhase, 6000); // 6 seconds per phase showcase
+        }
+
+        executeNextPhase();
+    }
+</script>
+
+</body>
+</html>

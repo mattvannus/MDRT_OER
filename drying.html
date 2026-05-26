@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Quality & Drying Lab</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg-light: #f8fafc;
+            --text-dark: #0f172a;
+            --border-color: #cbd5e1;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 10px;
+            display: flex; justify-content: center;
+            background: transparent; color: var(--text-dark);
+        }
+
+        .lab-container {
+            max-width: 850px; width: 100%;
+            background: white; border-radius: 12px;
+            padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+
+        .lab-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;
+        }
+
+        .preview-panel {
+            background: #1e293b; border-radius: 10px; padding: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; min-height: 280px; color: white;
+            box-shadow: inset 0 2px 15px rgba(0,0,0,0.5);
+        }
+
+        .instrument-box {
+            font-size: 80px; position: relative; z-index: 5; transition: all 0.3s;
+        }
+
+        /* Stain Overlays */
+        .stain-overlay {
+            position: absolute; width: 60px; height: 60px; border-radius: 50%;
+            opacity: 0; transition: opacity 0.5s ease; pointer-events: none; z-index: 6;
+        }
+        .stain-overlay.scale-spot { background: rgba(255,255,255,0.7); border: 2px solid white; top: 40%; left: 45%; filter: blur(3px); }
+        .stain-overlay.rust-spot { background: rgba(194, 65, 12, 0.8); top: 50%; left: 50%; filter: blur(2px); }
+
+        /* Environmental Air/Water effects */
+        .chamber-effect {
+            position: absolute; top:0; left:0; right:0; bottom:0; opacity: 0; transition: all 0.4s; pointer-events: none;
+        }
+        .effect-rinse { background: rgba(56, 189, 248, 0.2); opacity: 1; }
+        .effect-dry { background: rgba(251, 146, 60, 0.15); opacity: 1; }
+
+        .config-panel { display: flex; flex-direction: column; gap: 15px; }
+        .option-group { display: flex; flex-direction: column; gap: 8px; }
+        .group-title { font-weight: bold; font-size: 14px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .selector-btn {
+            background: var(--bg-light); border: 2px solid var(--border-color);
+            border-radius: 6px; padding: 10px 15px; text-align: left;
+            font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .selector-btn:hover { border-color: var(--primary); background: #f0f9ff; }
+        .selector-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .feedback-deck {
+            margin-top: 20px; padding: 15px; border-radius: 8px;
+            background: #f1f5f9; border-left: 4px solid #64748b; font-size: 14px; line-height: 1.5;
+        }
+        .feedback-deck.success-state { border-left-color: var(--success); background: #f0fdf4; }
+        .feedback-deck.error-state { border-left-color: var(--error); background: #fef2f2; }
+
+        @media (max-width: 650px) { .lab-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="lab-container">
+    <div class="lab-grid">
+        <!-- Live Chamber Preview -->
+        <div class="preview-panel" id="chamber">
+            <div class="chamber-effect" id="effect-layer"></div>
+            <div class="stain-overlay scale-spot" id="spot-scale"></div>
+            <div class="stain-overlay rust-spot" id="spot-rust"></div>
+            <div class="instrument-box" id="tool-pic">✂️</div>
+            <div style="position:absolute; bottom:10px; font-family:monospace; font-size:12px; color:#94a3b8;" id="chamber-readout">CHAMBER STATE: IDLE</div>
+        </div>
+
+        <!-- Selection Configuration System -->
+        <div class="config-panel">
+            <div class="option-group">
+                <div class="group-title">Step 1: Final Rinse Water Quality</div>
+                <button class="selector-btn" id="water-tap" onclick="selectWater('tap')">🚰 Untreated Municipal Tap Water</button>
+                <button class="selector-btn" id="water-pure" onclick="selectWater('pure')">🔬 Critical RO / DI Treated Water</button>
+            </div>
+
+            <div class="option-group">
+                <div class="group-title">Step 2: Drying Methodology</div>
+                <button class="selector-btn" id="dry-paper" onclick="selectDry('paper')" disabled>🧻 Industrial Paper Towels</button>
+                <button class="selector-btn" id="dry-air" onclick="selectDry('air')" disabled>💨 HEPA-Filtered Forced Air Gun</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="feedback-deck" id="lab-feedback">
+        <strong>Reprocessing Lab Operational:</strong> Select your final rinse water quality configuration on the right side to observe the chemical and metallurgical reaction path targets.
+    </div>
+</div>
+
+<script>
+    let currentWater = null;
+    let currentDry = null;
+
+    function selectWater(type) {
+        currentWater = type;
+        currentDry = null;
+        
+        // Reset buttons
+        document.getElementById('water-tap').className = 'selector-btn';
+        document.getElementById('water-pure').className = 'selector-btn';
+        document.getElementById(`water-${type}`).classList.add('active');
+
+        // Reset drying choices
+        document.getElementById('dry-paper').className = 'selector-btn';
+        document.getElementById('dry-air').className = 'selector-btn';
+        document.getElementById('dry-paper').disabled = false;
+        document.getElementById('dry-air').disabled = false;
+
+        // Visual animation triggers
+        const layer = document.getElementById('effect-layer');
+        layer.className = "chamber-effect effect-rinse";
+        document.getElementById('chamber-readout').innerText = "CHAMBER STATE: INJECTING FINAL RINSE";
+        
+        document.getElementById('spot-scale').style.opacity = "0";
+        document.getElementById('spot-rust').style.opacity = "0";
+
+        if(type === 'tap') {
+            document.getElementById('lab-feedback').className = "feedback-deck error-state";
+            document.getElementById('lab-feedback').innerHTML = "<strong>⚠️ Warning: Municipal Tap Water Introduced.</strong> Tap water contains raw calcium and magnesium loads. Proceed to the drying stage to see how evaporation fixes these minerals to the surgical steel.";
+        } else {
+            document.getElementById('lab-feedback').className = "feedback-deck success-state";
+            document.getElementById('lab-feedback').innerHTML = "<strong>✅ Validation Passed: High Purity RO/DI Water.</strong> All ambient conductivity ions, mineral concentrations, and pathogens are stripped away. Proceed to configure your drying selection.";
+        }
+    }
+
+    function selectDry(type) {
+        currentDry = type;
+        document.getElementById('dry-paper').className = 'selector-btn';
+        document.getElementById('dry-air').className = 'selector-btn';
+        document.getElementById(`dry-${type}`).classList.add('active');
+
+        const layer = document.getElementById('effect-layer');
+        layer.className = "chamber-effect effect-dry";
+        document.getElementById('chamber-readout').innerText = "CHAMBER STATE: EXECUTING DRY LOOP";
+
+        setTimeout(() => {
+            layer.className = "chamber-effect"; // clear background effect
+            evaluateOutcome();
+        }, 1200);
+    }
+
+    function evaluateOutcome() {
+        const feedback = document.getElementById('lab-feedback');
+        const scale = document.getElementById('spot-scale');
+        const rust = document.getElementById('spot-rust');
+
+        if(currentWater === 'tap' && currentDry === 'paper') {
+            feedback.className = "feedback-deck error-state";
+            scale.style.opacity = "1";
+            rust.style.opacity = "1";
+            document.getElementById('chamber-readout').innerText = "CHAMBER STATE: LOAD COMPROMISED";
+            feedback.innerHTML = "<strong>❌ CRITICAL WORKFLOW FAILURE:</strong> Tap water evaporation left heavy chalky white mineral spots. Additionally, the paper towels left cellulose lint inside the pivot hinge and failed to dry internal spaces, causing rust. <strong>Tray rejected due to corrosion risk.</strong>";
+        }
+        else if(currentWater === 'tap' && currentDry === 'air') {
+            feedback.className = "feedback-deck error-state";
+            scale.style.opacity = "1";
+            rust.style.opacity = "0";
+            document.getElementById('chamber-readout').innerText = "CHAMBER STATE: MONITORING ALARM";
+            feedback.innerHTML = "<strong>⚠️ WARNING: Mineral Masking Present.</strong> While the high-pressure HEPA air gun completely cleared internal moisture (preventing rust), the raw tap water left behind white calcium tracks. These deposits can shield bacteria during autoclave cycles. <strong>Reject and re-clean loop required.</strong>";
+        }
+        else if(currentWater === 'pure' && currentDry === 'paper') {
+            feedback.className = "feedback-deck error-state";
+            scale.style.opacity = "0";
+            rust.style.opacity = "1";
+            document.getElementById('chamber-readout').innerText = "CHAMBER STATE: QA AUDIT REJECTION";
+            feedback.innerHTML = "<strong>❌ REJECTION: Cross-Contamination Risk.</strong> Even though pure water prevented mineral scaling, drying with manual paper towels deposited particulate lint fibers across the metal surface. Furthermore, paper towels cannot clear interior lumened spaces, leading to internal pooling rust.";
+        }
+        else if(currentWater === 'pure' && currentDry === 'air') {
+            feedback.className = "feedback-deck success-state";
+            scale.style.opacity = "0";
+            rust.style.opacity = "0";
+            document.getElementById('chamber-readout').innerText = "CHAMBER STATE: CYCLE VALIDATED";
+            feedback.innerHTML = "<strong>✅ SUCCESS: Validated Reprocessing Sequence.</strong> Processed RO/DI water eliminated mineral spotting, while the HEPA forced air gun blew out moisture vectors from all box-locks and internal cavities without shedding fibers. <strong>Instrument is sterile-ready and pristine.</strong>";
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultrasonic Cavitation Simulator</title>
+    <style>
+        :root {
+            --primary: #0ea5e9; /* Light Blue */
+            --primary-dark: #0284c7;
+            --success: #059669;
+            --error: #dc2626;
+            --bg-light: #f8fafc;
+            --text-dark: #1e293b;
+            --border-color: #cbd5e1;
+            --tank-bg: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            margin: 0 0 10px 0;
+            color: #0f172a;
+        }
+
+        .header p {
+            color: #64748b;
+            margin: 0;
+            font-size: 15px;
+        }
+
+        /* Simulator Layout */
+        .simulator-layout {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        /* Left Side: Tank */
+        .tank-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 350px;
+            background: var(--bg-light);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        /* The Ultrasonic Tank */
+        .tank {
+            width: 250px;
+            height: 180px;
+            background: #cbd5e1;
+            border: 4px solid #64748b;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* The Water */
+        .water {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 85%;
+            background: rgba(14, 165, 233, 0.4);
+            border-top: 2px solid rgba(14, 165, 233, 0.6);
+            transition: background 0.5s;
+        }
+
+        /* Bubbles */
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            bottom: -10px;
+            animation: rise linear infinite;
+        }
+
+        @keyframes rise {
+            to { transform: translateY(-200px); opacity: 0; }
+        }
+
+        /* Sound Waves Indicator */
+        .waves {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-radial-gradient(
+                circle at bottom,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.2) 12px,
+                rgba(255,255,255,0.2) 15px
+            );
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Aluminum Foil */
+        .foil-wrapper {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(0);
+            transition: transform 2s ease-in-out;
+            z-index: 10;
+        }
+
+        .foil {
+            width: 80px;
+            height: 120px;
+            background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 50%, #cbd5e1 100%);
+            border: 1px solid #94a3b8;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* Pinhole Effect on Foil (Cavitation) */
+        .foil.cavitated {
+            background-image: radial-gradient(circle at center, transparent 0, transparent 2px, #94a3b8 2px, #94a3b8 3px, transparent 3px);
+            background-size: 8px 8px;
+            background-color: #cbd5e1;
+        }
+
+        /* Right Side: Controls */
+        .control-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-power { background: #64748b; color: white; }
+        .btn-power.on { background: var(--success); }
+        
+        .btn-action { background: var(--primary); color: white; }
+        .btn-action:hover:not(:disabled) { background: var(--primary-dark); }
+        
+        .btn-test { background: #8b5cf6; color: white; }
+        .btn-test:hover:not(:disabled) { background: #7c3aed; }
+
+        .btn-reset { background: #f1f5f9; color: #475569; border: 1px solid var(--border-color); }
+        .btn-reset:hover:not(:disabled) { background: #e2e8f0; }
+
+        /* Feedback Screen */
+        .feedback {
+            background: white;
+            border: 2px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .feedback.error { border-color: var(--error); background: #fee2e2; color: #991b1b; }
+        .feedback.success { border-color: var(--success); background: #d1fae5; color: #065f46; }
+
+        @media (max-width: 768px) {
+            .simulator-layout { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Ultrasonic Degassing & Cavitation Simulator</h2>
+        <p>Learn why degassing the tank is critical before processing surgical instruments.</p>
+    </div>
+
+    <div class="simulator-layout">
+        <!-- Visual Tank Area -->
+        <div class="tank-area">
+            <!-- The Foil (Starts hovering above the tank) -->
+            <div class="foil-wrapper" id="foil-wrapper">
+                <div class="foil" id="foil"></div>
+            </div>
+
+            <div class="tank">
+                <div class="water" id="water">
+                    <div class="waves" id="waves"></div>
+                    <!-- Bubbles will be injected here via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Area -->
+        <div class="control-panel">
+            <button class="btn btn-power" id="btn-power" onclick="togglePower()">1. Turn Machine ON</button>
+            <button class="btn btn-action" id="btn-degas" onclick="runDegas()" disabled>2. Run Degassing Cycle</button>
+            <button class="btn btn-test" id="btn-test" onclick="runFoilTest()" disabled>3. Perform Foil Test</button>
+            <button class="btn btn-reset" id="btn-reset" onclick="resetSim()" disabled>Reset Simulator</button>
+        </div>
+    </div>
+
+    <div class="feedback" id="feedback">
+        <strong>Status:</strong> The machine is currently OFF. The fresh water is full of trapped air bubbles. Turn the machine on to begin.
+    </div>
+</div>
+
+<script>
+    // State variables
+    let isPoweredOn = false;
+    let isDegassed = false;
+    let isTesting = false;
+    let bubblesInterval;
+
+    const waterEl = document.getElementById('water');
+    const wavesEl = document.getElementById('waves');
+    const foilWrapper = document.getElementById('foil-wrapper');
+    const foil = document.getElementById('foil');
+    const feedback = document.getElementById('feedback');
+
+    // UI Buttons
+    const btnPower = document.getElementById('btn-power');
+    const btnDegas = document.getElementById('btn-degas');
+    const btnTest = document.getElementById('btn-test');
+    const btnReset = document.getElementById('btn-reset');
+
+    // Initialize: Create trapped air bubbles
+    function createBubbles(amount) {
+        for (let i = 0; i < amount; i++) {
+            createSingleBubble();
+        }
+    }
+
+    function createSingleBubble() {
+        const bubble = document.createElement('div');
+        bubble.classList.add('bubble');
+        
+        // Randomize size, position, and animation duration
+        const size = Math.random() * 8 + 2; // 2px to 10px
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        bubble.style.left = `${Math.random() * 95}%`;
+        bubble.style.animationDuration = `${Math.random() * 2 + 1}s`;
+        bubble.style.animationDelay = `${Math.random() * 2}s`;
+        
+        waterEl.appendChild(bubble);
+    }
+
+    // Start with 50 bubbles representing trapped air in fresh tap water
+    createBubbles(50);
+
+    function togglePower() {
+        if (isTesting) return;
+
+        isPoweredOn = !isPoweredOn;
+        if (isPoweredOn) {
+            btnPower.classList.add('on');
+            btnPower.innerText = "Machine is ON";
+            btnDegas.disabled = false;
+            btnTest.disabled = false;
+            btnReset.disabled = false;
+            updateFeedback("Machine is ON. You can now perform a foil test to check for cavitation, or run a degassing cycle first.", "");
+        } else {
+            btnPower.classList.remove('on');
+            btnPower.innerText = "1. Turn Machine ON";
+            btnDegas.disabled = true;
+            btnTest.disabled = true;
+            updateFeedback("Machine turned OFF.", "");
+            wavesEl.style.opacity = '0';
+        }
+    }
+
+    function runDegas() {
+        if (!isPoweredOn || isTesting || isDegassed) return;
+        
+        isTesting = true;
+        btnDegas.disabled = true;
+        btnTest.disabled = true;
+        
+        updateFeedback("Running Degassing Cycle... Driving trapped air out of the solution.", "");
+        wavesEl.style.opacity = '1';
+
+        // Simulate degassing process
+        let bubbles = document.querySelectorAll('.bubble');
+        let index = 0;
+        
+        // Remove bubbles one by one
+        let removeInterval = setInterval(() => {
+            if (index < bubbles.length) {
+                bubbles[index].remove();
+                index++;
+            } else {
+                clearInterval(removeInterval);
+                finishDegas();
+            }
+        }, 50); // Speed of bubble removal
+    }
+
+    function finishDegas() {
+        isDegassed = true;
+        isTesting = false;
+        wavesEl.style.opacity = '0';
+        btnTest.disabled = false;
+        btnDegas.innerText = "Degassing Complete ✅";
+        updateFeedback("Degassing Complete! The trapped air has been removed. The water is now ready for true cavitation.", "success");
+    }
+
+    function runFoilTest() {
+        if (!isPoweredOn || isTesting) return;
+        
+        isTesting = true;
+        btnPower.disabled = true;
+        btnDegas.disabled = true;
+        btnTest.disabled = true;
+        btnReset.disabled = true;
+
+        updateFeedback("Performing Aluminum Foil Test... Lowering foil into the tank.", "");
+        
+        // Turn on waves
+        wavesEl.style.opacity = '1';
+        
+        // Lower Foil
+        foilWrapper.style.transform = "translateX(-50%) translateY(160px)";
+
+        // Wait for it to sit in the tank, then evaluate
+        setTimeout(() => {
+            if (!isDegassed) {
+                // FAILED TEST
+                evaluateFoilTest(false);
+            } else {
+                // PASSED TEST
+                evaluateFoilTest(true);
+            }
+        }, 2500);
+    }
+
+    function evaluateFoilTest(didPass) {
+        wavesEl.style.opacity = '0';
+        
+        if (didPass) {
+            foil.classList.add('cavitated');
+        }
+
+        // Raise Foil
+        foilWrapper.style.transform = "translateX(-50%) translateY(0)";
+
+        setTimeout(() => {
+            isTesting = false;
+            btnReset.disabled = false;
+            btnPower.disabled = false;
+
+            if (didPass) {
+                updateFeedback("<strong>✅ TEST PASSED:</strong> Look at the foil! The pinholes prove that millions of microscopic implosions (cavitation) are occurring. The machine is safe to use on instruments.", "success");
+            } else {
+                updateFeedback("<strong>❌ TEST FAILED:</strong> The foil is completely smooth! Because you didn't degas the tank, the trapped air bubbles acted like pillows, cushioning the sound waves. No cleaning is happening!", "error");
+            }
+        }, 2000);
+    }
+
+    function resetSim() {
+        if (isTesting) return;
+        
+        isPoweredOn = false;
+        isDegassed = false;
+        
+        // Reset UI
+        btnPower.classList.remove('on');
+        btnPower.innerText = "1. Turn Machine ON";
+        btnDegas.disabled = true;
+        btnDegas.innerText = "2. Run Degassing Cycle";
+        btnTest.disabled = true;
+        btnReset.disabled = true;
+        
+        foil.classList.remove('cavitated');
+        foilWrapper.style.transform = "translateX(-50%) translateY(0)";
+        wavesEl.style.opacity = '0';
+        
+        // Clear old bubbles and add new ones
+        waterEl.innerHTML = '<div class="waves" id="waves"></div>';
+        createBubbles(50);
+        
+        updateFeedback("<strong>Status:</strong> Simulator Reset. Fresh tap water added with trapped air bubbles.", "");
+    }
+
+    function updateFeedback(msg, className) {
+        feedback.innerHTML = msg;
+        feedback.className = `feedback ${className}`;
+    }
+</script>
+
+</body>
+</html>

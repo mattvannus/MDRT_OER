@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AER Introduction Simulator</title>
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --panel-bg: #ffffff;
+            --text-main: #1e293b;
+            --accent-blue: #0284c7;
+            --accent-green: #10b981;
+            --border-color: #cbd5e1;
+            
+            /* Fluid colors */
+            --fluid-leak: #f59e0b;
+            --fluid-wash: #38bdf8;
+            --fluid-disinfect: #a855f7;
+            --fluid-rinse: #0ea5e9;
+            --fluid-air: #e2e8f0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .aer-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+        }
+
+        .aer-header {
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .aer-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .aer-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .aer-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .aer-layout {
+                grid-template-columns: 1.2fr 1fr;
+            }
+        }
+
+        /* Machine Graphic Representation */
+        .aer-visual-panel {
+            background: #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 320px;
+            position: relative;
+            border: 2px solid #94a3b8;
+        }
+
+        .aer-basin {
+            width: 85%;
+            height: 200px;
+            background: #cbd5e1;
+            border: 4px solid #64748b;
+            border-radius: 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.5s ease;
+            overflow: hidden;
+        }
+
+        /* Simulated Fluid Fill overlay */
+        .fluid-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background-color: transparent;
+            transition: height 0.8s ease, background-color 0.5s ease;
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        .scope-schematic {
+            width: 70%;
+            height: 120px;
+            border: 8px double #475569;
+            border-radius: 50%;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scope-schematic::after {
+            content: "INTERNAL LUMENS / CHANNELS";
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: #475569;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .lumen-flow-line {
+            position: absolute;
+            width: 100%;
+            height: 6px;
+            background: #94a3b8;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 3;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Control / Interface Panel */
+        .aer-control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .status-display {
+            background: #0f172a;
+            color: #38bdf8;
+            font-family: monospace;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .status-title {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .step-navigation {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step-btn {
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 6px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .step-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .step-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        .educational-feedback {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #166534;
+            min-height: 80px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="aer-container">
+    <div class="aer-header">
+        <h2>Automated Endoscope Reprocessor (AER)</h2>
+        <p>Introductory Cycle & Flow Architecture Overview</p>
+    </div>
+    
+    <div class="aer-layout">
+        <!-- Visualizer Area -->
+        <div class="aer-visual-panel">
+            <div class="aer-basin" id="machineBasin">
+                <div class="fluid-fill" id="fluidVisual"></div>
+                <div class="scope-schematic">
+                    <div class="lumen-flow-line" id="lumenVisual"></div>
+                </div>
+            </div>
+            <p style="margin-top: 10px; font-size: 0.8rem; color: #64748b; font-weight: bold;">
+                BASIN & INTERNAL CHANNEL SIMULATION CONTAINER
+            </p>
+        </div>
+
+        <!-- Controls and Narrative Area -->
+        <div class="aer-control-panel">
+            <div class="status-display">
+                <div class="status-title">Current Phase Status</div>
+                <div class="status-value" id="statusLabel">1. Ready / Load Scope</div>
+            </div>
+
+            <div class="educational-feedback" id="explanationText">
+                Welcome to the AER introduction module. Click the process phases below to understand how an automated reprocessor treats an endoscope.
+            </div>
+
+            <div class="step-navigation">
+                <button class="step-btn active" onclick="triggerPhase(1)">1. Leak Testing (Critical Prerequisite)</button>
+                <button class="step-btn" onclick="triggerPhase(2)">2. Washing & Detergent Cycle</button>
+                <button class="step-btn" onclick="triggerPhase(3)">3. High-Level Disinfection (HLD)</button>
+                <button class="step-btn" onclick="triggerPhase(4)">4. Rinsing Stage</button>
+                <button class="step-btn" onclick="triggerPhase(5)">5. Air Purge & Drying</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const phases = {
+        1: {
+            title: "Phase 1: Leak Testing",
+            text: "Before any fluids enter the basin, the AER pressurizes the scope's interior. If a drop in pressure is detected, the cycle aborts immediately to protect the fiberoptics and internal electronics from catastrophic fluid invasion.",
+            basinFill: "0%",
+            basinColor: "transparent",
+            lumenColor: "#f59e0b" // Warning amber for air pressure check
+        },
+        2: {
+            title: "Phase 2: Detergent Wash",
+            text: "The basin fills with water mixed automatically with enzymatic or chemical detergent. The machine pumps this solution through the internal hookup manifolds directly into the internal channels while spray arms wash the exterior.",
+            basinFill: "45%",
+            basinColor: "#38bdf8",
+            lumenColor: "#0284c7"
+        },
+        3: {
+            title: "Phase 3: High-Level Disinfection",
+            text: "The critical phase. The machine introduces a validated chemical solution (e.g., glutaraldehyde or peracetic acid) at an exact temperature. The liquid fills the basin and is continually recirculated through the scope channels for a strictly monitored exposure time.",
+            basinFill: "75%",
+            basinColor: "#c084fc",
+            lumenColor: "#a855f7"
+        },
+        4: {
+            title: "Phase 4: Fresh Water Rinse",
+            text: "Following disinfection, toxic chemical residues must be completely removed. The machine drains the disinfectant and floods the basin with high-purity (often bacteria-filtered) rinse water to purge all internal and external surfaces.",
+            basinFill: "60%",
+            basinColor: "#7dd3fc",
+            lumenColor: "#0ea5e9"
+        },
+        5: {
+            title: "Phase 5: Air & Alcohol Purge",
+            text: "To prepare for safe removal or storage, the AER forces HEPA-filtered air through the channels to blow out remaining moisture. Many systems utilize a final 70% isopropyl alcohol flush to accelerate evaporation within the narrow lumens.",
+            basinFill: "0%",
+            basinColor: "transparent",
+            lumenColor: "#cbd5e1"
+        }
+    };
+
+    function triggerPhase(phaseId) {
+        // Update Active Button Classes
+        const buttons = document.querySelectorAll('.step-btn');
+        buttons.forEach((btn, index) => {
+            if (index === (phaseId - 1)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const current = phases[phaseId];
+        
+        // Update Text Elements
+        document.getElementById('statusLabel').innerText = current.title;
+        document.getElementById('explanationText').innerText = current.text;
+
+        // Animate Fluid Changes
+        const fluidFill = document.getElementById('fluidVisual');
+        fluidFill.style.height = current.basinFill;
+        fluidFill.style.backgroundColor = current.basinColor;
+
+        // Animate Internal Channel/Lumen Indicators
+        const lumen = document.getElementById('lumenVisual');
+        lumen.style.backgroundColor = current.lumenColor;
+    }
+</script>
+
+</body>
+</html>
