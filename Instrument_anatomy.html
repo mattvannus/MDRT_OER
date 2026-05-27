@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    /* Scope strictly to insulate Pressbooks template components */
+    .mdrt-anatomy-scope {
+        --navy-dark: #002B49;
+        --blue-bright: #005A9C;
+        --blue-pale: #E3F2FD;
+        --border-slate: #CFD8DC;
+        --text-slate: #37474F;
+        --alert-orange: #EF6C00;
+        
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        max-width: 850px;
+        margin: 20px auto;
+        border: 2px solid var(--border-slate);
+        border-radius: 12px;
+        background: #FFFFFF;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        color: var(--text-slate);
+        overflow: hidden;
+    }
+
+    .anatomy-header {
+        background: var(--navy-dark);
+        color: #FFFFFF;
+        padding: 20px;
+        margin: 0;
+    }
+
+    .anatomy-header h3 {
+        margin: 0 0 5px 0;
+        font-size: 1.35rem;
+        color: #FFFFFF;
+    }
+
+    .anatomy-header p {
+        margin: 0;
+        font-size: 0.95rem;
+        opacity: 0.85;
+    }
+
+    /* Core Workbench Interactive Split Grid */
+    .anatomy-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    @media (min-width: 650px) {
+        .anatomy-grid {
+            grid-template-columns: 340px 1fr;
+        }
+    }
+
+    /* Vector Layout Visual Window Bench */
+    .vector-bench {
+        background: #ECEFF1;
+        border: 2px solid var(--border-slate);
+        border-radius: 8px;
+        height: 340px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .instrument-vector {
+        width: 140px;
+        height: auto;
+    }
+
+    /* Hotspot Pin Placement Overlay Mechanics */
+    .anatomy-pin {
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        background: var(--alert-orange);
+        border: 2px solid #FFFFFF;
+        color: #FFFFFF;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+        cursor: pointer;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+        transition: all 0.2s ease;
+    }
+
+    .anatomy-pin:hover {
+        background: var(--blue-bright);
+        transform: scale(1.15);
+        z-index: 10;
+    }
+
+    .anatomy-pin.selected-pin {
+        background: #2E7D32;
+        box-shadow: 0 0 0 4px rgba(46,125,50,0.3);
+    }
+
+    /* Technical Feedback Readout Panel */
+    .readout-panel {
+        background: var(--blue-pale);
+        border-left: 6px solid var(--blue-bright);
+        border-radius: 0 8px 8px 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 200px;
+    }
+
+    .readout-panel h4 {
+        margin: 0 0 10px 0;
+        color: var(--navy-dark);
+        font-size: 1.2rem;
+    }
+
+    .readout-panel p {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #0D47A1;
+    }
+
+    .scaffold-label {
+        display: inline-block;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        background: var(--blue-bright);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin-top: 12px;
+    }
+</style>
+</head>
+<body>
+
+<div class="mdrt-anatomy-scope">
+    <div class="anatomy-header">
+        <h3>Instrument Anatomic Explorer (Section 24.6 Component)</h3>
+        <p>Interactive Structural Parts Mapping and Quality Inspection Checklist</p>
+    </div>
+
+    <div class="anatomy-grid">
+        <div class="vector-bench">
+            <svg class="instrument-vector" viewBox="0 0 100 200" fill="none" stroke="#78909C" stroke-width="3" stroke-linecap="round">
+                <path d="M45,20 L50,60 M55,20 L50,60" stroke="#90A4AE" stroke-width="5" />
+                <circle cx="50" cy="60" r="5" fill="#546E7A" stroke="#37474F" stroke-width="2"/>
+                <path d="M47,64 L40,140 M53,64 L60,140" />
+                <path d="M42,130 L48,130 M58,130 L52,130" stroke-width="2" stroke="#455A64" />
+                <circle cx="36" cy="155" r="12" fill="none" stroke-width="4" />
+                <circle cx="64" cy="155" r="12" fill="none" stroke-width="4" />
+            </svg>
+
+            <button class="anatomy-pin selected-pin" style="top: 15%; left: 48%;" onclick="loadAnatomySpecs(this, 'tips')">1</button>
+            <button class="anatomy-pin" style="top: 30%; left: 48%;" onclick="loadAnatomySpecs(this, 'lock')">2</button>
+            <button class="anatomy-pin" style="top: 48%; left: 32%;" onclick="loadAnatomySpecs(this, 'shank')">3</button>
+            <button class="anatomy-pin" style="top: 62%; left: 52%;" onclick="loadAnatomySpecs(this, 'ratchet')">4</button>
+            <button class="anatomy-pin" style="top: 76%; left: 24%;" onclick="loadAnatomySpecs(this, 'rings')">5</button>
+        </div>
+
+        <div class="readout-panel">
+            <h4 id="anatomy-title">1. Tips and Jaws</h4>
+            <p id="anatomy-desc">The functional workspace of the instrument that interacts directly with patient tissue or surgical needles. Jaws frequently feature grooved parallel tracks called <strong>serrations</strong> to prevent slipping.</p>
+            <div><span id="anatomy-action" class="scaffold-label">MDRT Action: Check serrations for trapped blood or bone dust</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Local data dictionary isolating anatomical parts metadata records
+    const anatomyDatabase = {
+        tips: {
+            title: "1. Tips and Jaws",
+            desc: "The functional workspace of the instrument that interacts directly with patient tissue or surgical needles. Jaws frequently feature grooved parallel tracks called <strong>serrations</strong> to improve grip and prevent slipping.",
+            action: "MDRT Action: Check serrations for trapped blood or bone dust"
+        },
+        lock: {
+            title: "2. The Box Lock Joint",
+            desc: "The central hinge point where the two matching halves of the instrument are securely pinned together. This critical junction bears intense physical stress during closing actions.",
+            action: "MDRT Action: Inspect hinges for hidden cracks, stiffness, or residual bioburden"
+        },
+        shank: {
+            title: "3. The Instrument Shank",
+            desc: "The structural arms or shafts extending from the central box lock down to the finger rings. Shanks establish the mechanical leverage required to translate hand pressure into tip closure power.",
+            action: "MDRT Action: Check shanks for alignment bending or surface rust stains"
+        },
+        ratchet: {
+            title: "4. The Locking Ratchet",
+            desc: "The interlocking, stepped metal ridges positioned right above the finger loop assemblies. Ratchets allow the surgeon to lock the clamp jaw tips closed over tissue without holding onto the handles.",
+            action: "MDRT Action: Confirm teeth hold tightly and do not spring open when tapped"
+        },
+        rings: {
+            title: "5. Finger Rings",
+            desc: "The circular loop components at the base designed to house the operator's fingers, permitting fine manual steering of the tool jaws.",
+            action: "MDRT Action: Feel ring welds to catch sharp metal snags or cracks"
+        }
+    };
+
+    function loadAnatomySpecs(clickedButton, dictionaryKey) {
+        // Clear previous selection markers across buttons array
+        const elementsArray = document.querySelectorAll('.anatomy-pin');
+        elementsArray.forEach(el => el.classList.remove('selected-pin'));
+        
+        // Highlight active clicked layout target
+        clickedButton.classList.add('selected-pin');
+
+        // Inject content fields dynamically into UI nodes
+        const activeRecord = anatomyDatabase[dictionaryKey];
+        document.getElementById("anatomy-title").innerHTML = activeRecord.title;
+        document.getElementById("anatomy-desc").innerHTML = activeRecord.desc;
+        document.getElementById("anatomy-action").innerHTML = activeRecord.action;
+    }
+</script>
+
+</body>
+</html>

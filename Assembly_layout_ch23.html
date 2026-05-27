@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    /* Scope component styles to protect Pressbooks global style sheets */
+    .mdrt-layout-explorer {
+        --clean-blue: #005A9C;
+        --dark-navy: #002B49;
+        --border-gray: #CFD8DC;
+        --light-bg: #F4F6F8;
+        --text-color: #263238;
+        --pass-green: #2E7D32;
+        --deco-orange: #EF6C00;
+
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        max-width: 850px;
+        margin: 30px auto;
+        border: 2px solid var(--border-gray);
+        border-radius: 12px;
+        background: #FFFFFF;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+        color: var(--text-color);
+        overflow: hidden;
+    }
+
+    .explorer-header {
+        background: var(--dark-navy);
+        color: #FFFFFF;
+        padding: 20px;
+        margin: 0;
+    }
+
+    .explorer-header h3 {
+        margin: 0 0 4px 0;
+        font-size: 1.4rem;
+        color: #FFFFFF;
+    }
+
+    .explorer-header p {
+        margin: 0;
+        font-size: 0.95rem;
+        opacity: 0.9;
+    }
+
+    .explorer-instruction {
+        background: #E3F2FD;
+        padding: 12px 20px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        color: var(--clean-blue);
+        border-bottom: 1px solid var(--border-gray);
+        margin: 0;
+    }
+
+    /* Core Dynamic Map Screen */
+    .map-canvas {
+        background: #ECEFF1;
+        padding: 20px;
+        position: relative;
+    }
+
+    /* Grid layout representing rooms */
+    .blueprint-grid {
+        display: grid;
+        grid-template-columns: 180px 16px 1fr;
+        gap: 10px;
+        background: #FFFFFF;
+        border: 3px solid #78909C;
+        border-radius: 8px;
+        padding: 15px;
+        height: 280px;
+        box-shadow: inset 0 0 15px rgba(0,0,0,0.05);
+    }
+
+    /* Architectural Room Blocks */
+    .room-pane {
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 12px;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .room-title-tag {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .room-pressure-status {
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: rgba(255,255,255,0.7);
+        padding: 2px 6px;
+        border-radius: 4px;
+        align-self: flex-start;
+    }
+
+    /* Room Specific Colors and Interactions */
+    .decon-side {
+        background-color: #FFE0B2;
+        border: 2px dashed var(--deco-orange);
+        color: #E65100;
+    }
+
+    .pass-barrier {
+        background-color: #ECEFF1;
+        border: 2px solid #90A4AE;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.75rem;
+        text-align: center;
+        color: #455A64;
+        border-radius: 4px;
+    }
+
+    .assembly-side {
+        background-color: #E3F2FD;
+        border: 2px solid var(--clean-blue);
+        color: var(--dark-navy);
+        cursor: pointer;
+    }
+
+    .assembly-side:hover {
+        background-color: #BBDEFB;
+        box-shadow: 0 0 12px rgba(0,90,156,0.2);
+    }
+
+    .assembly-side.selected-pane {
+        border-color: #1A237E;
+        box-shadow: 0 0 0 3px rgba(0,90,156,0.3);
+    }
+
+    /* Sub-zone Interactive Micro-nodes within Assembly Room */
+    .internal-nodes-layout {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 15px;
+        height: 100%;
+    }
+
+    .work-node {
+        background: #FFFFFF;
+        border: 2px solid #90A4AE;
+        border-radius: 4px;
+        padding: 8px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: #37474F;
+    }
+
+    .work-node:hover {
+        border-color: var(--clean-blue);
+        background: var(--mdrt-blue-light);
+        transform: translateY(-2px);
+    }
+
+    .work-node.active-node {
+        border-color: var(--pass-green);
+        background: #E8F5E9;
+        color: #1B5E20;
+        box-shadow: 0 2px 6px rgba(46,125,50,0.2);
+    }
+
+    .node-icon-svg {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 4px;
+    }
+
+    /* Flow direction vectors layer */
+    .airflow-indicator {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        top: 50%;
+        left: -12px;
+        transform: translateY(-50%);
+        background: var(--clean-blue);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        animation: floatArrow 2s infinite ease-in-out;
+        z-index: 10;
+    }
+
+    @keyframes floatArrow {
+        0%, 100% { transform: translateY(-50%) translateX(0); }
+        50% { transform: translateY(-50%) translateX(4px); }
+    }
+
+    /* Description Output Information Desk */
+    .info-desk-panel {
+        background: #F8F9FA;
+        border-top: 2px solid var(--border-gray);
+        padding: 20px;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .info-desk-panel h4 {
+        margin: 0 0 8px 0;
+        color: var(--dark-navy);
+        font-size: 1.15rem;
+    }
+
+    .info-desk-panel p {
+        margin: 0;
+        font-size: 0.98rem;
+        line-height: 1.5;
+    }
+</style>
+</head>
+<body class="mdrt-animator-scope">
+
+<div class="mdrt-layout-explorer">
+    <div class="explorer-header">
+        <h3>Assembly Area Architectural & Flow Explorer</h3>
+        <p>Interactive Clean Zone Engineering & Workstation Overview</p>
+    </div>
+    
+    <div class="explorer-instruction">
+        🗺️ Click on any white workstation box within the clean room to map the physical area layout rules.
+    </div>
+
+    <div class="map-canvas">
+        <div class="blueprint-grid">
+            <div class="room-pane decon-side">
+                <p class="room-title-tag">Decontamination Area</p>
+                <span class="room-pressure-status">Negative Pressure</span>
+            </div>
+
+            <div class="pass-barrier">
+                P<br/>A<br/>S<br/>S
+            </div>
+
+            <div class="room-pane assembly-side selected-pane" onclick="focusMainRoom()">
+                <div class="airflow-indicator" title="Airflow pushes out from Clean side to Dirty side">▶</div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <p class="room-title-tag" style="color: var(--dark-navy);">Assembly &amp; Packaging Room (Clean Zone)</p>
+                    <span class="room-pressure-status" style="background: var(--clean-blue); color: white;">Positive Pressure Airflow</span>
+                </div>
+
+                <div class="internal-nodes-layout">
+                    <div class="work-node active-node" id="node-sorting" onclick="revealZoneDetails(event, 'sorting')">
+                        <svg class="node-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                        Sorting Station
+                    </div>
+                    <div class="work-node" id="node-inspection" onclick="revealZoneDetails(event, 'inspection')">
+                        <svg class="node-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        Inspection Desk
+                    </div>
+                    <div class="work-node" id="node-wrapping" onclick="revealZoneDetails(event, 'wrapping')">
+                        <svg class="node-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                        Packaging Racks
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-desk-panel">
+        <h4 id="desk-title">Clean Zone Overview (Positive Pressure Environment)</h4>
+        <p id="desk-text">The entire room uses <strong>positive air pressure</strong>. This configuration guarantees that clean air constantly pushes out toward adjacent corridors and pass-through tracks, physically blocking airborne contaminants from migrating into the room where tools are exposed.</p>
+    </div>
+</div>
+
+<script>
+    // Scaffolding content database mapping architectural parameters for EAL focus items
+    const zoneMetadata = {
+        main: {
+            title: "Clean Zone Environmental Matrix (CSA Z314 Compliance)",
+            text: "The entire room operates under <strong>positive air pressure</strong>. This means when a pass-through window or access door opens, clean air blasts <em>outward</em>. This mechanical pressure barrier forms a security wall that blocks airborne dirt, micro-droplets, and skin flakes from crossing over from the decontamination area."
+        },
+        sorting: {
+            title: "1. Sorting Station (The Input Interface)",
+            text: "Located directly adjacent to the wash pass-through tracks. MDRTs unload clean, disinfected tools here using sanitized hands. The visual task focus on this table is to <strong>separate tool families</strong>, filter heavy basins from delicate micro-devices, and link barcodes into the Instrument Tracking System (ITS)."
+        },
+        inspection: {
+            title: "2. Inspection & Function Testing Desks",
+            text: "The core technical workspace. Every desk features high-output, shadow-free task lighting, 5x lighted magnification frames, insulation testers, and digital lumen borescopes. Technicians execute meticulous checks here, looking for microscopic biological defects, active micro-rust pits, and hinge stiffness."
+        },
+        wrapping: {
+            title: "3. Packaging and Wrap Storage Racks",
+            text: "The final clean station before serialization carts. This layout zone holds clean stock wrap materials (SMS sheets), heat-seal pouch systems, internal chemical indicator sets, and labeling barcode drawers. Trays are tightly wrapped or locked inside filtered rigid barrier containers here."
+        }
+    };
+
+    function revealZoneDetails(event, zoneKey) {
+        // Halt event cascading out to parental containers
+        event.stopPropagation();
+        
+        // Remove all previous active node highlight borders
+        const nodes = document.querySelectorAll('.work-node');
+        nodes.forEach(n => n.classList.remove('active-node'));
+        
+        // Apply target layout properties
+        document.getElementById('node-' + zoneKey).classList.add('active-node');
+        document.querySelector('.assembly-side').classList.add('selected-pane');
+
+        // Render variables to information window
+        const data = zoneMetadata[zoneKey];
+        document.getElementById('desk-title').innerHTML = data.title;
+        document.getElementById('desk-text').innerHTML = data.text;
+    }
+
+    function focusMainRoom() {
+        // Clear sub-node selection highlights
+        const nodes = document.querySelectorAll('.work-node');
+        nodes.forEach(n => n.classList.remove('active-node'));
+        
+        document.querySelector('.assembly-side').classList.add('selected-pane');
+
+        const data = zoneMetadata['main'];
+        document.getElementById('desk-title').innerHTML = data.title;
+        document.getElementById('desk-text').innerHTML = data.text;
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Specialty Case Preference Card Decoder</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-red: #C62828;
+        --status-amber: #EF6C00;
+        --bg-light: #F8F9FA;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 10px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .decoder-app-wrapper {
+        max-width: 100%;
+        margin: 0 auto;
+        border: 2px solid var(--mdrt-border);
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        overflow: hidden;
+        background: #FFFFFF;
+    }
+
+    /* Software Interface Top Banner */
+    .app-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 4px solid var(--mdrt-blue);
+    }
+
+    .app-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .live-clock-badge {
+        background: var(--mdrt-blue);
+        font-size: 0.8rem;
+        font-weight: bold;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-family: monospace;
+    }
+
+    /* Main Split Layout Grid */
+    .app-layout-body {
+        display: grid;
+        grid-template-columns: 1fr;
+        background: #ECEFF1;
+    }
+
+    @media (min-width: 768px) {
+        .app-layout-body {
+            grid-template-columns: 360px 1fr;
+        }
+    }
+
+    /* Left Panel: Active OR Schedule & Preference Card Case */
+    .schedule-panel {
+        background: #FFFFFF;
+        padding: 20px;
+        border-right: 1px solid var(--mdrt-border);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .section-header-tag {
+        margin: 0 0 5px 0;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: var(--mdrt-slate);
+        letter-spacing: 0.75px;
+        font-weight: 800;
+        border-bottom: 2px solid var(--mdrt-border);
+        padding-bottom: 4px;
+    }
+
+    .or-case-ticket {
+        background: var(--mdrt-sky);
+        border-left: 5px solid var(--mdrt-blue);
+        border-radius: 4px;
+        padding: 12px 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    .ticket-title {
+        font-size: 1.05rem;
+        font-weight: bold;
+        color: var(--mdrt-navy);
+        margin: 0 0 6px 0;
+    }
+
+    .ticket-meta-line {
+        font-size: 0.88rem;
+        margin: 4px 0;
+        color: #37474F;
+    }
+
+    /* Right Panel: Interactive Decoupling Station Workspace */
+    .decoding-workbench {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .scaffolding-instruction-box {
+        background: #FFFFFF;
+        border: 1px solid var(--mdrt-border);
+        border-radius: 6px;
+        padding: 12px 15px;
+        font-size: 0.92rem;
+        line-height: 1.4;
+    }
+
+    /* Matrix Options Verification Column */
+    .parameters-checklist-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .checklist-row-card {
+        background: #FFFFFF;
+        border: 2px solid var(--mdrt-border);
+        border-radius: 6px;
+        padding: 15px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.2s ease;
+    }
+
+    .checklist-row-card:hover {
+        border-color: var(--mdrt-blue);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+    }
+
+    .checklist-row-card.validated-correct {
+        border-color: var(--status-green);
+        background-color: #E8F5E9;
+    }
+
+    .checklist-row-card.validated-incorrect {
+        border-color: var(--status-red);
+        background-color: #FFEBEE;
+    }
+
+    .parameter-text-content h4 {
+        margin: 0 0 4px 0;
+        font-size: 0.95rem;
+        color: var(--mdrt-charcoal);
+    }
+
+    .parameter-text-content p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #546E7A;
+        line-height: 1.3;
+    }
+
+    .eal-helper-badge {
+        font-size: 0.7rem;
+        background: var(--mdrt-slate);
+        color: #FFFFFF;
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-left: 5px;
+    }
+
+    .selector-dropdown-menu {
+        padding: 8px 12px;
+        font-size: 0.88rem;
+        font-weight: bold;
+        border: 2px solid #90A4AE;
+        border-radius: 4px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        cursor: pointer;
+        min-width: 160px;
+    }
+
+    .selector-dropdown-menu:focus {
+        outline: none;
+        border-color: var(--mdrt-blue);
+    }
+
+    /* Real-time Dynamic Validation Feedback Logger Terminal */
+    .sim-terminal-output {
+        background: #212121;
+        color: #69F0AE;
+        border-radius: 6px;
+        padding: 12px 15px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        min-height: 60px;
+        line-height: 1.4;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.25);
+    }
+
+    .terminal-error-alert { color: #FF5252; }
+    .terminal-success-alert { color: #69F0AE; }
+
+    /* Footer Operations Controls Container */
+    .app-footer-controls {
+        background: #ECEFF1;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--mdrt-border);
+    }
+
+    .footer-btn {
+        padding: 10px 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        text-transform: uppercase;
+    }
+
+    .btn-submit-case {
+        background: var(--status-green);
+        color: white;
+    }
+
+    .btn-submit-case:hover:not(:disabled) { background: #1B5E20; }
+    .btn-submit-case:disabled {
+        background: #B0BEC5;
+        color: #78909C;
+        cursor: not-allowed;
+    }
+
+    /* Completion Overlay View Screen */
+    .app-completion-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,43,73,0.96);
+        color: #FFFFFF;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        text-align: center;
+        z-index: 100;
+        display: none;
+    }
+
+    .completion-title {
+        font-size: 1.8rem;
+        color: #69F0AE;
+        margin: 0 0 10px 0;
+    }
+
+    .completion-text {
+        max-width: 550px;
+        line-height: 1.5;
+        font-size: 1.05rem;
+        margin-bottom: 20px;
+    }
+
+    .btn-cycle-restart {
+        background: #FFFFFF;
+        color: var(--mdrt-navy);
+        padding: 12px 24px;
+        border: none;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        text-transform: uppercase;
+    }
+</style>
+</head>
+<body>
+
+<div class="decoder-app-wrapper">
+    <!-- Header Block Simulation -->
+    <header class="app-header">
+        <h2>Preference Card Decoder Network</h2>
+        <span class="live-clock-badge" id="case-cycle-counter">Case Index: 1 / 3</span>
+    </header>
+
+    <div class="app-layout-body">
+        <!-- Left Side: Preference Card Information Context Sheet -->
+        <section class="schedule-panel">
+            <h3 class="section-header-tag">Preference Card Parameters</h3>
+            <div class="or-case-ticket" id="case-ticket-box">
+                <!-- Data rendered dynamically via Javascript engine -->
+            </div>
+        </section>
+
+        <!-- Right Side: Reprocessing Decision Workspace Matrix -->
+        <section class="decoding-workbench">
+            <h3 class="section-header-tag">MDR Reprocessing Control Decisions</h3>
+            
+            <div class="scaffolding-instruction-box">
+                📋 <strong>Support:</strong> Read the Preference Card parameters on the left side carefully. Adjust all three dropdown selectors below to achieve strict alignment with regional decontamination protocols, validation parameters, and safety controls.
+            </div>
+
+            <!-- Validation Metrics Checklist Group Area -->
+            <div class="parameters-checklist-group">
+                <!-- Dropdown Rows Rendered Dynamically -->
+                <div class="checklist-row-card" id="row-logistics">
+                    <div class="parameter-text-content">
+                        <h4>Logistics &amp; Scheduling Control <span class="eal-helper-badge" id="label-vocab-1" title="Logistics deals with the timing, tracking, and movement of equipment packages.">Vocab Helper</span></h4>
+                        <p id="label-desc-1">Define processing priority rules based on item arrival states or assembly room workflow constraints.</p>
+                    </div>
+                    <div>
+                        <select class="selector-dropdown-menu" id="select-logistics" onchange="evaluateActiveRowSelection('logistics')">
+                            <!-- Options Injected Dyamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="checklist-row-card" id="row-method">
+                    <div class="parameter-text-content">
+                        <h4>Sterilization Processing Compatibility <span class="eal-helper-badge" id="label-vocab-2" title="Compatibility checks determine if a chemical or structural process will dissolve or break down the tool materials.">Vocab Helper</span></h4>
+                        <p id="label-desc-2">Determine the validated serialization pipeline option matching device metallurgical parameters.</p>
+                    </div>
+                    <div>
+                        <select class="selector-dropdown-menu" id="select-method" onchange="evaluateActiveRowSelection('method')">
+                            <!-- Options Injected Dyamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="checklist-row-card" id="row-qa">
+                    <div class="parameter-text-content">
+                        <h4>Quality Assurance Monitor Safeguard <span class="eal-helper-badge" id="label-vocab-3" title="Safeguards are structured checks used to protect patients from invisible contamination risks.">Vocab Helper</span></h4>
+                        <p id="label-desc-3">Select the correct tracking safeguard needed to verify effective sterilant contact and density bounds.</p>
+                    </div>
+                    <div>
+                        <select class="selector-dropdown-menu" id="select-qa" onchange="evaluateActiveRowSelection('qa')">
+                            <!-- Options Injected Dyamically -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Text Console Logging Window -->
+            <div class="sim-terminal-output" id="terminal-logger">
+                [SYSTEM READY] Initialize decision selectors to update QA validation data streams...
+            </div>
+        </section>
+    </div>
+
+    <!-- Application Footer Control Ribbon Bar -->
+    <footer class="app-footer-controls">
+        <span style="font-size: 0.88rem; color: var(--mdrt-slate); font-weight: bold;" id="app-score-tracker">Score Status: 0 / 3 Correct Controls Selected</span>
+        <button class="footer-btn btn-submit-case" id="submit-case-trigger" onclick="commitCaseVerification()" disabled>Validate &amp; Process Work Order</button>
+    </footer>
+
+    <!-- Completion Screen Overlay Container -->
+    <div class="app-completion-overlay" id="completion-overlay-screen">
+        <h3 class="completion-title">✔ Patient Advocate Audit Cycle Complete</h3>
+        <p class="completion-text" id="completion-text-target"></p>
+        <button class="btn-cycle-restart" onclick="resetSimulatorToBaseline()">Reprocess Next Shift Manifest</button>
+    </div>
+</div>
+
+<script>
+    // System database mapping technical definitions, case files, and vocabulary scaffold definitions to match Chapter 25 parameters
+    const casesDatabase = [
+        {
+            title: "Emergency Orthopedic Tray",
+            metaService: "Orthopedic &amp; Trauma Service",
+            metaSpecs: "Third-Party Vendor Loaner Tray Set (400 items total)",
+            metaAttributes: "Tray configuration features complex joint plates and thousands of bone-holding locking screws.",
+            vocabScaffolding: {
+                v1: "Logistics: Tracking and checking delivery times for outside equipment sets.",
+                v2: "Compatibility: Matching correct heat boundaries to high-density 400-series steel tools.",
+                v3: "Safeguard: Verifying every screw slot profile is clear of lipids or residual bone marrow."
+            },
+            dropdowns: {
+                logistics: {
+                    prompt: "-- Select Logistics Entry Rules --",
+                    correct: "VERIFY_48H",
+                    options: [
+                        { val: "PROCESS_IMMEDIATE", text: "Bypass delivery queues; push directly to clean room tables" },
+                        { val: "VERIFY_48H", text: "Verify 48-hour delivery log; cross-check vendor IFU manuals" },
+                        { val: "REJECT_MANIFEST", text: "Refuse inventory logs; return tracking records to vendor" }
+                    ],
+                    errorText: "[QA ALERT] Priority processing bypassed verification lines. External loaner sets must be logged and cross-checked against explicit vendor IFU specs ahead of scheduled surgeries to ensure appropriate processing margins.",
+                    successText: "[VERIFIED] Logistics validated. External tray successfully registered. Current vendor IFU loaded onto workstation computer."
+                },
+                method: {
+                    prompt: "-- Select Sterilization Cycle --",
+                    correct: "STEAM_PREVAC",
+                    options: [
+                        { val: "STEAM_PREVAC", text: "High-Temperature Pre-Vacuum Steam Autoclave Cycle" },
+                        { val: "GAS_PLASMA", text: "Low-Temperature Hydrogen Peroxide Gas Plasma Processing" },
+                        { val: "ETHYLENE_OXIDE", text: "Extended Ethylene Oxide (EtO) Low-Heat Gas Exposure" }
+                    ],
+                    errorText: "[METALLURGICAL ERROR] Process parameters unmatched. Heavy, dense structural orthopedic instruments require high-pressure steam autoclave configurations to penetrate dense metal masses completely.",
+                    successText: "[VERIFIED] Sterilization tracking set to high-temperature pre-vacuum steam profile matching heavy steel load densities."
+                },
+                qa: {
+                    prompt: "-- Select Safeguard Rule --",
+                    correct: "THREAD_INSPECT",
+                    options: [
+                        { val: "BASIC_LIGHT", text: "Satin matte outer skin surface check under standard lighting" },
+                        { val: "THREAD_INSPECT", text: "Meticulous verification of screw hole threads for marrow tracking" },
+                        { val: "WEIGHT_CHECK", text: "Weight check only; verify total tray balance scales skip visual check" }
+                    ],
+                    errorText: "[INFECTION CONTROL FAILURE] Visual check incomplete. Bone plates are high-risk zones; bone lipids, marrow, and proteins hide tightly inside individual threaded script tracks, requiring macro-magnification audit lines.",
+                    successText: "[VERIFIED] Quality assurance active. Workstation magnification lens engaged for thread-by-thread micro-bioburden checking."
+                }
+            }
+        },
+        {
+            title: "Robotic EndoWrist Wristed Forceps Set",
+            metaService: "Robotic-Assisted Minimally Invasive Surgery",
+            metaSpecs: "Multi-Jointed Articulated Instruments featuring complex hidden cable paths",
+            metaAttributes: "Tray configuration features internal electronic microchips tracking usage counts.",
+            vocabScaffolding: {
+                v1: "Logistics: Checking electronic usage trackers to verify tool lifespan bounds.",
+                v2: "Compatibility: Confirming tool insulation can withstand high heat parameters.",
+                v3: "Safeguard: Actuating multi-joint internal pulley systems during visual validation checks."
+            },
+            dropdowns: {
+                logistics: {
+                    prompt: "-- Select Lifespan Verification --",
+                    correct: "CHECK_TRACKER",
+                    options: [
+                        { val: "SKIP_COUNT", text: "Skip counting lines if handles appear smooth and clean" },
+                        { val: "CHECK_TRACKER", text: "Scan barcode tool index; cross-reference electronic usage data" },
+                        { val: "RESET_TRACKER", text: "Clear log errors manually to override internal tracking warnings" }
+                    ],
+                    errorText: "[COMPLIANCE VIOLATION] Life cycles skipped. Articulated robotic tools contain strict activation limits to prevent wire snapping or structural wire breakages inside the patient during procedures.",
+                    successText: "[VERIFIED] Barcode interface pulled tool lifecycle tracking data successfully. Activation limits within safe manufacturing thresholds."
+                },
+                method: {
+                    prompt: "-- Select Sterilization Cycle --",
+                    correct: "STEAM_PREVAC_IFU",
+                    options: [
+                        { val: "STEAM_PREVAC_IFU", text: "IFU-Validated Pre-Vacuum Steam Cycle (3-4 mins at 132°C)" },
+                        { val: "LOW_TEMP_VAPOR", text: "Low-Temperature Gas Plasma processing with open port locks" },
+                        { val: "DRY_HEAT_EXPOSURE", text: "Extended Dry Heat Exposure tunnel treatment lines" }
+                    ],
+                    errorText: "[PARAMETER ERROR] Cycle profile rejected by manufacturer criteria. Wristed robotic elements require specific pre-vacuum steam cycles with explicit parameters to reach internal mechanical paths securely.",
+                    successText: "[VERIFIED] Autoclave control linked to high-performance pre-vacuum configuration matching vendor specification parameters."
+                },
+                qa: {
+                    prompt: "-- Select Safeguard Rule --",
+                    correct: "ACTUATE_PULLEYS",
+                    options: [
+                        { val: "VISUAL_SHAFT", text: "Visual insulation outer track check only; handle left stationary" },
+                        { val: "ACTUATE_PULLEYS", text: "Actuate pulleys manually; test line insulation and internal cables" },
+                        { val: "FLUSH_ONLY", text: "Flush internal line paths; skip mechanical actuation checks" }
+                    ],
+                    errorText: "[CRITICAL QA FAILURE] Functional validation checklist incomplete. Multi-jointed robotic assemblies must be fully actuated manually at the clean desk to expose internal wear tracks and detect hidden wire tears.",
+                    successText: "[VERIFIED] Mechanical actuation checklist complete. Cable tension and high-voltage shaft insulation profiles verified as non-defective."
+                }
+            }
+        },
+        {
+            title: "Ophthalmic Cataract Microsurgery Set",
+            metaService: "Ophthalmic Surgery Discipline",
+            metaSpecs: "Hair-Thin Micro-Instruments with delicate jaw setups",
+            metaAttributes: "Highly sensitive intraocular deployment path profile; extreme risk of chemical residue damage.",
+            vocabScaffolding: {
+                v1: "Logistics: Enforcing isolation rules on clean benches to prevent contact damage.",
+                v2: "Compatibility: Selecting sterile packaging paths that protect fine tip geometries.",
+                v3: "Safeguard: Verifying total removal of chemical soap films to protect patient sight rows."
+            },
+            dropdowns: {
+                logistics: {
+                    prompt: "-- Select Workbench Interface --",
+                    correct: "ISOLATE_BENCH",
+                    options: [
+                        { val: "MIXED_SORT", text: "Sort inside general mesh baskets alongside heavy orthopedic clamps" },
+                        { val: "ISOLATE_BENCH", text: "Isolate on a separate layout mat away from sharps and massive devices" },
+                        { val: "STACK_TRAYS", text: "Stack heavy plastic sets on top to save tracking workstation space" }
+                    ],
+                    errorText: "[MECHANICAL DAMAGE RISK] Structural separation lines ignored. Fine ophthalmic tip geometries clash and dull instantly if mixed with or stacked under standard surgical-grade clamps.",
+                    successText: "[VERIFIED] Micro-sorting boundaries established. Silicone pin protection mat deployed over steel assembly grid area."
+                },
+                method: {
+                    prompt: "-- Select Sterile Packaging System --",
+                    correct: "SILICONE_CONTAINER",
+                    options: [
+                        { val: "STANDARD_WRAP", text: "Standard heavy sequential wrap with single polypropylene sheets" },
+                        { val: "SILICONE_CONTAINER", text: "Rigid micro-container with custom silicone divider slots" },
+                        { val: "BULK_POUCH", text: "Loose bulk packaging pouch without custom tip guards" }
+                    ],
+                    errorText: "[QA DEFECT TRIGGERED] Fragile tips are vulnerable to collision wear inside large wraps or loose pouches. Micro-instruments require secure anchoring inside custom slot dividers to maintain alignment rules.",
+                    successText: "[VERIFIED] Packaging type matched. Specialized micro-container selected with structural lock matrices."
+                },
+                qa: {
+                    prompt: "-- Select Residue Safeguard --",
+                    correct: "CRITICAL_WATER_CHECK",
+                    options: [
+                        { val: "CRITICAL_WATER_CHECK", text: "Verify final rinse used critical water; audit lines for zero chemical film" },
+                        { val: "TAP_RINSE_CHECK", text: "Fast tap water wash rinse checklist verification sequence" },
+                        { val: "SKIP_RESIDUE", text: "Skip residue checks if tools appear shiny and clear of bioburden strings" }
+                    ],
+                    errorText: "[PATIENT BLINDNESS RISK] Chemical monitor line breached. Leftover soap residues or mineral tracking salts on intraocular tools can cause Toxic Anterior Segment Syndrome (TASS), risking total blindness for the patient.",
+                    successText: "[VERIFIED] Safeguard cleared. Chemical purity documentation confirmed. Zero residue status logged onto tracking certificate sheet."
+                }
+            }
+        }
+    ];
+
+    let globalActiveCaseIndex = 0;
+    let accumulatedUserScorePoints = 0;
+
+    const caseTicketBoxElement = document.getElementById("case-ticket-box");
+    const terminalLoggerElement = document.getElementById("terminal-logger");
+    const scoreTrackerElement = document.getElementById("app-score-tracker");
+    const submissionButtonElement = document.getElementById("submit-case-trigger");
+
+    function renderActiveSimulationModule() {
+        if (globalActiveCaseIndex >= casesDatabase.length) {
+            triggerFinalEvaluationOverlay();
+            return;
+        }
+
+        // Reset display wrappers
+        document.getElementById("case-cycle-counter").innerText = `Case Index: ${globalActiveCaseIndex + 1} / ${casesDatabase.length}`;
+        terminalLoggerElement.className = "sim-terminal-output";
+        terminalLoggerElement.innerHTML = `[SYSTEM READY] Adjust decision parameters to clear case profile rules...`;
+        submissionButtonElement.disabled = true;
+
+        const activeCaseRecord = casesDatabase[globalActiveCaseIndex];
+
+        // Hydrate Left Text Column Preference Card Info
+        caseTicketBoxElement.innerHTML = `
+            <h4 class="ticket-title">${activeCaseRecord.title}</h4>
+            <p class="ticket-meta-line"><strong>Surgical Service:</strong> ${activeCaseRecord.metaService}</p>
+            <p class="ticket-meta-line"><strong>Tray Specifications:</strong> ${activeCaseRecord.metaSpecs}</p>
+            <p class="ticket-meta-line"><strong>Design Attributes:</strong> ${activeCaseRecord.metaAttributes}</p>
+            <div style="background: #FFFFFF; border-radius: 4px; padding: 10px; margin-top: 12px; font-size: 0.85rem; border: 1px solid var(--mdrt-border);">
+                <span style="font-weight: bold; color: var(--mdrt-navy); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 4px;">Vocabulary Scaffold:</span>
+                <ul style="margin: 0; padding-left: 15px; color: var(--mdrt-slate);">
+                    <li>${activeCaseRecord.dropdowns.logistics.correct.includes("48H") ? activeCaseRecord.vocabScaffolding.v1 : activeCaseRecord.vocabScaffolding.v1}</li>
+                    <li>${activeCaseRecord.vocabScaffolding.v2}</li>
+                    <li>${activeCaseRecord.vocabScaffolding.v3}</li>
+                </ul>
+            </div>
+        `;
+
+        // Render Dropdown Menus and Reset Row Background Skins
+        hydrateSelectorMenu("select-logistics", activeCaseRecord.dropdowns.logistics);
+        hydrateSelectorMenu("select-method", activeCaseRecord.dropdowns.method);
+        hydrateSelectorMenu("select-qa", activeCaseRecord.dropdowns.qa);
+
+        clearRowStatusVisualStyles("row-logistics");
+        clearRowStatusVisualStyles("row-method");
+        clearRowStatusVisualStyles("row-qa");
+
+        updateGlobalScoreTrackerDisplay();
+    }
+
+    function hydrateSelectorMenu(selectElementId, dropdownDataRecord) {
+        const selectorNode = document.getElementById(selectElementId);
+        selectorNode.innerHTML = `<option value="">${dropdownDataRecord.prompt}</option>`;
+        
+        dropdownDataRecord.options.forEach(opt => {
+            const optionNode = document.createElement("option");
+            optionNode.value = opt.val;
+            optionNode.innerText = opt.text;
+            selectorNode.appendChild(optionNode);
+        });
+    }
+
+    function clearRowStatusVisualStyles(rowElementId) {
+        const targetRow = document.getElementById(rowElementId);
+        targetRow.classList.remove("validated-correct", "validated-incorrect");
+    }
+
+    function evaluateActiveRowSelection(categoryKey) {
+        const currentCase = casesDatabase[globalActiveCaseIndex];
+        const selectedValue = document.getElementById(`select-${categoryKey}`).value;
+        const targetRowElement = document.getElementById(`row-${categoryKey}`);
+
+        if (!selectedValue) {
+            clearRowStatusVisualStyles(`row-${categoryKey}`);
+            return;
+        }
+
+        const matchConfig = currentCase.dropdowns[categoryKey];
+
+        if (selectedValue === matchConfig.correct) {
+            targetRowElement.classList.remove("validated-incorrect");
+            targetRowElement.classList.add("validated-correct");
+            terminalLoggerElement.className = "sim-terminal-output terminal-success-alert";
+            terminalLoggerElement.innerHTML = `[QA LOG] ${matchConfig.successText}`;
+        } else {
+            targetRowElement.classList.remove("validated-correct");
+            targetRowElement.classList.add("validated-incorrect");
+            terminalLoggerElement.className = "sim-terminal-output terminal-error-alert";
+            terminalLoggerElement.innerHTML = `[CRITICAL REPROCESSING EXCEPTION] ${matchConfig.errorText}`;
+        }
+
+        evaluateSubmitButtonEligibilityState();
+    }
+
+    function evaluateSubmitButtonEligibilityState() {
+        const logVal = document.getElementById("select-logistics").value;
+        const metVal = document.getElementById("select-method").value;
+        const qaVal = document.getElementById("select-qa").value;
+
+        // Unlock verification action buttons only when all three parameters are actively selected
+        if (logVal && metVal && qaVal) {
+            submissionButtonElement.disabled = false;
+        } else {
+            submissionButtonElement.disabled = true;
+        }
+    }
+
+    function commitCaseVerification() {
+        const activeCase = casesDatabase[globalActiveCaseIndex];
+        
+        const logVal = document.getElementById("select-logistics").value;
+        const metVal = document.getElementById("select-method").value;
+        const qaVal = document.getElementById("select-qa").value;
+
+        // Check if all configurations are verified before granting scorecard points
+        if (logVal === activeCase.dropdowns.logistics.correct &&
+            metVal === activeCase.dropdowns.method.correct &&
+            qaVal === activeCase.dropdowns.qa.correct) {
+            accumulatedUserScorePoints++;
+        }
+
+        globalActiveCaseIndex++;
+        renderActiveSimulationModule();
+    }
+
+    function updateGlobalScoreTrackerDisplay() {
+        scoreTrackerElement.innerText = `Score Status: ${accumulatedUserScorePoints} / ${casesDatabase.length} Cases Correctly Decoded`;
+    }
+
+    function triggerFinalEvaluationOverlay() {
+        updateGlobalScoreTrackerDisplay();
+        const textOverlayTarget = document.getElementById("completion-text-target");
+        document.getElementById("completion-overlay-screen").style.display = "flex";
+
+        if (accumulatedUserScorePoints === casesDatabase.length) {
+            textOverlayTarget.innerHTML = `<strong>Reprocessing Grade: Master Certified Technician (100%)</strong><br/><br/>You successfully decoded every complex preference card matrix configuration. You demonstrated precise knowledge of workflow logistics timelines, metallurgical processing rules, and residue tracking boundaries across orthopedic, microscopic, and robotic case sets.`;
+        } else {
+            textOverlayTarget.innerHTML = `<strong>Reprocessing Grade: Baseline Competency Gaps Detected (${Math.round((accumulatedUserScorePoints/casesDatabase.length)*100)}%)</strong><br/><br/>You scored ${accumulatedUserScorePoints} out of ${casesDatabase.length} cases correctly. Review your specialty instrument instructions for use (IFU) and check validation log errors to ensure zero processing parameters escape detection on the next workflow manifest.`;
+        }
+    }
+
+    function resetSimulatorToBaseline() {
+        globalActiveCaseIndex = 0;
+        accumulatedUserScorePoints = 0;
+        document.getElementById("completion-overlay-screen").style.display = "none";
+        renderActiveSimulationModule();
+    }
+
+    // DomContentLoaded instantiation entry point
+    window.addEventListener("DOMContentLoaded", () => {
+        renderActiveSimulationModule();
+    });
+</script>
+
+</body>
+</html>

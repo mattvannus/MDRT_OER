@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autoclave Load Auditor &amp; Indicator Interpreter</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-red: #C62828;
+        --status-amber: #EF6C00;
+        --terminal-bg: #1A1A1A;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 10px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .auditor-app-container {
+        max-width: 100%;
+        margin: 0 auto;
+        border: 2px solid var(--mdrt-border);
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        overflow: hidden;
+        background: #FFFFFF;
+        position: relative;
+    }
+
+    /* Interface Top Banner */
+    .app-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 4px solid var(--mdrt-blue);
+    }
+
+    .app-header h2 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .progress-badge {
+        background: var(--mdrt-blue);
+        font-size: 0.8rem;
+        font-weight: bold;
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+
+    /* Main Split Screen Panel Layout */
+    .main-split-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        background: #ECEFF1;
+    }
+
+    @media (min-width: 768px) {
+        .main-split-grid {
+            grid-template-columns: 1fr 420px;
+        }
+    }
+
+    /* Left Column: Mechanical Autoclave Chamber / Physical Manifest Desk */
+    .chamber-workbench-area {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        border-right: 1px solid var(--mdrt-border);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .panel-header-title {
+        margin: 0;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: var(--mdrt-slate);
+        letter-spacing: 0.75px;
+        font-weight: 800;
+        align-self: flex-start;
+        width: 100%;
+        border-bottom: 2px solid var(--mdrt-border);
+        padding-bottom: 4px;
+    }
+
+    .autoclave-chamber-box {
+        width: 100%;
+        max-width: 440px;
+        height: 300px;
+        background: #FFFFFF;
+        border: 4px solid #78909C;
+        border-radius: 8px;
+        position: relative;
+        box-shadow: inset 0 4px 20px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .indicator-render-canvas {
+        width: 90%;
+        height: 90%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .indicator-render-canvas svg {
+        width: 100%;
+        height: 100%;
+        max-height: 260px;
+    }
+
+    /* Right Column: Dynamic Terminal QA Monitor Dashboard */
+    .qa-dashboard-terminal {
+        background: #FFFFFF;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .case-manifest-card {
+        background: var(--mdrt-sky);
+        border-left: 5px solid var(--mdrt-blue);
+        border-radius: 4px;
+        padding: 12px 15px;
+    }
+
+    .case-manifest-card h4 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+        color: var(--mdrt-navy);
+    }
+
+    .case-manifest-card p {
+        margin: 0;
+        font-size: 0.88rem;
+        color: #37474F;
+        line-height: 1.4;
+    }
+
+    .eal-vocabulary-helper {
+        font-size: 0.7rem;
+        background: var(--mdrt-slate);
+        color: #FFFFFF;
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-left: 5px;
+        cursor: help;
+    }
+
+    /* Option Selection Command Block */
+    .decision-matrix-box {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .decision-btn {
+        padding: 14px;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .btn-approve { background-color: var(--status-green); color: white; }
+    .btn-approve:hover:not(:disabled) { background-color: #1B5E20; }
+    
+    .btn-reject { background-color: var(--status-red); color: white; }
+    .btn-reject:hover:not(:disabled) { background-color: #8E2424; }
+
+    .decision-btn:disabled {
+        background-color: #B0BEC5 !important;
+        color: #78909C !important;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    /* Live Output Text Feed Logger */
+    .terminal-readout-monitor {
+        background: var(--terminal-bg);
+        color: #69F0AE;
+        border-radius: 6px;
+        padding: 12px 15px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        min-height: 100px;
+        line-height: 1.4;
+        box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .text-pass { color: #69F0AE; }
+    .text-fail { color: #FF5252; }
+    .text-warn { color: #FFD740; }
+
+    /* Footer Metrics Staging Ribbon */
+    .app-footer-metrics-bar {
+        background: #ECEFF1;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--mdrt-border);
+    }
+
+    /* Dynamic Application Overlay Panels */
+    .completion-view-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,43,73,0.97);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        text-align: center;
+        z-index: 100;
+        display: none;
+    }
+
+    .completion-view-overlay h3 {
+        font-size: 1.8rem;
+        color: #69F0AE;
+        margin: 0 0 10px 0;
+    }
+
+    .completion-view-overlay p {
+        max-width: 550px;
+        line-height: 1.5;
+        font-size: 1.05rem;
+        margin-bottom: 20px;
+    }
+
+    .action-reboot-btn {
+        background: #FFFFFF;
+        color: var(--mdrt-navy);
+        padding: 12px 24px;
+        border: none;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: background 0.15s ease;
+    }
+
+    .action-reboot-btn:hover {
+        background: var(--mdrt-sky);
+    }
+</style>
+</head>
+<body>
+
+<div class="auditor-app-container">
+    <!-- Top Interactive Dashboard Ribbon Header -->
+    <header class="app-header">
+        <h2>LOT AUDIT STATION: Sterilization Cycle Interpreter</h2>
+        <span class="progress-badge" id="hud-tracker-pills">Lot Test: 1 / 4</span>
+    </header>
+
+    <div class="main-split-grid">
+        <!-- Left Workspace: Visual Simulation Chamber Monitor Window -->
+        <section class="chamber-workbench-area">
+            <h3 class="panel-header-title">Active Chamber Parameter Readout</h3>
+            <div class="autoclave-chamber-box">
+                <div class="indicator-render-canvas" id="canvas-target-window">
+                    <!-- Inline vector layer maps injected here dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Workspace: Interactive Decision Checklist Panel -->
+        <section class="qa-dashboard-terminal">
+            <h3 class="panel-header-title">Audit Target Profile</h3>
+            <div class="case-manifest-card" id="manifest-brief-target">
+                <!-- Data injection point -->
+            </div>
+
+            <h3 class="panel-header-title">Gatekeeper Decision Matrix</h3>
+            <div class="decision-matrix-box">
+                <button class="decision-btn btn-approve" id="action-btn-approve" onclick="logUserAuditorDecision('APPROVE')">✔ Authenticate &amp; Release Load</button>
+                <button class="decision-btn btn-reject" id="action-btn-reject" onclick="logUserAuditorDecision('REJECT')">✘ Quarantine &amp; Reject Load</button>
+            </div>
+
+            <h3 class="panel-header-title">QA Verification Datastream Log</h3>
+            <div class="terminal-readout-monitor" id="terminal-text-logger">
+                [SYSTEM RUNTIME INITIALIZED] Analyze the active monitor index card on the left. Click a validation response configuration to continue...
+            </div>
+        </section>
+    </div>
+
+    <!-- Application Staging Progress Ribbon Footer -->
+    <footer class="app-footer-metrics-bar">
+        <span style="font-size: 0.88rem; color: var(--mdrt-slate); font-weight: bold;" id="hud-scorecard-readout">Reprocessing Accuracy: 0 / 4 Lot Cycles Cleared</span>
+        <span style="font-size: 0.75rem; color: #78909C; font-family: monospace;">ISO 11140-1 / CSA Z314.0 Compliant</span>
+    </footer>
+
+    <!-- Completion Grading Modal Panel Frame -->
+    <div class="completion-view-overlay" id="completion-grade-panel">
+        <h3 id="completion-title-field">🎉 Load Audit Manifest Complete</h3>
+        <p id="completion-body-field"></p>
+        <button class="action-reboot-btn" onclick="rebootAuditorSimulatorSuite()">Finish Audit</button>
+    </div>
+</div>
+
+<script>
+    // System database mapping core textbook parameters, vector tracks, and customized vocabulary scaffold tooltips
+    const lotAuditDatabase = [
+        {
+            title: "Class 1 Process Tape Monitor",
+            classKey: "Class 1 Process Indicator",
+            description: "Evaluating an external package tape wrap removed from a basic laparotomy instrument tray bundle following a routine cycle exposure run.",
+            ealVocab: "Process Tape: Sticky indicator strips placed on the outside of wraps to separate processed sets from unprocessed lots at a fast glance.",
+            expectedAction: "APPROVE",
+            svgSource: `<svg viewBox="0 0 100 60"><rect x="5" y="15" width="90" height="30" rx="3" fill="#E0D7C6" stroke="#B3A998" stroke-width="2"/><line x1="15" y1="15" x2="30" y2="45" stroke="#37474F" stroke-width="4" stroke-linecap="round"/><line x1="35" y1="15" x2="50" y2="45" stroke="#37474F" stroke-width="4" stroke-linecap="round"/><line x1="55" y1="15" x2="70" y2="45" stroke="#37474F" stroke-width="4" stroke-linecap="round"/><line x1="75" y1="15" x2="90" y2="45" stroke="#37474F" stroke-width="4" stroke-linecap="round"/><text x="26" y="54" fill="#37474F" font-size="3" font-weight="bold">COLOR CHANGED: BLACK</text></svg>`,
+            successLog: "<strong>Correct Selection!</strong> Class 1 external indicators monitor only basic exposure. The transition of the line indicators to dark black confirms that this package was processed inside a chamber, fulfilling its basic screening purpose.",
+            failLog: "<strong>Incorrect Selection.</strong> This Class 1 process tape has achieved complete chemical color transition. While it does not guarantee internal sterility, its specific job is to confirm exposure. This package should be released to distribution."
+        },
+        {
+            title: "Class 2 Bowie-Dick Diagnostic Pack",
+            classKey: "Class 2 Specialty Indicator",
+            description: "Reviewing the center indicator profile sheet extracted from the daily vacuum air removal challenge pack during the morning quality shift setup loop.",
+            ealVocab: "Bowie-Dick: A custom chemical paper test sheet used every morning to check if the sterilizer pump is successfully drawing out all pocket air barriers.",
+            expectedAction: "REJECT",
+            svgSource: `<svg viewBox="0 0 100 80"><rect x="10" y="5" width="80" height="70" fill="#ECEFF1" stroke="#455A64" stroke-width="2"/><rect x="15" y="10" width="70" height="60" fill="#37474F"/><circle cx="50" cy="40" r="18" fill="#D32F2F"/><text x="44" y="42" fill="#FFFFFF" font-size="6" font-weight="bold">CREAM</text><text x="24" y="77" fill="#C62828" font-size="4" font-weight="bold">ERROR: UNCHANGED CENTER PATCH</text></svg>`,
+            successLog: "<strong>Correct Selection! Critical Quality Intercept.</strong> The unchanged, light cream spot lingering in the center grid shows a core air-retention error. An air pocket failure blocks steam penetration. This system must be locked down immediately.",
+            failLog: "<strong>Incorrect Selection! High Risk Violation.</strong> An unchanged center color patch on a Bowie-Dick diagnostic grid signals a major internal vacuum failure. Allowing this run would compromise every complex device or hollow lumen processed today."
+        },
+        {
+            title: "Class 5 Chemical Integrating Strip",
+            classKey: "Class 5 Integrating Indicator",
+            description: "Auditing an internal integration line strip retrieved from the center floor of a heavy orthopedic orthopedic plate set.",
+            ealVocab: "Integrating Strip: A high-performance monitor placed inside trays that measures all critical factors (time, heat, steam) to closely parallel biological safety checks.",
+            expectedAction: "APPROVE",
+            svgSource: `<svg viewBox="0 0 100 50"><rect x="5" y="10" width="90" height="30" rx="4" fill="#FFFFFF" stroke="#78909C" stroke-width="3"/><rect x="10" y="15" width="40" height="20" fill="#FFEBEE"/><rect x="50" y="15" width="40" height="20" fill="#E8F5E9"/><line x1="50" y1="10" x2="50" y2="40" stroke="#78909C" stroke-width="2" stroke-dasharray="2 2"/><text x="18" y="27" fill="#C62828" font-size="3" font-weight="bold">REJECT</text><text x="58" y="27" fill="#2E7D32" font-size="7" font-weight="bold">ACCEPT</text><path d="M8,25 L68,25" stroke="#37474F" stroke-width="6" stroke-linecap="square"/><circle cx="68" cy="25" r="4" fill="#37474F"/><text x="24" y="47" fill="#2E7D32" font-size="3" font-weight="bold">WICK CLEAR: ENTIRELY IN ACCEPT AREA</text></svg>`,
+            successLog: "<strong>Correct Selection! Lot Integrity Verified.</strong> The tracking chemical dye line has fully crossed the decision boundary, moving into the safe green 'ACCEPT' zone. This tracking behavior demonstrates complete factor exposure inside the internal load space.",
+            failLog: "<strong>Incorrect Selection.</strong> This Class 5 integration strip has passed all safety thresholds. The tracking line successfully crossed out of the warning area into the clear 'ACCEPT' grid box, making the lot safe to distribute."
+        },
+        {
+            title: "Class 4 Multi-Parameter Pack Strip",
+            classKey: "Class 4 Multi-Parameter Indicator",
+            description: "Evaluating an internal multi-variable monitoring strip pulled from a packaged single ward-grade tissue clamp pouch.",
+            ealVocab: "Multi-Parameter: An internal strip strip made to change color only when two or more cycle variables (such as target heat and duration) are reached.",
+            expectedAction: "REJECT",
+            svgSource: `<svg viewBox="0 0 100 40"><rect x="5" y="10" width="90" height="20" fill="#FFFFFF" stroke="#90A4AE" stroke-width="2"/><rect x="10" y="14" width="25" height="12" fill="#EF6C00"/><rect x="65" y="14" width="25" height="12" fill="#FFF3E0"/><text x="14" y="22" fill="#FFFFFF" font-size="3" font-weight="bold">CHANGED</text><text x="68" y="22" fill="#EF6C00" font-size="4" font-weight="bold">UNCHANGED</text><text x="32" y="36" fill="#EF6C00" font-size="5" font-weight="bold">STALLED ERROR STATE</text></svg>`,
+            successLog: "<strong>Correct Selection! Biological Defect Isolated.</strong> One validation block failed to transition to its complete dark tone indicator shade. This incomplete shift signals a multi-variable fault (such as a premature pressure drop or short exposure run), making reprocessing mandatory.",
+            failLog: "<strong>Incorrect Selection.</strong> An unchanged color block on a Class 4 multi-parameter strip indicates that one or more critical variables failed to sustain parameters during the cycle. The device must be held in quarantine."
+        }
+    ];
+
+    let activeLotStepIndex = 0;
+    let accumulatedUserLotPoints = 0;
+
+    const canvasWindowNode = document.getElementById("canvas-target-window");
+    const manifestBoxNode = document.getElementById("manifest-brief-target");
+    const textLoggerNode = document.getElementById("terminal-text-logger");
+    const hudTrackerNode = document.getElementById("hud-tracker-pills");
+    const hudScorecardNode = document.getElementById("hud-scorecard-readout");
+    const approveButtonNode = document.getElementById("action-btn-approve");
+    const rejectButtonNode = document.getElementById("action-btn-reject");
+
+    function renderActiveLotScenario() {
+        if (activeLotStepIndex >= lotAuditDatabase.length) {
+            triggerFinalLotGradingOverlay();
+            return;
+        }
+
+        // Re-initialize controls state markers
+        hudTrackerNode.innerText = `Lot Test: ${activeLotStepIndex + 1} / ${lotAuditDatabase.length}`;
+        textLoggerNode.className = "terminal-readout-monitor";
+        textLoggerNode.innerHTML = `[MONITOR LINE STANDBY] Awaiting operator evaluation response inputs...`;
+        
+        approveButtonNode.disabled = false;
+        rejectButtonNode.disabled = false;
+
+        const currentLotRecord = lotAuditDatabase[activeLotStepIndex];
+
+        // Process asset element injection tracks
+        canvasWindowNode.innerHTML = currentLotRecord.svgSource;
+        manifestBoxNode.innerHTML = `
+            <h4 style="margin: 0 0 4px 0; font-size: 1.05rem; color: var(--mdrt-navy);">${currentLotRecord.title}</h4>
+            <p style="margin: 2px 0; font-size: 0.8rem; background: var(--mdrt-blue); color: white; padding: 2px 6px; border-radius: 3px; display: inline-block; font-weight: bold;">${currentLotRecord.classKey}</p>
+            <p style="margin: 8px 0 0 0; font-size: 0.88rem; line-height: 1.3; color: #37474F;"><strong>Operational Field Context:</strong> ${currentLotRecord.description}</p>
+            <div style="margin-top: 10px; background: #FFFFFF; border: 1px solid var(--mdrt-border); border-radius: 4px; padding: 8px 10px; font-size: 0.84rem;">
+                <span style="font-weight: bold; color: var(--mdrt-navy); text-transform: uppercase; font-size: 0.72rem; display: block; margin-bottom: 2px;">Context Decoder:</span>
+                <span style="color: var(--mdrt-slate);">${currentLotRecord.ealVocab}</span>
+            </div>
+        `;
+    }
+
+    function logUserAuditorDecision(userActionValue) {
+        const activeScenario = lotAuditDatabase[activeLotStepIndex];
+        
+        // Block intermediate triggers
+        approveButtonNode.disabled = true;
+        rejectButtonNode.disabled = true;
+
+        const userDecisionIsCorrect = (userActionValue === activeScenario.expectedAction);
+
+        if (userDecisionIsCorrect) {
+            accumulatedUserLotPoints++;
+            textLoggerNode.className = "terminal-readout-monitor text-pass";
+            textLoggerNode.innerHTML = `[QA VERIFICATION PASSED]<br/><br/>${activeScenario.successLog}`;
+        } else {
+            textLoggerNode.className = "terminal-readout-monitor text-fail";
+            textLoggerNode.innerHTML = `[REPROCESSING BOUNDARY BREACHED]<br/><br/>${activeScenario.failLog}`;
+        }
+
+        activeLotStepIndex++;
+        hudScorecardNode.innerText = `Reprocessing Accuracy: ${accumulatedUserLotPoints} / ${lotAuditDatabase.length} Lot Cycles Cleared`;
+        
+        // Timeout frame gives EAL student adequate pacing control line markers
+        setTimeout(renderActiveLotScenario, 6000);
+    }
+
+    function triggerFinalLotGradingOverlay() {
+        const titleField = document.getElementById("completion-title-field");
+        const bodyField = document.getElementById("completion-body-field");
+        document.getElementById("completion-grade-panel").style.display = "flex";
+
+        const accuratePercentageValue = Math.round((accumulatedUserLotPoints / lotAuditDatabase.length) * 100);
+
+        if (accuratePercentageValue === 100) {
+            titleField.innerText = "✔ Quality Control Master Audit: 100%";
+            titleField.style.color = "#69F0AE";
+            bodyField.innerHTML = `Excellent work! You successfully intercepted all structural air-pocket faults and validated parameter transitions without error. You possess reliable baseline skills for verifying sterilization indicator controls in a clinical clean room environment.`;
+        } else {
+            titleField.innerText = `Lot Audit Evaluation Complete: ${accuratePercentageValue}%`;
+            titleField.style.color = "#FFD740";
+            bodyField.innerHTML = `You correctly audited ${accumulatedUserLotPoints} out of ${lotAuditDatabase.length} sterilization profiles. Remember to re-read your ISO indicator classifications, check internal wick targets closely, and always isolate stalled change errors to maintain complete patient safety controls.`;
+        }
+    }
+
+    function rebootAuditorSimulatorSuite() {
+        activeLotStepIndex = 0;
+        accumulatedUserLotPoints = 0;
+        document.getElementById("completion-grade-panel").style.display = "none";
+        hudScorecardNode.innerText = `Reprocessing Accuracy: 0 / ${lotAuditDatabase.length} Lot Cycles Cleared`;
+        renderActiveLotScenario();
+    }
+
+    // Initialize module event listeners
+    window.addEventListener("DOMContentLoaded", () => {
+        renderActiveLotScenario();
+    });
+</script>
+</body>
+</html>

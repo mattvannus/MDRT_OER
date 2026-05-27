@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+    :root { --mdrt-blue: #005A9C; --mdrt-gray: #E0E0E0; --mdrt-light: #F8F9FA; }
+    .anim-container { font-family: sans-serif; max-width: 800px; margin: 20px auto; border: 1px solid var(--mdrt-gray); border-radius: 8px; padding: 20px; background: var(--mdrt-light); }
+    .track { display: flex; justify-content: space-between; margin-bottom: 30px; position: relative; }
+    .station { flex: 1; text-align: center; font-size: 0.8rem; font-weight: bold; color: #555; }
+    .station-icon { width: 40px; height: 40px; background: var(--mdrt-gray); margin: 0 auto 5px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .active-station { color: var(--mdrt-blue); }
+    .active-station .station-icon { background: var(--mdrt-blue); color: white; }
+    #tool-tray { transition: all 0.5s ease; width: 60px; height: 40px; background: #999; border-radius: 4px; position: absolute; top: 50px; }
+    .display-panel { background: white; padding: 20px; border-radius: 6px; border: 1px solid var(--mdrt-gray); min-height: 150px; }
+    .nav-btns { margin-top: 20px; display: flex; justify-content: space-between; }
+    button { padding: 10px 20px; background: var(--mdrt-blue); color: white; border: none; border-radius: 4px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="anim-container">
+    <h3>Workstation Sequence Overview</h3>
+    <div class="track" id="track">
+        <div id="s1" class="station active-station"><div class="station-icon">1</div>Visual</div>
+        <div id="s2" class="station"><div class="station-icon">2</div>Test</div>
+        <div id="s3" class="station"><div class="station-icon">3</div>Verify</div>
+        <div id="s4" class="station"><div class="station-icon">4</div>Prep</div>
+        <div id="s5" class="station"><div class="station-icon">5</div>Pack</div>
+        <div id="tool-tray"></div>
+    </div>
+
+    <div class="display-panel" id="info-panel">
+        <h4 id="stage-title">1. Visual Inspection</h4>
+        <p id="stage-text">Use bright lighting and magnification to check for bioburden (residual soil) inside every lumen and surface.</p>
+    </div>
+
+    <div class="nav-btns">
+        <button onclick="changeStage(-1)">Previous</button>
+        <button onclick="changeStage(1)">Next</button>
+    </div>
+</div>
+
+<script>
+    let current = 1;
+    const stages = [
+        {t: "1. Visual Inspection", d: "Use bright lighting and magnification to check for bioburden (residual soil) inside every lumen and surface."},
+        {t: "2. Functionality Testing", d: "Test hinges, ratchets, and cutting edges. Verify insulation on electrosurgical tools."},
+        {t: "3. Tray Verification", d: "Match instruments to the digital count sheet. Ensure every required device is accounted for."},
+        {t: "4. Sterilization Prep", d: "Open all hinges. Arrange instruments for optimal sterilant flow. Place internal chemical indicators."},
+        {t: "5. Packaging & Labeling", d: "Apply barrier wraps or rigid containers. Generate and attach tracking barcodes."}
+    ];
+
+    function changeStage(dir) {
+        current = Math.max(1, Math.min(5, current + dir));
+        update();
+    }
+
+    function update() {
+        for(let i=1; i<=5; i++) {
+            document.getElementById('s'+i).className = (i === current) ? 'station active-station' : 'station';
+        }
+        document.getElementById('tool-tray').style.left = (10 + (current-1) * 19) + '%';
+        document.getElementById('stage-title').innerText = stages[current-1].t;
+        document.getElementById('stage-text').innerText = stages[current-1].d;
+    }
+</script>
+</body>
+</html>

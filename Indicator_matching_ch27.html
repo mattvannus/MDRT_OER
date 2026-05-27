@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sterility Indicator Matching Simulator</title>
+<style>
+    /* Scope styles to guarantee high-fidelity rendering inside Pressbooks iframe wrappers */
+    .mdrt-match-scope {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-red: #C62828;
+        --surface-gray: #ECEFF1;
+        
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 15px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .match-container {
+        border: 2px solid var(--mdrt-border);
+        border-radius: 12px;
+        padding: 24px;
+        background: #F8F9FA;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .match-header {
+        margin-top: 0;
+        color: var(--mdrt-navy);
+        font-size: 1.3rem;
+        border-bottom: 3px solid var(--mdrt-sky);
+        padding-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .instruction-card {
+        background: #FFFFFF;
+        padding: 12px 15px;
+        border-radius: 6px;
+        border: 1px solid var(--mdrt-border);
+        font-size: 0.92rem;
+        line-height: 1.4;
+        margin-bottom: 20px;
+    }
+
+    /* Split Screen Work Bench Grid */
+    .workbench-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+
+    @media (min-width: 768px) {
+        .workbench-grid {
+            grid-template-columns: 280px 1fr;
+        }
+    }
+
+    /* Left Column: Draggable Indicators Deck */
+    .indicators-deck-panel {
+        background: var(--surface-gray);
+        border: 2px dashed #90A4AE;
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .panel-tag-title {
+        margin: 0 0 5px 0;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: #546E7A;
+        letter-spacing: 0.75px;
+        font-weight: 800;
+    }
+
+    .draggable-indicator-card {
+        background: #FFFFFF;
+        border: 2px solid var(--mdrt-blue);
+        border-radius: 6px;
+        padding: 10px 12px;
+        cursor: grab;
+        font-size: 0.88rem;
+        font-weight: bold;
+        color: var(--mdrt-navy);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+    }
+
+    .draggable-indicator-card:hover {
+        background-color: var(--mdrt-sky);
+        transform: scale(1.02);
+    }
+
+    .draggable-indicator-card:active {
+        cursor: grabbing;
+    }
+
+    .vocab-hint-text {
+        display: block;
+        font-weight: normal;
+        font-size: 0.78rem;
+        color: #546E7A;
+        margin-top: 4px;
+        font-style: italic;
+    }
+
+    /* Right Column: Sterile Packages Drop Matrix */
+    .packages-matrix-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .package-row-card {
+        background: #FFFFFF;
+        border: 1px solid var(--mdrt-border);
+        border-radius: 8px;
+        padding: 12px 15px;
+        display: grid;
+        grid-template-columns: 80px 1fr 180px;
+        align-items: center;
+        gap: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    /* CSS Drawn Visual Packages Icons */
+    .package-icon-frame {
+        width: 70px;
+        height: 60px;
+        background: #ECEFF1;
+        border: 2px solid #B0BEC5;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .icon-wrap { background-color: #90CAF9; border-color: #1565C0; }
+    .icon-pan { background-color: #B0BEC5; border-color: #37474F; position: relative; }
+    .icon-pouch { background-color: #FFFFFF; border-color: #80DEEA; border-style: double; }
+
+    .package-metadata h4 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+        color: var(--mdrt-charcoal);
+    }
+
+    .package-metadata p {
+        margin: 0;
+        font-size: 0.84rem;
+        color: #546E7A;
+        line-height: 1.3;
+    }
+
+    /* Drop Zone Target Areas */
+    .indicator-drop-zone {
+        background: #FAFAFA;
+        border: 2px dashed #B0BEC5;
+        border-radius: 6px;
+        min-height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 0.82rem;
+        color: #78909C;
+        padding: 4px 8px;
+        transition: all 0.25s ease;
+        font-weight: 500;
+    }
+
+    .indicator-drop-zone.drag-over-active {
+        background: var(--mdrt-sky);
+        border-color: var(--mdrt-blue);
+        color: var(--mdrt-blue);
+    }
+
+    .indicator-drop-zone.match-pass {
+        background: #E8F5E9;
+        border-color: var(--status-green);
+        color: #1B5E20;
+        border-style: solid;
+        font-weight: bold;
+    }
+
+    /* Dynamic Output Terminal Readout */
+    .qa-terminal-log {
+        margin-top: 20px;
+        background: #212121;
+        color: #69F0AE;
+        border-radius: 6px;
+        padding: 12px 15px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        min-height: 50px;
+        line-height: 1.4;
+        box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .btn-reset {
+        margin-top: 15px;
+        background-color: var(--mdrt-blue);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        display: none;
+        text-transform: uppercase;
+    }
+</style>
+</head>
+<body>
+
+<div class="mdrt-match-scope">
+    <div class="match-container">
+        <header class="match-header">
+            <span>Sterility Assurance: Quality Audit Match Bench</span>
+        </header>
+
+        <div class="instruction-card">
+            🤝 <strong>Interactive Quality Audit:</strong> Drag each sterility monitoring indicator from the left-hand deck panel and drop it onto its correct target sterile barrier system on the right. Note: High-performance class monitors are versatile and can clear multiple configurations!
+        </div>
+
+        <div class="workbench-grid">
+            <div class="indicators-deck-panel">
+                <h3 class="panel-tag-title">Indicators Pool</h3>
+                
+                <div class="draggable-indicator-card" draggable="true" id="ind-tamper" ondragstart="handleDragStart(event)">
+                    Tamper-Evident Chemical Lock
+                    <span class="vocab-hint-text">Plastic visual lock with integrated chemical process indicator window</span>
+                </div>
+                
+                <div class="draggable-indicator-card" draggable="true" id="ind-tape" ondragstart="handleDragStart(event)">
+                    Class 1 Indicator Tape
+                    <span class="vocab-hint-text">External exposure adhesive lines that shift color when autoclaved</span>
+                </div>
+                
+                <div class="draggable-indicator-card" draggable="true" id="ind-class5" ondragstart="handleDragStart(event)">
+                    Class 5 Integrating Strip
+                    <span class="vocab-hint-text">Internal tracking multi-variable strip response pellet</span>
+                </div>
+            </div>
+
+            <div class="packages-matrix-panel">
+                <h3 class="panel-tag-title">Surgical Packaging Systems</h3>
+                
+                <div class="package-row-card">
+                    <div class="package-icon-frame icon-pan">📦</div>
+                    <div class="package-metadata">
+                        <h4>Rigid Sterilization Container</h4>
+                        <p><strong>EAL Descriptor:</strong> Reusable hard metal aluminum or composite case featuring heavy mechanical side latch clamps and filtered lids.</p>
+                    </div>
+                    <div class="indicator-drop-zone" id="zone-pan" ondragover="allowDropTarget(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropCommit(event, 'pan')">
+                        [ Drop External Container Monitor Here ]
+                    </div>
+                </div>
+
+                <div class="package-row-card">
+                    <div class="package-icon-frame">🧺</div>
+                    <div class="package-metadata">
+                        <h4>Open Instrument Tray Basket</h4>
+                        <p><strong>EAL Descriptor:</strong> Wire steel grid base containing sorted tool families exposed directly to interior parameters.</p>
+                    </div>
+                    <div class="indicator-drop-zone" id="zone-tray" ondragover="allowDropTarget(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropCommit(event, 'tray')">
+                        [ Drop Internal Core Monitor Here ]
+                    </div>
+                </div>
+
+                <div class="package-row-card">
+                    <div class="package-icon-frame icon-wrap">🛡️</div>
+                    <div class="package-metadata">
+                        <h4>Wrapped Instrument Tray</h4>
+                        <p><strong>EAL Descriptor:</strong> Core tray enclosed within an engineered, soft blue multi-layer nonwoven polypropylene SMS fabric wrap.</p>
+                    </div>
+                    <div class="indicator-drop-zone" id="zone-wrap" ondragover="allowDropTarget(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropCommit(event, 'wrap')">
+                        [ Drop External Wrapper Seal Here ]
+                    </div>
+                </div>
+
+                <div class="package-row-card">
+                    <div class="package-icon-frame icon-pouch">✉️</div>
+                    <div class="package-metadata">
+                        <h4>Paper-Plastic Peel Pouch</h4>
+                        <p><strong>EAL Descriptor:</strong> Single transparent pouch bag utilized for lightweight instruments or isolated clinic supplies.</p>
+                    </div>
+                    <div class="indicator-drop-zone" id="zone-pouch" ondragover="allowDropTarget(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropCommit(event, 'pouch')">
+                        [ Drop Internal Pouch Monitor Here ]
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="qa-terminal-log" id="terminal-log">
+            [LOG MONITOR ACTIVE] Awaiting QA selection variables... Move an item to activate alignment validation loops.
+        </div>
+        
+        <button class="btn-reset" id="reset-btn" onclick="resetMatchingSimulatorSuite()">Reset Audit Desk</button>
+    </div>
+</div>
+
+<script>
+    // System definitions tracking matching configurations and flexible multi-target variables
+    const verificationMatrix = {
+        pan: {
+            allowedIds: ["ind-tamper"],
+            acceptedText: "✔ Verified: External Tamper Evident Chemical Lock secure.",
+            errorText: "❌ Validation Mismatch. Rigid containers feature heavy mechanical latch brackets requiring distinct locking blocks, not loose flexible exposure tapes or internal wicks."
+        },
+        tray: {
+            allowedIds: ["ind-class5"],
+            acceptedText: "✔ Verified: Class 5 Integrating Strip placed inside core layout center.",
+            errorText: "❌ Validation Mismatch. Open internal wire mesh baskets require high-level internal monitoring to check penetration boundaries across the core tool rows."
+        },
+        wrap: {
+            allowedIds: ["ind-tape"],
+            acceptedText: "✔ Verified: Class 1 External Indicator Tape applied to SMS fold skin.",
+            errorText: "❌ Validation Mismatch. Soft polypropylene wrapping folds require specialized high-adhesion indicator tape to secure geometry seals and show baseline cycle routing exposure at a fast glance."
+        },
+        pouch: {
+            allowedIds: ["ind-class5"],
+            acceptedText: "✔ Verified: Class 5 Integrating Strip slid loose inside protective pouch chamber.",
+            errorText: "❌ Validation Mismatch. Transparent pouches require high-performing internal indicators to prove sterilizing gas or heat parameters fully bypassed the plastic backing seams."
+        }
+    };
+
+    let totalSuccessfulMatchesFound = 0;
+
+    function handleDragStart(e) {
+        e.dataTransfer.setData("text/plain", e.target.id);
+    }
+
+    function allowDropTarget(e) {
+        e.preventDefault();
+    }
+
+    function handleDragEnter(e) {
+        e.preventDefault();
+        if (e.target.classList.contains("indicator-drop-zone") && !e.target.classList.contains("match-pass")) {
+            e.target.classList.add("drag-over-active");
+        }
+    }
+
+    function handleDragLeave(e) {
+        if (e.target.classList.contains("indicator-drop-zone")) {
+            e.target.classList.remove("drag-over-active");
+        }
+    }
+
+    function handleDropCommit(e, zoneKey) {
+        e.preventDefault();
+        const dropZone = document.getElementById("zone-" + zoneKey);
+        dropZone.classList.remove("drag-over-active");
+
+        const draggedCardId = e.dataTransfer.getData("text/plain");
+        const draggedCardElement = document.getElementById(draggedCardId);
+        const log = document.getElementById("terminal-log");
+        const ruleConfig = verificationMatrix[zoneKey];
+
+        if (ruleConfig.allowedIds.includes(draggedCardId)) {
+            // Processing correct match sequence lines
+            dropZone.classList.add("match-pass");
+            dropZone.innerHTML = draggedCardElement.childNodes[0].textContent.trim();
+            log.style.color = "#69F0AE";
+            log.innerHTML = `[SUCCESS DATA INJECTED] ${ruleConfig.acceptedText}`;
+            
+            // Check if source card is a Class 5 multi-target, hide only if fully exhausted across both targets
+            if (draggedCardId !== "ind-class5") {
+                draggedCardElement.style.visibility = "hidden";
+            }
+            
+            totalSuccessfulMatchesFound++;
+            evaluateModuleCompletionState();
+        } else {
+            // Processing bad alignment validation loops
+            log.style.color = "#FF5252";
+            log.innerHTML = `[COMPLIANCE VIOLATION FAILURE] ${ruleConfig.errorText}`;
+        }
+    }
+
+    function evaluateModuleCompletionState() {
+        if (totalSuccessfulMatchesFound >= 4) {
+            document.getElementById("terminal-log").innerHTML = "🎉 <strong>Quality Audit Successful: 100%</strong><br/>You successfully aligned all packaging configurations with their mandatory sterility indicator classes matching Canadian <strong>CSA Z314</strong> quality protocols.";
+            document.getElementById("reset-btn").style.display = "block";
+        }
+    }
+
+    function resetMatchingSimulatorSuite() {
+        totalSuccessfulMatchesFound = 0;
+        const log = document.getElementById("terminal-log");
+        log.style.color = "#69F0AE";
+        log.innerHTML = "[LOG MONITOR ACTIVE] Awaiting QA selection variables... Move an item to activate alignment validation loops.";
+        document.getElementById("reset-btn").style.display = "none";
+
+        // Re-hydrate card visibility states cleanly
+        const sourceCards = ["ind-tamper", "ind-tape", "ind-class5"];
+        sourceCards.forEach(id => {
+            document.getElementById(id).style.visibility = "visible";
+        });
+
+        // Re-hydrate droppable zone target parameters
+        const zoneKeys = ["pan", "tray", "wrap", "pouch"];
+        const zonePlaceholders = {
+            pan: "[ Drop External Container Monitor Here ]",
+            tray: "[ Drop Internal Core Monitor Here ]",
+            wrap: "[ Drop External Wrapper Seal Here ]",
+            pouch: "[ Drop Internal Pouch Monitor Here ]"
+        };
+
+        zoneKeys.forEach(key => {
+            const el = document.getElementById("zone-" + key);
+            el.className = "indicator-drop-zone";
+            el.innerHTML = zonePlaceholders[key];
+        });
+    }
+</script>
+
+</body>
+</html>

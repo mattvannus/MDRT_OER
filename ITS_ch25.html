@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual ITS Tray Audit Simulator</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-light-blue: #E3F2FD;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-red: #C62828;
+        --status-amber: #EF6C00;
+        --workbench-surface: #ECEFF1;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 10px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+    }
+
+    .its-app-container {
+        max-width: 950px;
+        margin: 0 auto;
+        border: 2px solid var(--mdrt-border);
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    /* ITS Software Header Simulation */
+    .its-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid var(--mdrt-blue);
+    }
+
+    .its-header h2 {
+        margin: 0;
+        font-size: 1.15rem;
+        letter-spacing: 0.5px;
+    }
+
+    .system-badge {
+        background: var(--mdrt-blue);
+        font-size: 0.75rem;
+        font-weight: bold;
+        padding: 4px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+
+    /* Split Screen: Left Workbench / Right Software Terminal */
+    .workspace-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        background: #F8F9FA;
+    }
+
+    @media (min-width: 768px) {
+        .workspace-layout {
+            grid-template-columns: 1fr 400px;
+        }
+    }
+
+    /* Left Column: Physical Assembly Workbench */
+    .physical-workbench {
+        background: var(--workbench-surface);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        border-right: 1px solid var(--mdrt-border);
+    }
+
+    .section-banner {
+        margin: 0;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: #546E7A;
+        letter-spacing: 0.5px;
+        font-weight: 800;
+    }
+
+    .mesh-basket-tray {
+        background: #FFFFFF;
+        border: 2px solid #90A4AE;
+        border-radius: 6px;
+        padding: 15px;
+        min-height: 320px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    /* Instrument Cards in Tray */
+    .instrument-item-card {
+        background: #FFFFFF;
+        border: 2px solid var(--mdrt-border);
+        border-radius: 6px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .instrument-item-card:hover {
+        border-color: var(--mdrt-blue);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .instrument-item-card.scanned-passed {
+        border-color: var(--status-green) !important;
+        background-color: #E8F5E9;
+    }
+
+    .instrument-item-card.scanned-failed {
+        border-color: var(--status-red) !important;
+        background-color: #FFEBEE;
+    }
+
+    .vector-graphic-box {
+        width: 100px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+    }
+
+    .vector-graphic-box svg {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .item-meta-title {
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-align: center;
+        margin: 0 0 6px 0;
+        color: var(--mdrt-charcoal);
+    }
+
+    /* Action Interactive Controls on Items */
+    .item-controls-row {
+        display: flex;
+        gap: 6px;
+        width: 100%;
+        margin-top: auto;
+    }
+
+    .workbench-btn {
+        flex: 1;
+        font-size: 0.7rem;
+        font-weight: bold;
+        padding: 5px 2px;
+        border: 1px solid var(--mdrt-border);
+        border-radius: 4px;
+        cursor: pointer;
+        background: #FFFFFF;
+        transition: all 0.15s ease;
+        text-transform: uppercase;
+    }
+
+    .btn-scan { background: var(--mdrt-light-blue); color: var(--mdrt-blue); border-color: #BBBDEFB; }
+    .btn-scan:hover { background: var(--mdrt-blue); color: #FFFFFF; }
+    .btn-fix { background: #FFF3E0; color: var(--status-amber); border-color: #FFE0B2; }
+    .btn-fix:hover { background: var(--status-amber); color: #FFFFFF; }
+
+    /* Right Column: Simulated ITS Tracking Software Monitor */
+    .its-software-monitor {
+        background: #FFFFFF;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .digital-count-sheet {
+        border: 1px solid var(--mdrt-border);
+        border-radius: 6px;
+        overflow: hidden;
+        background: #FFFFFF;
+    }
+
+    .sheet-row-header {
+        background: #ECEFF1;
+        padding: 8px 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #455A64;
+        display: grid;
+        grid-template-columns: 1fr 60px 60px;
+        border-bottom: 1px solid var(--mdrt-border);
+    }
+
+    .sheet-item-line {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        display: grid;
+        grid-template-columns: 1fr 60px 60px;
+        align-items: center;
+        border-bottom: 1px solid #F1F3F4;
+        transition: background-color 0.2s ease;
+    }
+
+    .sheet-item-line.row-complete {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .sheet-item-line.row-alert {
+        background-color: #FFF3E0;
+        color: #E65100;
+        font-weight: bold;
+    }
+
+    .qty-box {
+        text-align: center;
+        font-family: monospace;
+        font-size: 0.95rem;
+    }
+
+    /* Real-time Validation Dialogue Terminal Box */
+    .validation-terminal-box {
+        background: #263238;
+        color: #69F0AE;
+        border-radius: 6px;
+        padding: 12px 15px;
+        font-family: monospace;
+        font-size: 0.8rem;
+        min-height: 80px;
+        line-height: 1.4;
+        box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .terminal-error-text {
+        color: #FF5252;
+    }
+
+    .terminal-warn-text {
+        color: #FFD740;
+    }
+
+    /* Step Verification Action Trigger Footer */
+    .submit-audit-bar {
+        background: #ECEFF1;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--mdrt-border);
+    }
+
+    .submit-btn {
+        background: var(--status-green);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .submit-btn:hover { background: #1B5E20; }
+    .submit-btn:disabled {
+        background: #B0BEC5;
+        cursor: not-allowed;
+    }
+
+    .modal-completion-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,43,73,0.95);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        text-align: center;
+        z-index: 100;
+        display: none;
+    }
+
+    .scaffold-badge {
+        font-size: 0.65rem;
+        background: #546E7A;
+        color: white;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-weight: bold;
+        vertical-align: middle;
+        margin-left: 4px;
+        text-transform: uppercase;
+    }
+</style>
+</head>
+<body>
+
+<div class="its-app-container">
+    <!-- Header simulation mimicking standard Canadian healthcare software interfaces -->
+    <header class="its-header">
+        <h2>ITS Portal v4.2 – Sterile Assembly Audit Station</h2>
+        <span class="system-badge" id="tray-id-tag">Active Tray: Major Vascular Set</span>
+    </header>
+
+    <div class="workspace-layout">
+        <!-- Physical Basket Workbench Area -->
+        <section class="physical-workbench">
+            <h3 class="section-banner">Physical Assembly Mesh Basket (Clean Zone)</h3>
+            <div class="mesh-basket-tray" id="tray-grid-container">
+                <!-- Items are populated dynamically by the Javascript engine -->
+            </div>
+        </section>
+
+        <!-- ITS Software Display Column -->
+        <section class="its-software-monitor">
+            <h3 class="section-banner">Computer Screen: Live Count Sheet Checklist</h3>
+            
+            <div class="digital-count-sheet" id="count-sheet-container">
+                <div class="sheet-row-header">
+                    <span>Instrument Nomenclature</span>
+                    <span style="text-align: center;">Target</span>
+                    <span style="text-align: center;">Scanned</span>
+                </div>
+                <!-- Software lines dynamically rendered here -->
+            </div>
+
+            <h3 class="section-banner">Real-Time QA Validation Log</h3>
+            <div class="validation-terminal-box" id="terminal-readout">
+                [SYSTEM READY] Scan items to begin master sheet quality audit...
+            </div>
+        </section>
+    </div>
+
+    <!-- Actions Control Bar Footer -->
+    <footer class="submit-audit-bar">
+        <span style="font-size: 0.85rem; color: #546E7A;" id="progress-numerical-text">Audit Status: 0 / 4 verified</span>
+        <button class="submit-btn" id="final-submit-trigger" onclick="evaluateEntireTrayWrap()" disabled>Verify &amp; Generate Barcode Label</button>
+    </footer>
+
+    <!-- Completion Modal Block -->
+    <div class="modal-completion-overlay" id="completion-modal">
+        <h3 style="font-size: 1.8rem; margin: 0 0 10px 0; color: #69F0AE;">✔ Tray Verification Successful</h3>
+        <p style="max-width: 500px; line-height: 1.5; font-size: 1.05rem;" id="modal-performance-text"></p>
+        <button class="restart-btn" onclick="reloadAuditSimulatorSuite()" style="background: #FFFFFF; color: var(--mdrt-navy); padding: 12px 24px; border: none; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 15px;">Process Next Work Order Set</button>
+    </div>
+</div>
+
+<script>
+    // Database containing instrument definitions, configuration matrices, and definitions tailored for EAL students
+    const assetMatrixDatabase = [
+        {
+            id: "v_clamp_01",
+            name: "Vascular Clamp (Curved)",
+            type: "clamp",
+            recipeKey: "Vascular Clamps",
+            hasError: true,
+            errorType: "CLOSED_BOX_LOCK",
+            errorDescription: "Hinged box lock is completely closed. Steam cannot contact the interior joint tracks.",
+            svgOpen: `<svg viewBox="0 0 100 100"><path d="M35,30 C35,50 48,60 50,70" stroke="#78909C" stroke-width="4" fill="none"/><path d="M65,30 C65,50 52,60 50,70" stroke="#78909C" stroke-width="4" fill="none"/><circle cx="50" cy="70" r="3" fill="#37474F"/><path d="M48,73 L40,90" stroke="#78909C" stroke-width="4"/><path d="M52,73 L60,90" stroke="#78909C" stroke-width="4"/><circle cx="36" cy="90" r="5" stroke="#78909C" stroke-width="3" fill="none"/><circle cx="64" cy="90" r="5" stroke="#78909C" stroke-width="3" fill="none"/></svg>`,
+            svgFixed: `<svg viewBox="0 0 100 100"><path d="M42,30 C44,50 49,60 50,70" stroke="#78909C" stroke-width="4" fill="none"/><path d="M58,30 C56,50 51,60 50,70" stroke="#78909C" stroke-width="4" fill="none"/><circle cx="50" cy="70" r="3" fill="#37474F"/><path d="M49,73 L44,90" stroke="#78909C" stroke-width="4"/><path d="M51,73 L56,90" stroke="#78909C" stroke-width="4"/><circle cx="42" cy="90" r="5" stroke="#78909C" stroke-width="3" fill="none"/><circle cx="58" cy="90" r="5" stroke="#78909C" stroke-width="3" fill="none"/></svg>`,
+            scanned: false,
+            fixed: false
+        },
+        {
+            id: "v_scissors_02",
+            name: "Mayo Dissecting Scissors",
+            type: "scissors",
+            recipeKey: "Mayo Scissors",
+            hasError: false,
+            errorType: "NONE",
+            errorDescription: "",
+            svgOpen: `<svg viewBox="0 0 100 100"><path d="M40,25 L50,65 M60,25 L50,65" stroke="#90A4AE" stroke-width="5"/><circle cx="50" cy="65" r="4" fill="#37474F"/><path d="M48,68 L42,88 M52,68 L58,88" stroke="#90A4AE" stroke-width="4"/><circle cx="38" cy="90" r="6" stroke="#90A4AE" stroke-width="3" fill="none"/><circle cx="62" cy="90" r="6" stroke="#90A4AE" stroke-width="3" fill="none"/></svg>`,
+            svgFixed: ``,
+            scanned: false,
+            fixed: true
+        },
+        {
+            id: "fluid_basin_03",
+            name: "Fluid Specimen Basin",
+            type: "basin",
+            recipeKey: "Fluid Basins",
+            hasError: true,
+            errorType: "NESTED_BASIN",
+            errorDescription: "Basin is nested face-up. This profile traps air pockets and cooling condensation water, creating a wet pack sterilization failure.",
+            svgOpen: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="45" rx="35" ry="15" stroke="#B0BEC5" stroke-width="4" fill="#CFD8DC"/><ellipse cx="50" cy="48" rx="25" ry="10" stroke="#90A4AE" stroke-width="2" fill="#B0BEC5"/><text x="42" y="48" fill="#546E7A" font-size="8" font-weight="bold">NESTED</text></svg>`,
+            svgFixed: `<svg viewBox="0 0 100 100"><path d="M15,55 C15,35 30,30 50,30 C70,30 85,35 85,55 Z" stroke="#B0BEC5" stroke-width="4" fill="#CFD8DC"/><text x="36" y="48" fill="#546E7A" font-size="8" font-weight="bold">INVERTED</text></svg>`,
+            scanned: false,
+            fixed: false
+        },
+        {
+            id: "forceps_tissue_04",
+            name: "DeBakey Vascular Forceps",
+            type: "forceps",
+            recipeKey: "DeBakey Forceps",
+            hasError: false,
+            errorType: "NONE",
+            errorDescription: "",
+            svgOpen: `<svg viewBox="0 0 100 100"><path d="M45,15 L48,85 L52,85 L55,15 Z" fill="#90A4AE" stroke="#78909C" stroke-width="2"/><line x1="47" y1="40" x2="53" y2="40" stroke="#FFFFFF"/><line x1="47" y1="50" x2="53" y2="50" stroke="#FFFFFF"/><line x1="47" y1="60" x2="53" y2="60" stroke="#FFFFFF"/></svg>`,
+            svgFixed: ``,
+            scanned: false,
+            fixed: true
+        }
+    ];
+
+    // Master sheet checklist parameters mimicking computerized recipes
+    const trayRecipeChecklist = {
+        "Vascular Clamps": { target: 1, scanned: 0 },
+        "Mayo Scissors": { target: 1, scanned: 0 },
+        "Fluid Basins": { target: 1, scanned: 0 },
+        "DeBakey Forceps": { target: 1, scanned: 0 }
+    };
+
+    let userErrorCorrectionCount = 0;
+
+    function buildWorkstationInterface() {
+        const gridContainer = document.getElementById("tray-grid-container");
+        gridContainer.innerHTML = "";
+
+        assetMatrixDatabase.forEach(item => {
+            const itemCard = document.createElement("div");
+            itemCard.className = `instrument-item-card`;
+            itemCard.id = `card-${item.id}`;
+
+            const graphicWrapper = document.createElement("div");
+            graphicWrapper.className = "vector-graphic-box";
+            // Check whether the tool state is modified or corrected
+            graphicWrapper.innerHTML = item.fixed ? item.svgOpen : item.svgOpen;
+
+            const titleElement = document.createElement("p");
+            titleElement.className = "item-meta-title";
+            titleElement.innerHTML = `${item.name}${item.hasError && !item.fixed ? '<span class="scaffold-badge">Alert</span>' : ''}`;
+
+            const controlsRow = document.createElement("div");
+            controlsRow.className = "item-controls-row";
+
+            // Conditional rendering logic for action controls button states
+            if (item.hasError && !item.fixed) {
+                const fixButton = document.createElement("button");
+                fixButton.className = "workbench-btn btn-fix";
+                fixButton.innerText = item.errorType === "CLOSED_BOX_LOCK" ? "⚙ Open Hinge" : "⟲ Invert Basin";
+                fixButton.onclick = () => correctDefectWorkflow(item.id);
+                controlsRow.appendChild(fixButton);
+            } else {
+                const scanButton = document.createElement("button");
+                scanButton.className = "workbench-btn btn-scan";
+                scanButton.innerText = "📷 Scan Barcode";
+                scanButton.onclick = () => processBarcodeScan(item.id);
+                if (item.scanned) scanButton.disabled = true;
+                controlsRow.appendChild(scanButton);
+            }
+
+            itemCard.appendChild(graphicWrapper);
+            itemCard.appendChild(titleElement);
+            itemCard.appendChild(controlsRow);
+            gridContainer.appendChild(itemCard);
+
+            // Re-apply passed/failed style sheet visual boundaries on reload loops
+            if (item.scanned) {
+                itemCard.classList.add(item.hasError && !item.fixed ? "scanned-failed" : "scanned-passed");
+            }
+        });
+
+        renderSoftwareChecklistGrid();
+        recalculateControlBarMetrics();
+    }
+
+    function renderSoftwareChecklistGrid() {
+        const sheetContainer = document.getElementById("count-sheet-container");
+        // Maintain table layout header line blocks
+        sheetContainer.innerHTML = `
+            <div class="sheet-row-header">
+                <span>Instrument Nomenclature</span>
+                <span style="text-align: center;">Target</span>
+                <span style="text-align: center;">Scanned</span>
+            </div>
+        `;
+
+        Object.keys(trayRecipeChecklist).forEach(key => {
+            const dataRow = trayRecipeChecklist[key];
+            const lineItem = document.createElement("div");
+            lineItem.className = "sheet-item-line";
+            
+            if (dataRow.scanned === dataRow.target) {
+                lineItem.classList.add("row-complete");
+            }
+
+            lineItem.innerHTML = `
+                <span>${key}</span>
+                <span class="qty-box">${dataRow.target}</span>
+                <span class="qty-box">${dataRow.scanned}</span>
+            `;
+            sheetContainer.appendChild(lineItem);
+        });
+    }
+
+    function processBarcodeScan(assetId) {
+        const matchingRecord = assetMatrixDatabase.find(x => x.id === assetId);
+        const terminal = document.getElementById("terminal-readout");
+        const visualCard = document.getElementById(`card-${assetId}`);
+
+        matchingRecord.scanned = true;
+
+        if (matchingRecord.hasError && !matchingRecord.fixed) {
+            visualCard.classList.add("scanned-failed");
+            terminal.className = "validation-terminal-box terminal-error-text";
+            terminal.innerHTML = `[QA ERROR] Failure logged on barcode index: ${assetId.toUpperCase()}<br/>Reason: ${matchingRecord.errorDescription}`;
+        } else {
+            visualCard.classList.add("scanned-passed");
+            terminal.className = "validation-terminal-box";
+            terminal.innerHTML = `[SUCCESS] Barcode verification authenticated for: ${matchingRecord.name}. Master check cleared.`;
+            
+            // Increment software count spreadsheet columns
+            if (trayRecipeChecklist[matchingRecord.recipeKey].scanned < trayRecipeChecklist[matchingRecord.recipeKey].target) {
+                trayRecipeChecklist[matchingRecord.recipeKey].scanned++;
+            }
+        }
+
+        buildWorkstationInterface();
+    }
+
+    function correctDefectWorkflow(assetId) {
+        const targetRecord = assetMatrixDatabase.find(x => x.id === assetId);
+        const terminal = document.getElementById("terminal-readout");
+        
+        targetRecord.fixed = true;
+        targetRecord.svgOpen = targetRecord.svgFixed; // Substitute vector layer structure paths
+        userErrorCorrectionCount++;
+
+        terminal.className = "validation-terminal-box";
+        terminal.innerHTML = `[REPAIR ACTION] Correction verified. Instrument state aligned with standard operating guidelines. Retest barcode now.`;
+
+        buildWorkstationInterface();
+    }
+
+    function recalculateControlBarMetrics() {
+        const totalItemsInSet = assetMatrixDatabase.length;
+        const totalCurrentlyScannedAndCleared = Object.values(trayRecipeChecklist).reduce((acc, current) => acc + current.scanned, 0);
+        
+        document.getElementById("progress-numerical-text").innerText = `Audit Status: ${totalCurrentlyScannedAndCleared} / ${totalItemsInSet} verified items`;
+
+        // Unlock the packaging label generation button only when all items are correct and verified
+        if (totalCurrentlyScannedAndCleared === totalItemsInSet) {
+            document.getElementById("final-submit-trigger").disabled = false;
+        }
+    }
+
+    function evaluateEntireTrayWrap() {
+        const textModalField = document.getElementById("modal-performance-text");
+        document.getElementById("completion-modal").style.display = "flex";
+
+        // Performance evaluation calculation mapping EAL feedback rules
+        if (userErrorCorrectionCount === 0) {
+            textModalField.innerHTML = "<strong>Quality Audit Rating: Perfect Assembly</strong><br/><br/>You successfully scanned and checked all parameters without structural faults. However, remember to stay vigilant on every tray to ensure no closed box locks or nested basins slip into clean production storage lines.";
+        } else {
+            textModalField.innerHTML = `<strong>Quality Audit Rating: Patient Advocate</strong><br/><br/>You successfully identified and corrected configuration defects before generation of the sterilization wrap bar label. Your proactive alignment checks eliminated the risk of air pockets or cooling condensation water turning this set into an unsterile pack.`;
+        }
+    }
+
+    function reloadAuditSimulatorSuite() {
+        // Reset state mechanics cleanly across memory lines
+        userErrorCorrectionCount = 0;
+        currentActiveToolIndex = 0;
+        
+        assetMatrixDatabase[0].fixed = false;
+        assetMatrixDatabase[0].scanned = false;
+        assetMatrixDatabase[0].svgOpen = `<svg viewBox="0 0 100 100"><path d="M35,30 C35,50 48,60 50,70" stroke="#78909C" stroke-width="4" fill="none"/><path d="M65,30 C65,50 52,60 50,70" stroke="#78909C" stroke-width="4" fill="none"/><circle cx="50" cy="70" r="3" fill="#37474F"/><path d="M48,73 L40,90" stroke="#78909C" stroke-width="4"/><path d="M52,73 L60,90" stroke="#78909C" stroke-width="4"/><circle cx="36" cy="90" r="5" stroke="#78909C" stroke-width="3" fill="none"/><circle cx="64" cy="90" r="5" stroke="#78909C" stroke-width="3" fill="none"/></svg>`;
+        
+        assetMatrixDatabase[1].scanned = false;
+        
+        assetMatrixDatabase[2].fixed = false;
+        assetMatrixDatabase[2].scanned = false;
+        assetMatrixDatabase[2].svgOpen = `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="45" rx="35" ry="15" stroke="#B0BEC5" stroke-width="4" fill="#CFD8DC"/><ellipse cx="50" cy="48" rx="25" ry="10" stroke="#90A4AE" stroke-width="2" fill="#B0BEC5"/><text x="42" y="48" fill="#546E7A" font-size="8" font-weight="bold">NESTED</text></svg>`;
+        
+        assetMatrixDatabase[3].scanned = false;
+
+        Object.keys(trayRecipeChecklist).forEach(key => {
+            trayRecipeChecklist[key].scanned = 0;
+        });
+
+        document.getElementById("completion-modal").style.display = "none";
+        document.getElementById("final-submit-trigger").disabled = true;
+        document.getElementById("terminal-readout").className = "validation-terminal-box";
+        document.getElementById("terminal-readout").innerText = "[SYSTEM READY] New work order loaded. Scan items to initiate checklist verification...";
+
+        buildWorkstationInterface();
+    }
+
+    // Instantiation listener initialization hooks
+    window.addEventListener('DOMContentLoaded', () => {
+        buildWorkstationInterface();
+    });
+</script>
+
+</body>
+</html>

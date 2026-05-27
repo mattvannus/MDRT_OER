@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    /* Scope styles to guarantee high-fidelity rendering inside Pressbooks iframe wrappers */
+    .mdrt-simulator-body {
+        --mdrt-navy: #004070;
+        --mdrt-blue: #005A9C;
+        --mdrt-light-blue: #E3F2FD;
+        --mdrt-dark: #263238;
+        --mdrt-border: #CFD8DC;
+        --rust-color: #B71C1C;
+        --stain-color: #795548;
+        
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        max-width: 850px;
+        margin: 0 auto;
+        padding: 15px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-dark);
+    }
+
+    .mdrt-container {
+        border: 2px solid var(--mdrt-border);
+        border-radius: 12px;
+        padding: 24px;
+        background: #F8F9FA;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .mdrt-header {
+        margin-top: 0;
+        color: var(--mdrt-navy);
+        font-size: 1.4rem;
+        border-bottom: 3px solid var(--mdrt-light-blue);
+        padding-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .score-badge {
+        background: var(--mdrt-navy);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    /* Interactive Instruction Grid Layout */
+    .simulator-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-top: 15px;
+    }
+
+    @media (min-width: 650px) {
+        .simulator-grid {
+            grid-template-columns: 320px 1fr;
+        }
+    }
+
+    /* Microscopic Workbench Inspection Window */
+    .workbench-window {
+        background: #212121;
+        border: 4px solid var(--mdrt-dark);
+        border-radius: 8px;
+        height: 300px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        cursor: pointer;
+    }
+
+    /* Magnified Lens Overlay Styling */
+    .lens-overlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 4px;
+        border: 1px solid rgba(255,255,255,0.1);
+        pointer-events: none;
+        box-shadow: inset 0 0 50px rgba(0,212,255,0.15);
+        z-index: 5;
+    }
+
+    /* Scalpels / Clamps Base Vector Skins */
+    .instrument-base {
+        width: 260px;
+        height: auto;
+        opacity: 0.9;
+        transition: transform 0.3s ease;
+        z-index: 2;
+    }
+
+    /* Eraser Blemish Target Area Layer */
+    .blemish-target {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(1px);
+        mix-blend-mode: multiply;
+        transition: opacity 0.15s ease;
+        z-index: 3;
+    }
+
+    /* Virtual Pencil Eraser Cursor Element */
+    .virtual-eraser-tool {
+        position: absolute;
+        width: 35px;
+        height: 20px;
+        background: #FF8A8A;
+        border: 2px solid #D81B60;
+        border-radius: 3px 6px 6px 3px;
+        box-shadow: 2px 3px 5px rgba(0,0,0,0.3);
+        pointer-events: none;
+        transform: translate(-50%, -50%) rotate(-15deg);
+        z-index: 10;
+        display: none;
+    }
+
+    .virtual-eraser-tool::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0; width: 8px;
+        background: #B0BEC5;
+        border-right: 1px solid #37474F;
+    }
+
+    /* Control Interface and Scaffolding Side Panels */
+    .control-side-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .instruction-card {
+        background: #FFFFFF;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid var(--mdrt-border);
+        font-size: 0.95rem;
+        line-height: 1.4;
+        margin-bottom: 15px;
+    }
+
+    .action-buttons-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .mdrt-btn {
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+
+    .btn-action-keep { background-color: #2E7D32; color: white; }
+    .btn-action-keep:hover { background-color: #1B5E20; }
+    .btn-action-reject { background-color: #C62828; color: white; }
+    .btn-action-reject:hover { background-color: #8E2424; }
+    
+    .mdrt-btn:disabled {
+        background-color: #B0BEC5 !important;
+        color: #78909C !important;
+        cursor: not-allowed;
+    }
+
+    /* Feedback & EAL Scaffolding Display Panel */
+    .feedback-box {
+        margin-top: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-size: 1rem;
+        line-height: 1.5;
+        display: none;
+        animation: fadeIn 0.4s ease forwards;
+    }
+
+    .feedback-success { background-color: #E8F5E9; border-left: 6px solid #4CAF50; color: #1B5E20; }
+    .feedback-error { background-color: #FFEBEE; border-left: 6px solid #F44336; color: #C62828; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+</head>
+<body class="mdrt-animator-scope">
+
+<div class="mdrt-simulator-body">
+    <div class="mdrt-container">
+        <header class="mdrt-header">
+            <span>Visual QA Sandbox: Surface Defects</span>
+            <span id="score-counter" class="score-badge">Tray Progress: 0/4 Cases</span>
+        </header>
+
+        <div class="simulator-grid">
+            <!-- Microscope Visual Area Target Container -->
+            <div class="workbench-window" id="workbench" 
+                 onmousedown="startScrubbing(event)" 
+                 onmousemove="executeScrubbing(event)" 
+                 onmouseup="stopScrubbing()" 
+                 onmouseleave="stopScrubbing()">
+                
+                <div class="lens-overlay"></div>
+                <div id="eraser-cursor" class="virtual-eraser-tool"></div>
+                
+                <!-- Base Instrument SVG Model -->
+                <svg id="instrument-graphic" class="instrument-base" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+                    <!-- Standard Hemostatic Clamp Vector Representation -->
+                    <path d="M50,30 L50,70 M45,45 L55,45" stroke="#CFD8DC" stroke-width="6" stroke-linecap="round"/>
+                    <circle cx="42" cy="74" r="6" stroke="#CFD8DC" stroke-width="4" fill="none"/>
+                    <circle cx="58" cy="74" r="6" stroke="#CFD8DC" stroke-width="4" fill="none"/>
+                    <path d="M46,36 C48,20 52,20 54,36" stroke="#90A4AE" stroke-width="5" fill="none" stroke-linecap="round"/>
+                </svg>
+
+                <!-- Dynamic Functional Defect Target Overlay -->
+                <div id="defect-blemish" class="blemish-target"></div>
+            </div>
+
+            <!-- Context Manual Instruction Panel -->
+            <div class="control-side-panel">
+                <div class="instruction-card">
+                    <strong>EAL Action Checklist:</strong>
+                    <ol style="margin: 8px 0 0 20px; padding: 0;">
+                        <li>Click and <strong>hold down mouse</strong> inside the dark window.</li>
+                        <li><strong>Rub the eraser tool</strong> firmly over the surface blemish.</li>
+                        <li>Observe if the blemish disappears or changes shape.</li>
+                        <li>Make your compliance choice using the action indicators.</li>
+                    </ol>
+                </div>
+
+                <div class="action-buttons-group">
+                    <button id="btn-keep" class="mdrt-btn btn-action-keep" onclick="submitDecision('KEEP')" disabled>✔ Keep and Lubricate Joint</button>
+                    <button id="btn-reject" class="mdrt-btn btn-action-reject" onclick="submitDecision('REJECT')" disabled>✘ Remove From Circulation</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Scaffolding Block Box -->
+        <div id="feedback-panel" class="feedback-box"></div>
+    </div>
+</div>
+
+<script>
+    // Component database structure isolating definitions for EAL scaffolding matching Chapter 23 parameters
+    const scenarioDatabase = [
+        {
+            type: "STAIN",
+            color: "#5D4037",
+            size: "24px",
+            top: "35%",
+            left: "46%",
+            scrubbable: true,
+            feedbackKeep: "<strong>Correct Decision!</strong> The eraser removed the blemish smoothly. This is a mineral water deposit stain caused by facility water parameters, not functional rust. The stainless steel is intact; apply instrument milk to moving points and proceed.",
+            feedbackReject: "<strong>Incorrect Decision.</strong> This blemish was a water-soluble mineral stain, not active rust. Running the Eraser Test successfully cleared it away, showing safe underlying metal. Unnecessary rejection increases instrument replacement costs for the facility."
+        },
+        {
+            type: "RUST",
+            color: "#BF360C",
+            size: "18px",
+            top: "42%",
+            left: "48%",
+            scrubbable: false,
+            feedbackKeep: "<strong>Critical Error!</strong> Active rust cannot be rubbed away. Allowing rust to remain inside a tray poses a severe patient risk and spreads corrosion to clean devices during heat sterilization cycles. This tool must be removed immediately.",
+            feedbackReject: "<strong>Correct Decision!</strong> This is active rust. The blemish did not change during the Eraser Test, revealing corrosive metal damage underneath. This tool must be permanently removed from circulation to safeguard patient safety."
+        },
+        {
+            type: "SHADOW",
+            color: "#1A1A1A",
+            size: "30px",
+            top: "22%",
+            left: "44%",
+            scrubbable: false,
+            feedbackKeep: "<strong>Correct Decision!</strong> This is simply a normal lighting shadow or cosmetic distortion within the box lock groove. The tool surface is completely clean and smooth; proceed with functional loop checks].",
+            feedbackReject: "<strong>Incorrect Decision.</strong> Do not mistake structural contours or light angles for a dynamic soil failure. Visual inspection requires distinguishing safe shadows from biological bioburden layers or rust pits."
+        },
+        {
+            type: "PITTING",
+            color: "#37474F",
+            size: "14px",
+            top: "44%",
+            left: "49%",
+            scrubbable: false,
+            feedbackKeep: "<strong>Critical Error!</strong> These are deep chemical pitting holes. Pitting completely breaks the protective skin layer of the steel, creating tiny areas where bacteria can hide from sterilants. The tool must be taken out of service.",
+            feedbackReject: "<strong>Correct Decision!</strong> Deep pitting holes permanently damage stainless steel. Pitting holes provide microscopic shelters for bacteria, preventing proper sterilant access. You successfully caught a major hidden infection danger."
+        }
+    ];
+
+    let currentActiveIndex = 0;
+    let totalScorePoints = 0;
+    let absoluteScrubProgress = 0;
+    let userIsActivelyDraggingEraser = false;
+
+    const blemishElement = document.getElementById("defect-blemish");
+    const eraserCursorElement = document.getElementById("eraser-cursor");
+    const workbenchElement = document.getElementById("workbench");
+
+    function initializeScenarioInstance() {
+        if (currentActiveIndex >= scenarioDatabase.length) {
+            // All modules complete state transition handler
+            document.getElementById("score-counter").innerText = `Tray Complete! Total Verified: ${totalScorePoints}/${scenarioDatabase.length}`;
+            document.getElementById("instruction-card").innerHTML = "<strong>Quality Audit Complete!</strong> You have successfully audited all surface parameters across this instrument set.";
+            document.getElementById("btn-keep").disabled = true;
+            document.getElementById("btn-reject").disabled = true;
+            return;
+        }
+
+        // Update loop trackers
+        absoluteScrubProgress = 0;
+        userIsActivelyDraggingEraser = false;
+        document.getElementById("feedback-panel").style.display = "none";
+        document.getElementById("btn-keep").disabled = true;
+        document.getElementById("btn-reject").disabled = true;
+        document.getElementById("score-counter").innerText = `Tray Progress: ${currentActiveIndex}/${scenarioDatabase.length} Cases`;
+
+        // Render configuration variables across style layers
+        const currentDataRecord = scenarioDatabase[currentActiveIndex];
+        blemishElement.style.display = "block";
+        blemishElement.style.opacity = "1";
+        blemishElement.style.backgroundColor = currentDataRecord.color;
+        blemishElement.style.width = currentDataRecord.size;
+        blemishElement.style.height = currentDataRecord.size;
+        blemishElement.style.top = currentDataRecord.top;
+        blemishElement.style.left = currentDataRecord.left;
+    }
+
+    function startScrubbing(e) {
+        userIsActivelyDraggingEraser = true;
+        eraserCursorElement.style.display = "block";
+        positionEraserCursor(e);
+    }
+
+    function executeScrubbing(e) {
+        if (!userIsActivelyDraggingEraser) return;
+        positionEraserCursor(e);
+
+        const activeRecord = scenarioDatabase[currentActiveIndex];
+        if (activeRecord.scrubbable) {
+            absoluteScrubProgress += 1.5;
+            let targetOpacityCalculated = 1 - (absoluteScrubProgress / 100);
+            
+            if (targetOpacityCalculated <= 0) {
+                blemishElement.style.opacity = "0";
+                blemishElement.style.display = "none";
+            } else {
+                blemishElement.style.opacity = targetOpacityCalculated;
+            }
+        }
+
+        // Unlock validation workflow options once scrubbing metric passes lower thresholds
+        if (absoluteScrubProgress > 30 || !activeRecord.scrubbable) {
+            document.getElementById("btn-keep").disabled = false;
+            document.getElementById("btn-reject").disabled = false;
+        }
+    }
+
+    function stopScrubbing() {
+        userIsActivelyDraggingEraser = false;
+        eraserCursorElement.style.display = "none";
+    }
+
+    function positionEraserCursor(e) {
+        const dimensionsRect = workbenchElement.getBoundingClientRect();
+        const computedX = e.clientX - dimensionsRect.left;
+        const computedY = e.clientY - dimensionsRect.top;
+        eraserCursorElement.style.left = computedX + "px";
+        eraserCursorElement.style.top = computedY + "px";
+    }
+
+    function submitDecision(userChoice) {
+        const activeRecord = scenarioDatabase[currentActiveIndex];
+        const feedbackContainer = document.getElementById("feedback-panel");
+        
+        // Define correct logic matrix options
+        let optionIsCorrect = false;
+        if (activeRecord.type === "STAIN" || activeRecord.type === "SHADOW") {
+            if (userChoice === "KEEP") optionIsCorrect = true;
+        } else {
+            if (userChoice === "REJECT") optionIsCorrect = true;
+        }
+
+        // Parse corresponding documentation response template strings
+        if (optionIsCorrect) {
+            totalScorePoints++;
+            feedbackContainer.className = "feedback-box feedback-success";
+            feedbackContainer.innerHTML = userChoice === "KEEP" ? activeRecord.feedbackKeep : activeRecord.feedbackReject;
+        } else {
+            feedbackContainer.className = "feedback-box feedback-error";
+            feedbackContainer.innerHTML = userChoice === "KEEP" ? activeRecord.feedbackKeep : activeRecord.feedbackReject;
+        }
+
+        feedbackContainer.style.display = "block";
+        document.getElementById("btn-keep").disabled = true;
+        document.getElementById("btn-reject").disabled = true;
+
+        // Transition logic timeout sequence loop animation bounds
+        currentActiveIndex++;
+        setTimeout(() => {
+            initializeScenarioInstance();
+        }, 5000);
+    }
+
+    // Instantiation call trigger
+    window.addEventListener('DOMContentLoaded', () => {
+        initializeScenarioInstance();
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    /* Scope all styles cleanly to protect Pressbooks global themes */
+    .mdrt-animator-scope {
+        --mdrt-blue-dark: #004070;
+        --mdrt-blue-bright: #005A9C;
+        --mdrt-blue-light: #E3F2FD;
+        --mdrt-success-green: #2E7D32;
+        --mdrt-gray-border: #CFD8DC;
+        --mdrt-gray-bg: #ECEFF1;
+        --text-dark: #263238;
+        
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        max-width: 850px;
+        margin: 25px auto;
+        border: 2px solid var(--mdrt-gray-border);
+        border-radius: 12px;
+        padding: 24px;
+        background: #FFFFFF;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.06);
+        color: var(--text-dark);
+    }
+
+    .mdrt-animator-scope h3 {
+        margin-top: 0;
+        color: var(--mdrt-blue-dark);
+        font-size: 1.4rem;
+        border-bottom: 2px solid var(--mdrt-blue-light);
+        padding-bottom: 8px;
+    }
+
+    /* Track Layout Container */
+    .mdrt-animator-scope .track-wrapper {
+        position: relative;
+        background: var(--mdrt-gray-bg);
+        padding: 20px 10px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border: 1px solid var(--mdrt-gray-border);
+    }
+
+    .mdrt-animator-scope .step-track {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        z-index: 2;
+    }
+
+    .mdrt-animator-scope .station-node {
+        flex: 1;
+        text-align: center;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #78909C;
+        transition: color 0.3s ease;
+    }
+
+    .mdrt-animator-scope .station-node.active-node {
+        color: var(--mdrt-blue-bright);
+    }
+
+    .mdrt-animator-scope .node-circle {
+        width: 36px;
+        height: 36px;
+        background: #FFFFFF;
+        border: 3px solid var(--mdrt-gray-border);
+        margin: 0 auto 8px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        transition: all 0.4s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .mdrt-animator-scope .station-node.active-node .node-circle {
+        background: var(--mdrt-blue-bright);
+        color: #FFFFFF;
+        border-color: var(--mdrt-blue-dark);
+        transform: scale(1.1);
+    }
+
+    /* Animated Instrument Tray Component */
+    .mdrt-animator-scope #animated-tray {
+        position: absolute;
+        top: 15px;
+        left: 0;
+        width: 50px;
+        height: 32px;
+        background: linear-gradient(135deg, #B0BEC5 0%, #78909C 100%);
+        border: 2px solid #455A64;
+        border-radius: 4px;
+        z-index: 1;
+        transition: left 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+
+    /* Internal mesh line style for the basket */
+    .mdrt-animator-scope #animated-tray::after {
+        content: '';
+        position: absolute;
+        top: 3px; left: 3px; right: 3px; bottom: 3px;
+        border: 1px dashed rgba(255,255,255,0.6);
+    }
+
+    /* Workspace Content Split View */
+    .mdrt-animator-scope .workspace-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    @media (min-width: 650px) {
+        .mdrt-animator-scope .workspace-grid {
+            grid-template-columns: 240px 1fr;
+        }
+    }
+
+    /* Central Graphics Window wrapper */
+    .mdrt-animator-scope .visuals-window {
+        background: #37474F;
+        border-radius: 8px;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #263238;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .mdrt-animator-scope .graphic-svg {
+        width: 120px;
+        height: 120px;
+        transition: all 0.4s ease;
+    }
+
+    /* Interactive Description Display Panel */
+    .mdrt-animator-scope .info-content-panel {
+        background: var(--mdrt-blue-light);
+        border-left: 6px solid var(--mdrt-blue-bright);
+        padding: 20px;
+        border-radius: 0 8px 8px 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .mdrt-animator-scope .info-content-panel h4 {
+        margin: 0 0 10px 0;
+        color: var(--mdrt-blue-dark);
+        font-size: 1.25rem;
+    }
+
+    .mdrt-animator-scope .info-content-panel p {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #1A237E;
+    }
+
+    /* Step Navigation Interface */
+    .mdrt-animator-scope .navigation-bar {
+        margin-top: 25px;
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .mdrt-animator-scope .nav-action-button {
+        padding: 12px 24px;
+        background-color: var(--mdrt-blue-bright);
+        color: #FFFFFF;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.1s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .mdrt-animator-scope .nav-action-button:hover {
+        background-color: var(--mdrt-blue-dark);
+    }
+
+    .mdrt-animator-scope .nav-action-button:active {
+        transform: scale(0.98);
+    }
+    
+    .mdrt-animator-scope .nav-action-button:disabled {
+        background-color: var(--mdrt-gray-border);
+        color: #90A4AE;
+        cursor: not-allowed;
+    }
+</style>
+</head>
+<body>
+
+<div class="mdrt-animator-scope">
+    <h3>MDRT Workstation Flow Tracker</h3>
+    
+    <div class="track-wrapper">
+        <div id="animated-tray"></div>
+        <div class="step-track">
+            <div id="node1" class="station-node active-node"><div class="node-circle">1</div>Inspection</div>
+            <div id="node2" class="station-node"><div class="node-circle">2</div>Testing</div>
+            <div id="node3" class="station-node"><div class="node-circle">3</div>Verification</div>
+            <div id="node4" class="station-node"><div class="node-circle">4</div>Preparation</div>
+            <div id="node5" class="station-node"><div class="node-circle">5</div>Packaging</div>
+        </div>
+    </div>
+
+    <div class="workspace-grid">
+        <div class="visuals-window">
+            <div id="graphic-renderer">
+                <svg class="graphic-svg" viewBox="0 0 24 24" fill="none" stroke="#E3F2FD" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+            </div>
+        </div>
+
+        <div class="info-content-panel">
+            <h4 id="panel-title-target">1. Visual Inspection</h4>
+            <p id="panel-text-target">MDRTs must <strong>look closely</strong> at every side of a medical device using a bright magnifier. This step removes residual bioburden (hidden surgical soil) before items move forward.</p>
+        </div>
+    </div>
+
+    <div class="navigation-bar">
+        <button id="back-step-btn" class="nav-action-button" onclick="navigateWorkflow(-1)" disabled>◀ Back Step</button>
+        <button id="next-step-btn" class="nav-action-button" onclick="navigateWorkflow(1)">Next Step ▶</button>
+    </div>
+</div>
+
+<script>
+    // System configurations variables mapping localized offsets and vector graphics data
+    let currentActiveWorkflowStep = 1;
+    
+    // Exact vector layout paths customized to stay lightweight inside standard Pressbooks text containers
+    const vectorGraphicTemplates = {
+        1: `<svg class="graphic-svg" viewBox="0 0 24 24" fill="none" stroke="#64B5F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><circle cx="11" cy="11" r="3" fill="#FFF59D" opacity="0.3"></circle><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>`,
+        2: `<svg class="graphic-svg" viewBox="0 0 24 24" fill="none" stroke="#FF8A65" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`,
+        3: `<svg class="graphic-svg" viewBox="0 0 24 24" fill="none" stroke="#81C784" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+        4: `<svg class="graphic-svg" viewBox="0 0 24 24" fill="none" stroke="#BA68C8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>`,
+        5: `<svg class="graphic-svg" viewBox="0 0 24 24" fill="none" stroke="#4DB6AC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`
+    };
+
+    const descriptionTextDatabase = [
+        {
+            title: "1. Visual Inspection",
+            text: "MDRTs must <strong>look closely</strong> at every side of a medical device using a bright magnifier. This step removes residual bioburden (hidden surgical soil) before items move forward."
+        },
+        {
+            title: "2. Functionality Testing",
+            text: "Technicians must physically <strong>test mechanics</strong>. Scissors must cut cleanly through test strips, ratchets must lock without popping open, and insulation barriers are scanned for electricity leaks."
+        },
+        {
+            title: "3. Tray Verification",
+            text: "You must <strong>confirm item counts</strong> against the tracking computer layout database. Missing items or excess tools are addressed here to make sets complete."
+        },
+        {
+            title: "4. Sterilization Prep",
+            text: "Technicians <strong>arrange components</strong> carefully. Hinged scissors and hemostats must stay half-open and un-ratcheted so sterilization gas or steam can strike all surfaces uniformly."
+        },
+        {
+            title: "5. Packaging & Labeling",
+            text: "The final step is to <strong>apply barrier wraps</strong> or filters to rigid cases. Barcode tags are affixed to secure complete shift traceability records."
+        }
+    ];
+
+    // Node layout horizontal placement offset percentage targets 
+    const stepTargetPercentages = [6, 26, 47, 67, 87];
+
+    function navigateWorkflow(direction) {
+        currentActiveWorkflowStep = Math.max(1, Math.min(5, currentActiveWorkflowStep + direction));
+        renderUpdatedInterfaceState();
+    }
+
+    function renderUpdatedInterfaceState() {
+        // Correctively slide the structural tray element along horizontal axis path
+        const trayElement = document.getElementById("animated-tray");
+        trayElement.style.left = stepTargetPercentages[currentActiveWorkflowStep - 1] + "%";
+
+        // Toggle text and highlights across layout target circles
+        for (let i = 1; i <= 5; i++) {
+            const targetNodeElement = document.getElementById("node" + i);
+            if (i === currentActiveWorkflowStep) {
+                targetNodeElement.classList.add("active-node");
+            } else {
+                targetNodeElement.classList.remove("active-node");
+            }
+        }
+
+        // Inject data text variables dynamically into UI targets
+        const activeDataRecord = descriptionTextDatabase[currentActiveWorkflowStep - 1];
+        document.getElementById("panel-title-target").innerHTML = activeDataRecord.title;
+        document.getElementById("panel-text-target").innerHTML = activeDataRecord.text;
+
+        // Render matching vector pathway illustration graphic window
+        document.getElementById("graphic-renderer").innerHTML = vectorGraphicTemplates[currentActiveWorkflowStep];
+
+        // Process buttons activity limitations boundary constraints
+        document.getElementById("back-step-btn").disabled = (currentActiveWorkflowStep === 1);
+        document.getElementById("next-step-btn").disabled = (currentActiveWorkflowStep === 5);
+    }
+
+    // Set layout starting coordinates on document lifecycle load complete
+    window.addEventListener('DOMContentLoaded', () => {
+        renderUpdatedInterfaceState();
+    });
+</script>
+
+</body>
+</html>
