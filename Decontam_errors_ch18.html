@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decontamination Area QA Scenario Sandbox</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-red: #C62828;
+        --status-amber: #EF6C00;
+        --terminal-bg: #151515;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 10px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .qa-app-container {
+        max-width: 100%;
+        margin: 0 auto;
+        border: 2px solid var(--mdrt-border);
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        overflow: hidden;
+        background: #FFFFFF;
+        position: relative;
+    }
+
+    /* Top Ribbon Header */
+    .app-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 4px solid var(--mdrt-blue);
+    }
+
+    .app-header h2 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .progress-counter {
+        background: var(--mdrt-blue);
+        font-size: 0.8rem;
+        font-weight: bold;
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+
+    /* Main Presentation Layout Grid */
+    .app-split-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        background: #ECEFF1;
+    }
+
+    @media (min-width: 768px) {
+        .app-split-grid {
+            grid-template-columns: 1fr 420px;
+        }
+    }
+
+    /* Left Column: Visual Operational Alert Panel */
+    .visual-alert-viewport {
+        padding: 25px;
+        height: 340px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-right: 1px solid var(--mdrt-border);
+        background: linear-gradient(180deg, #37474F 0%, #212121 100%);
+    }
+
+    .alert-panel-window {
+        width: 100%;
+        max-width: 440px;
+        height: 100%;
+        background: #FFFFFF;
+        border: 5px solid #78909C;
+        border-radius: 6px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
+
+    /* CSS Vector Graphics Mapping the QA Status Lights */
+    .qa-console-graphic {
+        width: 140px;
+        height: 140px;
+        position: relative;
+    }
+
+    .status-light-bulb {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #B0BEC5;
+        border: 4px solid #37474F;
+        transition: all 0.3s ease;
+        box-shadow: inset 0 4px 8px rgba(0,0,0,0.4);
+    }
+
+    .status-light-bulb.light-alert {
+        background-color: #FF5252;
+        border-color: #7A1C1C;
+        box-shadow: 0 0 20px #FF5252, inset 0 2px 4px rgba(255,255,255,0.6);
+    }
+
+    .status-light-bulb.light-cleared {
+        background-color: #69F0AE;
+        border-color: #1B5E20;
+        box-shadow: 0 0 20px #69F0AE, inset 0 2px 4px rgba(255,255,255,0.6);
+    }
+
+    /* Right Column: Interactive Narrative & Options List */
+    .narrative-options-dashboard {
+        background: #FFFFFF;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .scenario-briefcard {
+        background: var(--mdrt-sky);
+        border-left: 5px solid var(--mdrt-blue);
+        border-radius: 4px;
+        padding: 12px 15px;
+    }
+
+    .scenario-briefcard h4 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+        color: var(--mdrt-navy);
+    }
+
+    .scenario-briefcard p {
+        margin: 0;
+        font-size: 0.88rem;
+        color: #37474F;
+        line-height: 1.4;
+    }
+
+    /* Action Response Options List layout */
+    .response-options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .option-row-btn {
+        padding: 12px 15px;
+        border: 2px solid var(--mdrt-border);
+        background: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        font-weight: 600;
+        font-size: 0.85rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+        line-height: 1.3;
+    }
+
+    .option-row-btn:hover:not(:disabled) {
+        border-color: var(--mdrt-blue);
+        background-color: var(--mdrt-sky);
+        color: var(--mdrt-blue);
+    }
+
+    .option-row-btn:disabled {
+        background-color: #ECEFF1;
+        color: #B0BEC5;
+        border-color: var(--mdrt-border);
+        cursor: not-allowed;
+    }
+
+    /* Live Output Terminal Feed Monitor */
+    .qa-live-terminal {
+        background: var(--terminal-bg);
+        color: #69F0AE;
+        border-radius: 6px;
+        padding: 12px 15px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        min-height: 80px;
+        line-height: 1.4;
+        box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .feed-pass { color: #69F0AE; }
+    .feed-fail { color: #FF5252; }
+
+    /* Footer Scoreboard Metrics Staging Row */
+    .app-footer-metrics {
+        background: #ECEFF1;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--mdrt-border);
+    }
+
+    /* Completion Grading Modal Panel Frame */
+    .completion-view-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,43,73,0.97);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        text-align: center;
+        z-index: 100;
+        display: none;
+    }
+
+    .completion-view-overlay h3 { font-size: 1.8rem; color: #69F0AE; margin: 0 0 10px 0; }
+    .completion-view-overlay p { max-width: 540px; line-height: 1.5; font-size: 1.05rem; margin-bottom: 20px; }
+
+    .action-reset-btn {
+        background: #FFFFFF;
+        color: var(--mdrt-navy);
+        padding: 12px 24px;
+        border: none;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: background 0.15s ease;
+    }
+</style>
+</head>
+<body>
+
+<div class="qa-app-container">
+    <header class="app-header">
+        <h2>Decontamination Area Quality Audit Sandbox</h2>
+        <span class="progress-counter" id="hud-step-counter">Scenario: 1 / 3</span>
+    </header>
+
+    <div class="app-split-grid">
+        <section class="visual-alert-viewport">
+            <h3 style="margin: 0; font-size: 0.85rem; text-transform: uppercase; color: #ECEFF1; letter-spacing: 0.75px; font-weight: 800; align-self: flex-start; width:100%; padding-bottom:6px;">Chamber Dashboard Warning</h3>
+            <div class="alert-panel-window">
+                <div class="status-light-bulb light-alert" id="console-status-light"></div>
+                <p style="margin: 12px 0 0 0; font-family: monospace; font-size: 0.8rem; font-weight: bold; color: var(--status-red);" id="console-light-label">CRITICAL PARAMETER EXCEPTION</p>
+            </div>
+        </section>
+
+        <section class="narrative-options-dashboard">
+            <div class="scenario-briefcard" id="narrative-briefcard-box">
+                </div>
+
+            <h3 style="margin: 0; font-size: 0.8rem; text-transform: uppercase; color: var(--mdrt-slate); letter-spacing: 0.5px; font-weight: 800;">Corrective Response Protocol</h3>
+            <div class="response-options-list" id="options-buttons-box">
+                </div>
+
+            <h3 style="margin: 0; font-size: 0.8rem; text-transform: uppercase; color: var(--mdrt-slate); letter-spacing: 0.5px; font-weight: 800;">Live QA Action Log</h3>
+            <div class="qa-live-terminal" id="terminal-logger-feed">
+                [SYSTEM ACTIVE] Review the active case profile. Click the correct structural action below to respond...
+            </div>
+        </section>
+    </div>
+
+    <footer class="app-footer-metrics">
+        <span style="font-size: 0.88rem; color: var(--mdrt-slate); font-weight: bold;" id="hud-scorecard-readout">Mitigation Accuracy: 0 / 3 Breaches Handled</span>
+        <span style="font-size: 0.75rem; color: #78909C; font-family: monospace;">MDR-QMS Framework</span>
+    </footer>
+
+    <div class="completion-view-overlay" id="completion-view-panel">
+        <h3 id="modal-title-field">Audit Validation Manifest Complete</h3>
+        <p id="modal-body-field"></p>
+        <button class="action-reset-btn" onclick="rebootQAScenarioSimulator()">Reset QA Audit Bench</button>
+    </div>
+</div>
+
+<script>
+    // Data structures tracking decontamination QA errors, options, and plain-English vocabulary links
+    const qaScenariosDatabase = [
+        {
+            index: 1,
+            title: "Scenario 1: Automated Washer Dose Drop",
+            text: "During a routine mechanical wash cycle for major bone-holding trays, the digital printer locks and flags an error log: <strong>'Enzymatic Dosing Line Pressure Failure'</strong>. The water temperature reached its target, but the chemical injection pump stalled mid-cycle.",
+            ealVocab: "Dosing Line: The internal mechanical tubes that pump precise volumes of concentrated enzymatic soap into hot washer water to break down blood layers.",
+            options: [
+                { text: "Bypass the printer log; advance the trays straight to the clean side assembly desks.", correct: false },
+                { text: "Rinse the sets quickly with utility tap water, wrap them, and clear them for sterilization.", correct: false },
+                { text: "Quarantine the load, label the cycle as failed, check the pump lines, and rerun the complete wash cycle.", correct: true }
+            ],
+            successFeedback: "<strong>Correct Action! Quality Intercept Cleared.</strong> You cannot skip chemical constraints. If enzymatic soap parameters are dropped, invisible organic protein films remain on the metal surfaces, causing complete sterilization shield failures. The lot must be fully re-cleaned.",
+            failFeedback: "<strong>Infection Control Breach!</strong> Advancing or bypassing a chemical delivery failure allows un-cleaned organic bioburden layers to remain on surgical instrumentation, threatening patient outcomes."
+        },
+        {
+            index: 2,
+            title: "Scenario 2: Ultrasonic Cleaning Verification Unchanged",
+            text: "You retrieve the chemical verification monitor strip from the basket of your high-frequency ultrasonic cleaning tank. The target test soil patch on the face of the strip is <strong>completely unchanged and dark brown</strong>, showing zero breakdown.",
+            ealVocab: "Verification Monitor: A custom metal or plastic card coated with simulated blood ink used to test if ultrasonic cavitation is actively scrubbing surfaces.",
+            options: [
+                { text: "Reject the load; check water level boundaries, verify degassing cycles, and retest the tank parameters.", correct: true },
+                { text: "Manually scrape the brown spot off the test monitor sheet to log a passed status on the clipboard.", correct: false },
+                { text: "Assume the instrument metal is clean; dry the tools using a towel and stack them into assembly racks.", correct: false }
+            ],
+            successFeedback: "<strong>Correct Action! Tank Safeguard Cleared.</strong> An unchanged test soil patch indicates that the tank failed to achieve effective <strong>cavitation</strong>. This can be caused by low water levels, cold temperatures, or skipping the mandatory morning degassing cycle. The system must be held for evaluation.",
+            failFeedback: "<strong>Critical Audit Error!</strong> Ignoring an unchanged cleaning monitor allows unsafe tools to pass, as a failed indicator strip means the machine did not deliver the energy required to scrub internal crevices clean."
+        },
+        {
+            index: 3,
+            title: "Scenario 3: Visible Bioburden at the Clean Assembly Desk",
+            text: "A tray of vascular clamps has finished its complete cycle run inside the mechanical washer-disinfector and crossed through to the clean side. While inspecting a clamp box lock under magnification, you find a distinct speck of <strong>hardened blood bioburden</strong>.",
+            ealVocab: "Bioburden: Raw biological soil, tissues, or fluid remnants clinging to instruments that must be fully removed before serialization can safely happen.",
+            options: [
+                { text: "Scrape the speck away with a clean fingernail and continue sequencing the tray assembly sheet.", correct: false },
+                { text: "Isolate the tool immediately, send it back through the pass-through window to decontamination, and log a QA failure strip.", correct: true },
+                { text: "Assume the heat of the thermal disinfection phase killed the germs, making the stain safe to ignore.", correct: false }
+            ],
+            successFeedback: "<strong>Correct Action! Clean-Room Safeguard Cleared.</strong> Cleanliness is an absolute prerequisite for sterilization. High-temperature steam cannot penetrate underlying bacteria if it is insulated beneath a layer of baked-on blood. The device must be returned to the dirty side for manual cleaning.",
+            failFeedback: "<strong>Critical Safety Hazard!</strong> Baked-on biological tissue can harbor viable bacterial spores. Never attempt to clean or scrape an instrument on the clean side of the department; it must be fully recycled through decontamination."
+        }
+    ];
+
+    let currentScenarioStepIndex = 0;
+    let userSuccessfulAnswersCount = 0;
+
+    const hudStepCounterElement = document.getElementById("hud-step-counter");
+    const hudScorecardElement = document.getElementById("hud-scorecard-readout");
+    const narrativeBriefcardBoxElement = document.getElementById("narrative-briefcard-box");
+    const optionsButtonsBoxElement = document.getElementById("options-buttons-box");
+    const terminalLoggerFeedElement = document.getElementById("terminal-logger-feed");
+    const consoleStatusLightElement = document.getElementById("console-status-light");
+    const consoleLightLabelElement = document.getElementById("console-light-label");
+
+    function renderActiveQAScenario() {
+        if (currentScenarioStepIndex >= qaScenariosDatabase.length) {
+            triggerFinalQAEvaluationOverlay();
+            return;
+        }
+
+        // Re-initialize terminal logs and system warning lights
+        hudStepCounterElement.innerText = `Scenario: ${currentScenarioStepIndex + 1} / ${qaScenariosDatabase.length}`;
+        consoleStatusLightElement.className = "status-light-bulb light-alert";
+        consoleLightLabelElement.innerText = "CRITICAL PARAMETER EXCEPTION";
+        consoleLightLabelElement.style.color = "var(--status-red)";
+        
+        terminalLoggerFeedElement.className = "qa-live-terminal";
+        terminalLoggerFeedElement.innerHTML = `[MONITOR RESET] New quality deviation logged. Select the correct protocol response below...`;
+
+        const currentActiveCase = qaScenariosDatabase[currentScenarioStepIndex];
+
+        // Inject active text blocks and definition cards
+        narrativeBriefcardBoxElement.innerHTML = `
+            <h4 style="margin: 0 0 4px 0; font-size: 1.05rem; color: var(--mdrt-navy);">${currentActiveCase.title}</h4>
+            <p style="margin: 0; font-size: 0.88rem; line-height: 1.4; color: #37474F;">${currentActiveCase.text}</p>
+            <div style="margin-top: 10px; background: #FFFFFF; border: 1px solid var(--mdrt-border); border-radius: 4px; padding: 8px 10px; font-size: 0.84rem;">
+                <span style="font-weight: bold; color: var(--mdrt-navy); text-transform: uppercase; font-size: 0.72rem; display: block; margin-bottom: 2px;">Vocabulary Scaffold:</span>
+                <span style="color: var(--mdrt-slate); font-style: italic;">${currentActiveCase.ealVocab}</span>
+            </div>
+        `;
+
+        // Generate response option buttons array
+        optionsButtonsBoxElement.innerHTML = "";
+        currentActiveCase.options.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.className = "option-row-btn";
+            btn.innerHTML = opt.text;
+            btn.onclick = () => verifyUserOptionChoice(opt.correct);
+            optionsButtonsBoxElement.appendChild(btn);
+        });
+    }
+
+    function verifyUserOptionChoice(isOptionCorrectValue) {
+        const scenarioData = qaScenariosDatabase[currentScenarioStepIndex];
+        
+        // Lock button arrays during transition evaluation logging
+        const alternativeButtons = optionsButtonsBoxElement.querySelectorAll(".option-row-btn");
+        alternativeButtons.forEach(b => b.disabled = true);
+
+        if (isOptionCorrectValue) {
+            userSuccessfulAnswersCount++;
+            consoleStatusLightElement.className = "status-light-bulb light-cleared";
+            consoleLightLabelElement.innerText = "PARAMETER RISK COMPLIANT";
+            consoleLightLabelElement.style.color = "var(--status-green)";
+            
+            terminalLoggerFeedElement.className = "qa-live-terminal feed-pass";
+            terminalLoggerFeedElement.innerHTML = `[QA EXCEPTION RESOLVED]<br/><br/>${scenarioData.successFeedback}`;
+        } else {
+            terminalLoggerFeedElement.className = "qa-live-terminal feed-fail";
+            terminalLoggerFeedElement.innerHTML = `[CRITICAL PROCESS VIOLATION]<br/><br/>${scenarioData.failFeedback}`;
+        }
+
+        currentScenarioStepIndex++;
+        hudScorecardElement.innerText = `Mitigation Accuracy: ${userSuccessfulAnswersCount} / ${qaScenariosDatabase.length} Breaches Handled`;
+        
+        // Pacing delay allow adequate margin for EAL processing loops
+        setTimeout(renderActiveQAScenario, 6500);
+    }
+
+    function triggerFinalQAEvaluationOverlay() {
+        const titleField = document.getElementById("modal-title-field");
+        const bodyField = document.getElementById("modal-body-field");
+        document.getElementById("completion-view-panel").style.display = "flex";
+
+        const successRatioValue = Math.round((userSuccessfulAnswersCount / qaScenariosDatabase.length) * 100);
+
+        if (successRatioValue === 100) {
+            titleField.innerText = "✔ Quality Management Audit: 100%";
+            titleField.style.color = "#69F0AE";
+            bodyField.innerHTML = `Fantastic job! You successfully resolved every quality deviation in the decontamination area. You have demonstrated a strong understanding of how to manage pump line drops, interpret ultrasonic monitor markers, and isolate bioburden risks to maintain patient safety standards.`;
+        } else {
+            titleField.innerText = `Audit Review Complete: ${successRatioValue}%`;
+            titleField.style.color = "#FFD740";
+            bodyField.innerHTML = `You correctly navigated ${userSuccessfulAnswersCount} out of ${qaScenariosDatabase.length} quality deviations. Remember: never bypass active washer logs, verify ultrasonic tank parameters daily, and always return soiled devices to the dirty side to avoid cross-contamination.`;
+        }
+    }
+
+    function rebootQAScenarioSimulator() {
+        currentScenarioStepIndex = 0;
+        userSuccessfulAnswersCount = 0;
+        document.getElementById("completion-view-panel").style.display = "none";
+        hudScorecardElement.innerText = `Mitigation Accuracy: 0 / ${qaScenariosDatabase.length} Breaches Handled`;
+        renderActiveQAScenario();
+    }
+
+    // Bind DOM load event handlers
+    window.addEventListener("DOMContentLoaded", () => {
+        renderActiveQAScenario();
+    });
+</script>
+</body>
+</html>
