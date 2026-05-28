@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robotic Laparoscopic Surgery & Reprocessing Simulator</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-red: #C62828;
+        --bg-light: #F8F9FA;
+        --accent-orange: #EF6C00;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        padding: 4px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .sim-app-wrapper {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        border: 1px solid var(--mdrt-border);
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        overflow: hidden;
+        background: #FFFFFF;
+    }
+
+    .sim-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 10px 15px;
+        border-bottom: 3px solid var(--mdrt-blue);
+    }
+
+    .sim-header h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .sim-header p {
+        margin: 2px 0 0 0;
+        font-size: 0.75rem;
+        color: #B0BEC5;
+    }
+
+    .sim-layout-body {
+        display: flex;
+        flex-direction: column;
+        background: #ECEFF1;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    /* Interactive Visual Theater */
+    .visual-theater-card {
+        background: #FFFFFF;
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid var(--mdrt-border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .theater-instruction {
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: var(--mdrt-blue);
+        margin: 0;
+        text-align: center;
+    }
+
+    /* SVG Graphics Container */
+    .svg-container {
+        width: 100%;
+        max-width: 500px;
+        height: auto;
+        background: #F0F4F8;
+        border-radius: 4px;
+        border: 1px solid var(--mdrt-border);
+    }
+
+    .interactive-zone {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .interactive-zone:hover {
+        filter: brightness(1.15);
+    }
+
+    .interactive-zone.active {
+        stroke: var(--accent-orange) !important;
+        stroke-width: 3px !important;
+    }
+
+    /* Dynamic Learning Information Panel */
+    .info-panel {
+        background: #FFFFFF;
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid var(--mdrt-border);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .component-title {
+        font-size: 1rem;
+        font-weight: bold;
+        color: var(--mdrt-navy);
+        margin: 0;
+        border-bottom: 2px solid var(--mdrt-sky);
+        padding-bottom: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .zone-badge {
+        font-size: 0.65rem;
+        background: var(--mdrt-blue);
+        color: #FFFFFF;
+        padding: 2px 6px;
+        border-radius: 10px;
+        text-transform: uppercase;
+    }
+
+    .description-block h4, .challenge-block h4 {
+        margin: 4px 0 2px 0;
+        font-size: 0.82rem;
+        color: var(--mdrt-slate);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .description-block p, .challenge-block p {
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.3;
+        color: var(--mdrt-charcoal);
+    }
+
+    .challenge-block {
+        background: #FFF3E0;
+        border-left: 4px solid var(--accent-orange);
+        padding: 6px 10px;
+        border-radius: 0 4px 4px 0;
+    }
+
+    /* Embedded Knowledge Verification Block */
+    .mini-quiz-box {
+        background: var(--mdrt-sky);
+        border: 1px solid var(--mdrt-blue);
+        border-radius: 4px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .quiz-question {
+        font-size: 0.82rem;
+        font-weight: bold;
+        color: var(--mdrt-navy);
+        margin: 0;
+    }
+
+    .quiz-options {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .quiz-opt-btn {
+        background: #FFFFFF;
+        border: 1px solid #90A4AE;
+        border-radius: 4px;
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .quiz-opt-btn:hover {
+        background: #ECEFF1;
+        border-color: var(--mdrt-blue);
+    }
+
+    .quiz-opt-btn.correct {
+        background: #E8F5E9;
+        border-color: var(--status-green);
+        color: var(--status-green);
+        font-weight: bold;
+    }
+
+    .quiz-opt-btn.incorrect {
+        background: #FFEBEE;
+        border-color: var(--status-red);
+        color: var(--status-red);
+    }
+
+    .quiz-feedback {
+        font-size: 0.78rem;
+        font-weight: bold;
+        margin: 2px 0 0 0;
+        line-height: 1.2;
+    }
+</style>
+</head>
+<body>
+
+<div class="sim-app-wrapper">
+    <header class="sim-header">
+        <h2>Robotic Surgical Systems Anatomy</h2>
+        <p>Interactive Training Module for Medical Device Reprocessing</p>
+    </header>
+
+    <div class="sim-layout-body">
+        <section class="visual-theater-card">
+            <p class="theater-instruction">👆 Click on any numbered component in the system to explore anatomy and reprocessing parameters:</p>
+            
+            <svg class="svg-container" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
+                <line x1="0" y1="190" x2="400" y2="190" stroke="#CFD8DC" stroke-width="2"/>
+                
+                <g class="interactive-zone" id="zone-console" onclick="selectSystemComponent('console')">
+                    <rect x="20" y="70" width="75" height="110" rx="5" fill="#263238" stroke="#37474F" stroke-width="2"/>
+                    <rect x="30" y="85" width="40" height="30" rx="3" fill="#002B49"/>
+                    <circle cx="50" cy="100" r="8" fill="#90A4AE"/> <path d="M 35 140 Q 50 150 65 140" stroke="#B0BEC5" stroke-width="3" fill="none"/>
+                    <circle cx="75" cy="115" r="10" fill="#005A9C"/>
+                    <path d="M 75 125 Q 60 145 55 160" stroke="#005A9C" stroke-width="6" fill="none"/>
+                    <circle cx="57" cy="70" r="11" fill="#005A9C" stroke="#FFFFFF" stroke-width="2"/>
+                    <text x="53" y="74" fill="#FFFFFF" font-size="12" font-weight="bold">1</text>
+                </g>
+
+                <g class="interactive-zone" id="zone-cart" onclick="selectSystemComponent('cart')">
+                    <rect x="180" y="50" width="60" height="130" rx="6" fill="#78909C" stroke="#455A64" stroke-width="2"/>
+                    <path d="M 210 70 Q 250 50 290 80" stroke="#B0BEC5" stroke-width="4" fill="none"/>
+                    <path d="M 210 90 Q 260 90 290 110" stroke="#B0BEC5" stroke-width="4" fill="none"/>
+                    <path d="M 210 110 Q 240 140 290 140" stroke="#B0BEC5" stroke-width="4" fill="none"/>
+                    <rect x="190" y="170" width="40" height="10" fill="#37474F"/>
+                    <circle cx="210" cy="50" r="11" fill="#005A9C" stroke="#FFFFFF" stroke-width="2"/>
+                    <text x="206" y="54" fill="#FFFFFF" font-size="12" font-weight="bold">2</text>
+                </g>
+
+                <g class="interactive-zone" id="zone-instruments" onclick="selectSystemComponent('instruments')">
+                    <rect x="290" y="130" width="95" height="15" rx="2" fill="#B0BEC5"/>
+                    <line x1="310" y1="100" x2="310" y2="145" stroke="#37474F" stroke-width="3"/>
+                    <line x1="340" y1="100" x2="325" y2="145" stroke="#37474F" stroke-width="3"/>
+                    <line x1="290" y1="80" x2="310" y2="125" stroke="#EF6C00" stroke-width="2"/>
+                    <circle cx="310" cy="125" r="3" fill="#212121"/>
+                    <line x1="290" y1="110" x2="325" y2="145" stroke="#EF6C00" stroke-width="2"/>
+                    <circle cx="325" cy="145" r="3" fill="#212121"/>
+                    <circle cx="325" cy="85" r="11" fill="#005A9C" stroke="#FFFFFF" stroke-width="2"/>
+                    <text x="321" y="89" fill="#FFFFFF" font-size="12" font-weight="bold">3</text>
+                </g>
+            </svg>
+        </section>
+
+        <section class="info-panel" id="component-info-panel">
+            </section>
+    </div>
+</div>
+
+<script>
+    const componentDatabase = {
+        console: {
+            title: "1. The Surgeon Console",
+            badge: "Non-Sterile Control Hub",
+            description: "Located outside the sterile field perimeter. The operating surgeon sits comfortably here, looking through a high-definition stereoscopic 3D viewer. Their fingers grasp master controllers to manipulate the instruments inside the patient in real time.",
+            challenge: "Because this unit stays completely clear of patient tissue and fluids, it is never sent to the Medical Device Reprocessing Department. It is manually wiped down with intermediate-level hospital disinfectants inside the operating theater between cases.",
+            quiz: {
+                question: "How is the Surgeon Console managed for infection control?",
+                correctIndex: 1,
+                options: [
+                    "Transported to MDR for high-temperature steam sterilization",
+                    "Manually disinfected with chemical wipes in the OR suite",
+                    "Submerged inside an automated endoscope reprocessor (AER)"
+                ],
+                successMsg: "Correct! The console does not directly contact the patient and cannot tolerate liquid submersion or extreme heat.",
+                failMsg: "Incorrect. The console contains sensitive video screens and electronics. High heat or liquid submersions will cause catastrophic electrical damage."
+            }
+        },
+        cart: {
+            title: "2. The Patient-Side Cart",
+            badge: "Sterile Field Hardware Base",
+            description: "Stands directly adjacent to the operating table. It features up to four mechanical, multi-jointed articulated arms that hold the laparoscopic cameras and instruments. The arms directly execute the physical movements translated from the Surgeon Console.",
+            challenge: "The structural arms are covered in single-use sterile plastic drapes during surgery. However, if a drape fails or tears, patient blood or bioburden can contact the columns. It requires close monitoring and specialized low-fluid manual decontamination.",
+            quiz: {
+                question: "What protective barrier isolates the Patient-Side Cart arms during a procedure?",
+                correctIndex: 0,
+                options: [
+                    "Single-use sterile protective plastic drapes",
+                    "Thick liquid-resistant antimicrobial chemical sprays",
+                    "They are inherently sterile and do not require covering"
+                ],
+                successMsg: "Correct! Clear sterile drapes shield the main robotic arms from contamination during the operation.",
+                failMsg: "Incorrect. The structural cart arms are mechanical and non-sterile; they must be physically isolated from the sterile field with specialized plastic drapes."
+            }
+        },
+        instruments: {
+            title: "3. Wristed EndoWrist Instruments",
+            badge: "Critical Patient-Contact Device",
+            description: "Specialized laparoscopic tools linked directly to the robotic arms. They feature internal micro-cables that actuate fine joint structures at the tip, replicating the full range of motion of a human wrist inside narrow spaces.",
+            challenge: "These are among the most complex instruments managed by MDRTs. Soil traps inside the internal pulley channels and long lumen shafts. They require mandatory manual wire actuation, specialized flushing ports, physical insulation testing, and adherence to manufacturer-defined use lifespans tracked by embedded microchips.",
+            quiz: {
+                question: "Why are wristed robotic instruments considered a high risk in reprocessing?",
+                correctIndex: 2,
+                options: [
+                    "They are too long to fit into typical mechanical wash baskets",
+                    "They are entirely single-use and melt if touched by water",
+                    "Internal cable channels and pulleys trap hidden blood and bioburden"
+                ],
+                successMsg: "Correct! The multi-jointed pulleys and cable paths create severe friction points that require strict manual cleaning and specialized flushing parameters.",
+                failMsg: "Incorrect. While they are delicate, they are reusable for a certified number of cycles, and their main risk is hidden organic bioburden inside the mechanical cable channels."
+            }
+        }
+    };
+
+    function selectSystemComponent(componentKey) {
+        // Toggle active styling states on SVGs
+        document.querySelectorAll('.interactive-zone').forEach(zone => {
+            zone.classList.remove('active');
+        });
+        document.getElementById(`zone-${componentKey}`).classList.add('active');
+
+        const record = componentDatabase[componentKey];
+        const infoPanel = document.getElementById("component-info-panel");
+
+        // Hydrate learning display areas cleanly
+        infoPanel.innerHTML = `
+            <h3 class="component-title">
+                ${record.title}
+                <span class="zone-badge">${record.badge}</span>
+            </h3>
+            <div class="description-block">
+                <h4>Anatomy & Function</h4>
+                <p>${record.description}</p>
+            </div>
+            <div class="challenge-block">
+                <h4>MDR Reprocessing Impact</h4>
+                <p>${record.challenge}</p>
+            </div>
+            
+            <div class="mini-quiz-box">
+                <p class="quiz-question">❓ Check Your Understanding: ${record.quiz.question}</p>
+                <div class="quiz-options">
+                    ${record.quiz.options.map((optionText, index) => `
+                        <button class="quiz-opt-btn" onclick="verifyQuizAnswer(this, ${index}, ${record.quiz.correctIndex}, '${btoa(record.quiz.successMsg)}', '${btoa(record.quiz.failMsg)}')">
+                            ${optionText}
+                        </button>
+                    `).join('')}
+                </div>
+                <div class="quiz-feedback" id="quiz-feedback-output"></div>
+            </div>
+        `;
+    }
+
+    function verifyQuizAnswer(buttonNode, selectedIndex, correctIndex, successEncoded, failEncoded) {
+        const optionsBlock = buttonNode.parentElement;
+        const feedbackOutput = document.getElementById("quiz-feedback-output");
+        
+        // Decode strings securely
+        const successMessage = atob(successEncoded);
+        const failMessage = atob(failEncoded);
+
+        // Deactivate alternate choice options
+        optionsBlock.querySelectorAll('.quiz-opt-btn').forEach(btn => {
+            btn.disabled = true;
+            btn.classList.remove('correct', 'incorrect');
+        });
+
+        if (selectedIndex === correctIndex) {
+            buttonNode.classList.add('correct');
+            feedbackOutput.style.color = "var(--status-green)";
+            feedbackOutput.innerText = `✔ ${successMessage}`;
+        } else {
+            buttonNode.classList.add('incorrect');
+            feedbackOutput.style.color = "var(--status-red)";
+            feedbackOutput.innerText = `❌ ${failMessage}`;
+            
+            // Highlight correct fallback line
+            const buttons = optionsBlock.querySelectorAll('.quiz-opt-btn');
+            buttons[correctIndex].classList.add('correct');
+        }
+    }
+
+    // Initialize display with Zone 3 (Instruments) automatically visible as the primary MDR target
+    window.addEventListener("DOMContentLoaded", () => {
+        selectSystemComponent('instruments');
+    });
+</script>
+
+</body>
+</html>
