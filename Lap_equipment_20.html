@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surgical Endoscopy Tower &amp; Equipment Explorer</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-amber: #EF6C00;
+        --screen-glow: #1DE9B6;
+        --cable-light: #FFF176;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 10px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .tower-app-container {
+        max-width: 100%;
+        margin: 0 auto;
+        border: 2px solid var(--mdrt-border);
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        overflow: hidden;
+        background: #FFFFFF;
+        position: relative;
+    }
+
+    /* Top Ribbon Header */
+    .app-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 4px solid var(--mdrt-blue);
+    }
+
+    .app-header h2 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .telemetry-status {
+        background: var(--mdrt-blue);
+        font-size: 0.8rem;
+        font-weight: bold;
+        padding: 4px 12px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        font-family: monospace;
+    }
+
+    /* Split Workspace Grid Layout */
+    .app-split-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        background: #ECEFF1;
+    }
+
+    @media (min-width: 768px) {
+        .app-split-grid {
+            grid-template-columns: 1fr 420px;
+        }
+    }
+
+    /* Left Panel: Surgical Video Rack Cart Canvas Viewport */
+    .tower-rack-viewport {
+        padding: 20px;
+        height: 480px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-right: 1px solid var(--mdrt-border);
+        background: linear-gradient(180deg, #37474F 0%, #212121 100%);
+        position: relative;
+    }
+
+    .blueprint-rack-frame {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Interactive Hardware Selection Hotspots */
+    .hardware-node-btn {
+        position: absolute;
+        background: rgba(239, 108, 0, 0.15);
+        border: 2px solid var(--status-amber);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+    }
+
+    .hardware-node-btn:hover {
+        background: rgba(0, 90, 156, 0.25);
+        border-color: #29B6F6;
+        box-shadow: 0 0 10px rgba(41, 182, 246, 0.5);
+    }
+
+    .hardware-node-btn.node-selected {
+        border-color: var(--screen-glow);
+        background: rgba(29, 233, 182, 0.15);
+        box-shadow: 0 0 12px var(--screen-glow);
+    }
+
+    .node-label-tag {
+        color: #FFFFFF;
+        font-size: 0.68rem;
+        font-weight: bold;
+        background: rgba(0,0,0,0.75);
+        padding: 1px 4px;
+        border-radius: 2px;
+        text-transform: uppercase;
+        pointer-events: none;
+    }
+
+    /* Right Panel: Content Dashboards & Care Guidelines */
+    .dashboard-details-panel {
+        background: #FFFFFF;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .scaffold-help-card {
+        background: #F5F7F8;
+        border: 1px solid var(--mdrt-border);
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 0.88rem;
+        line-height: 1.3;
+        color: var(--mdrt-slate);
+    }
+
+    .equipment-data-card {
+        background: var(--mdrt-sky);
+        border-left: 5px solid var(--mdrt-blue);
+        border-radius: 4px;
+        padding: 15px;
+        min-height: 240px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .equipment-data-card h4 {
+        margin: 0 0 6px 0;
+        color: var(--mdrt-navy);
+        font-size: 1.05rem;
+    }
+
+    .equipment-data-card p {
+        margin: 0;
+        font-size: 0.88rem;
+        line-height: 1.4;
+        color: #1A237E;
+    }
+
+    .mdrt-directive-badge {
+        display: inline-block;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        background: var(--mdrt-blue);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin-top: 12px;
+        align-self: flex-start;
+    }
+</style>
+</head>
+<body>
+
+<div class="tower-app-container">
+    <header class="app-header">
+        <h2>Surgical Endoscopy Tower Framework</h2>
+        <span class="telemetry-status" id="hud-cart-telemetry">Cart Mode: Standby</span>
+    </header>
+
+    <div class="app-split-grid">
+        <section class="tower-rack-viewport">
+            <div class="blueprint-rack-frame">
+                <svg viewBox="0 0 240 260" width="100%" height="100%">
+                    <rect x="20" y="10" width="6" height="240" fill="#546E7A"/>
+                    <rect x="94" y="10" width="6" height="240" fill="#546E7A"/>
+                    <rect x="15" y="240" width="90" height="10" rx="2" fill="#37474F"/>
+                    
+                    <rect x="12" y="15" width="96" height="52" rx="4" fill="#455A64" stroke="#78909C" stroke-width="2"/>
+                    <rect x="16" y="19" width="88" height="44" fill="#1A1A1A" id="v-monitor-screen"/>
+                    <ellipse cx="60" cy="41" rx="25" ry="12" fill="#00E676" opacity="0.1" id="v-screen-imaging"/>
+                    
+                    <rect x="26" y="74" width="68" height="26" rx="2" fill="#37474F" stroke="#90A4AE"/>
+                    <rect x="32" y="80" width="16" height="8" fill="#1A1A1A"/>
+                    <text x="34" y="86" fill="#FF5252" font-family="monospace" font-size="5" font-weight="bold" id="v-insuf-txt">00.0</text>
+                    
+                    <rect x="26" y="106" width="68" height="26" rx="2" fill="#37474F" stroke="#90A4AE"/>
+                    <circle cx="36" cy="119" r="3" fill="#90A4AE"/>
+                    
+                    <rect x="26" y="138" width="68" height="26" rx="2" fill="#37474F" stroke="#90A4AE"/>
+                    <circle cx="80" cy="151" r="4" fill="#1A1A1A"/>
+                    <circle cx="80" cy="151" r="2" fill="var(--cable-light)" opacity="0.2" id="v-source-bulb"/>
+                    
+                    <rect x="26" y="170" width="68" height="24" rx="2" fill="#37474F" stroke="#90A4AE"/>
+                    
+                    <path d="M140,160 Q180,110 220,160 Z" fill="none" stroke="#90A4AE" stroke-width="2" id="v-abdomen-wall"/>
+                    <path d="M140,160 Q180,110 220,160 Z" fill="rgba(0,230,118,0.03)" stroke="none" id="v-pneumo-fill" opacity="0"/>
+                    
+                    <rect x="160" y="124" width="6" height="20" transform="rotate(-25 160 124)" fill="#B0BEC5" stroke="#37474F"/>
+                    <rect x="195" y="124" width="6" height="20" transform="rotate(25 195 124)" fill="#B0BEC5" stroke="#37474F"/>
+                    
+                    <rect x="145" y="110" width="4" height="42" transform="rotate(-25 145 110)" fill="#78909C" stroke="#37474F"/>
+                    <rect x="135" y="94" width="14" height="18" transform="rotate(-25 135 94)" fill="#455A64"/>
+                    
+                    <path d="M80,151 Q110,210 135,110" fill="none" stroke="var(--cable-light)" stroke-width="2" opacity="0.15" id="v-cable-lightpath"/>
+                    <path d="M140,102 Q110,130 60,119" fill="none" stroke="#00E676" stroke-width="1.5" opacity="0.15" id="v-cable-camerapath"/>
+                    <path d="M48,84 Q130,50 200,126" fill="none" stroke="#E3F2FD" stroke-width="2.5" stroke-dasharray="4 2" opacity="0.2" id="v-cable-gaspath"/>
+                    <path d="M60,182 Q120,240 198,134" fill="none" stroke="#FF8A80" stroke-width="2" opacity="0.2" id="v-cable-suctionpath"/>
+                </svg>
+
+                <button class="hardware-node-btn node-selected" style="top: 4%; left: 5%; width: 40%; height: 20%;" onclick="loadCartComponentSpecs(this, 'monitor')"><span class="node-label-tag">Surgical Monitor</span></button>
+                <button class="hardware-node-btn" style="top: 28%; left: 11%; width: 28%; height: 10%;" onclick="loadCartComponentSpecs(this, 'insufflator')"><span class="node-label-tag">CO₂ Insufflator</span></button>
+                <button class="hardware-node-btn" style="top: 41%; left: 11%; width: 28%; height: 10%;" onclick="loadCartComponentSpecs(this, 'processor')"><span class="node-label-tag">Video Processor</span></button>
+                <button class="hardware-node-btn" style="top: 53%; left: 11%; width: 28%; height: 10%;" onclick="loadCartComponentSpecs(this, 'source')"><span class="node-label-tag">Light Source</span></button>
+                <button class="hardware-node-btn" style="top: 65%; left: 11%; width: 28%; height: 9%;" onclick="loadCartComponentSpecs(this, 'suction')"><span class="node-label-tag">Suction Pump</span></button>
+                
+                <button class="hardware-node-btn" style="top: 32%; left: 54%; width: 14%; height: 12%;" onclick="loadCartComponentSpecs(this, 'camera')"><span class="node-label-tag">Camera</span></button>
+                <button class="hardware-node-btn" style="top: 48%; left: 66%; width: 12%; height: 12%;" onclick="loadCartComponentSpecs(this, 'trocars')"><span class="node-label-tag">Trocars</span></button>
+                <button class="hardware-node-btn" style="top: 60%; left: 78%; width: 15%; height: 12%;" onclick="loadCartComponentSpecs(this, 'tubing')"><span class="node-label-tag">Tubing Lines</span></button>
+            </div>
+        </section>
+
+        <section class="dashboard-details-panel">
+            <div class="scaffold-help-card">
+                🗺️ <strong>Interactive System Map:</strong> Click on any named hardware layer or accessory panel across the endoscopy schematic layout to audit definitions and clean-bench care directives.
+            </div>
+
+            <div class="equipment-data-card" id="details-card-box">
+                <h4>Surgical Display Monitor</h4>
+                <p>The visual output system suspended over the operative field. It receives processed digital video streams from the camera console, rendering high-definition, real-time images of the patient's internal anatomy for the surgical team.</p>
+                <span class="mdrt-directive-badge">MDRT Action: Wipe screen using manufacturer-approved non-abrasive anti-static cloths; inspect housing arm links</span>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    // Comprehensive system mapping repository containing technical data entries matched to requested inputs
+    const towerInventoryMatrix = {
+        monitor: {
+            title: "Surgical Medical Display Monitor",
+            desc: "The visual output center suspended directly over the operating table field. It displays high-definition, live video streams sent from the video processor box, giving surgeons a clear, magnified view of internal tissue tracks and micro-structures.",
+            action: "MDRT Action: Clean housing skins using facility-approved micro-cloths; verify mounting brackets adjust smoothly without drifting",
+            telemetry: "Cart Mode: Display Active",
+            screen: "#00E676", screenImg: "1.0", bulb: "0.2", lightC: "0.15", camC: "0.15", gasC: "0.2", sucC: "0.2", pneumo: "0"
+        },
+        insufflator: {
+            title: "CO₂ Insufflator Unit",
+            desc: "A crucial electronic gas-regulation device. It injects warm Medical Grade Carbon Dioxide gas into the patient's abdomen through a tubing line at a precisely controlled pressure (typically 12–15 mmHg). This gas expands the abdomen, creating an open workspace called a <strong>pneumoperitoneum</strong> so the surgeon can navigate safely without damaging organs.",
+            action: "MDRT Action: Inspect internal check-valves to prevent backflow fluid contamination; verify pressure baseline calibrations match logs",
+            telemetry: "Telemetry: PNEUMOPERITONEUM ACTIVE",
+            screen: "#1A1A1A", screenImg: "0.1", bulb: "0.2", lightC: "0.15", camC: "0.15", gasC: "1.0", sucC: "0.2", pneumo: "0.2"
+        },
+        processor: {
+            title: "High-Definition Video Processor Box",
+            desc: "The centralized computing hub of the endoscopy cart. It receives raw digital data streams captured by the connected camera head, processes color balance and sharpness matrix configurations, and transmits a clear video signal to the display monitors.",
+            action: "MDRT Action: Inspect connection pins inside the receptacle socket for bent components; confirm firmware version matches hospital asset logs",
+            telemetry: "Processor Mode: SIGNAL RECONSTRUCTED",
+            screen: "#00E676", screenImg: "0.4", bulb: "0.2", lightC: "0.15", camC: "1.0", gasC: "0.2", sucC: "0.2", pneumo: "0"
+        },
+        source: {
+            title: "High-Output Optical Light Source",
+            desc: "The generation unit for intense illumination, utilizing high-output LED or Xenon bulb matrices. It focuses brilliant, cold illumination straight into the light post interface of the fiber-optic cable, lighting up the dark interior spaces of the patient's body cavity.",
+            action: "MDRT Action: Test bulb intensity hours to prevent unexpected failures; ensure cooling vents are entirely clear of dust layers",
+            telemetry: "Source Status: BULB RUNTIME NORMAL",
+            screen: "#1A1A1A", screenImg: "0.1", bulb: "1.0", lightC: "1.0", camC: "0.15", gasC: "0.2", sucC: "0.2", pneumo: "0"
+        },
+        suction: {
+            title: "Fluid Suction &amp; Irrigation Pump",
+            desc: "A dual-action fluid management system. It pumps sterile saline through an irrigation tube to wash away blood or tissue debris from lenses and structures, then activates a vacuum line to pull dirty fluids out into external canister reservoirs, keeping the surgical field clear.",
+            action: "MDRT Action: Inspect pump roller tracks for wear fatigue; dismantle reusable overflow valves to confirm zero fluid leaks",
+            telemetry: "Pump Status: RECOVERY VACUUM SEALED",
+            screen: "#1A1A1A", screenImg: "0.1", bulb: "0.2", lightC: "0.15", camC: "0.15", gasC: "0.2", sucC: "1.0", pneumo: "0"
+        },
+        camera: {
+            title: "HD Surgical Camera Head &amp; Coupler Cable",
+            desc: "The handpiece component that locks onto the scope eyepiece. Equipped with internal optical prism sensors, it converts the reflected image into an electronic data stream. The attached heavy permanent cable is insulated to survive sterilization while shielding fine video lines from electromagnetic interference.",
+            action: "MDRT Action: Inspect the entire cable run for cracks or insulation cuts using an insulation tester; check glass windows for scratches or cloudiness",
+            telemetry: "Handpiece Link: CCD SENSOR COUPLING",
+            screen: "#00E676", screenImg: "0.8", bulb: "0.2", lightC: "0.15", camC: "1.0", gasC: "0.2", sucC: "0.2", pneumo: "0"
+        },
+        trocars: {
+            title: "Surgical Access Trocars &amp; Cannula Sleeves",
+            desc: "Rigid entry ports placed through the patient's abdominal wall. Trocars contain sharp or blunt obturators to pierce tissue layers, housing internal rubber flap seals that maintain internal gas pressure when scopes or instruments pass through the sleeve.",
+            action: "MDRT Action: Disassemble multi-part plastic or steel valves completely; inspect interior rubber gaskets for micro-tears that cause pressure leaks",
+            telemetry: "Access Points: BARRIER VALVES STABLE",
+            screen: "#1A1A1A", screenImg: "0.1", bulb: "0.2", lightC: "0.15", camC: "0.15", gasC: "0.4", sucC: "0.4", pneumo: "0.1"
+        },
+        tubing: {
+            title: "Insufflation Tubing &amp; Suction Lines",
+            desc: "The specialized fluid conduits linking cart machinery to the patient field. The insufflation line features an inline hydrophobic HEPA micron filter to trap contaminants. Suction-irrigation lines use reinforced walls to handle strong internal pressures without collapsing.",
+            action: "MDRT Action: Verify single-use disposable tags on lightweight tubes; for reusable lines, check lumens for complete dryness before packaging",
+            telemetry: "Lines Status: DISPLACEMENT PATHS OPEN",
+            screen: "#1A1A1A", screenImg: "0.1", bulb: "0.2", lightC: "0.15", camC: "0.15", gasC: "1.0", sucC: "1.0", pneumo: "0.1"
+        }
+    };
+
+    // DOM Layer Vector Selectors
+    const monitorScreenNode = document.getElementById("v-monitor-screen");
+    const screenImagingNode = document.getElementById("v-screen-imaging");
+    const sourceBulbNode = document.getElementById("v-source-bulb");
+    const cableLightpathNode = document.getElementById("v-cable-lightpath");
+    const cableCamerapathNode = document.getElementById("v-cable-camerapath");
+    const cableGaspathNode = document.getElementById("v-cable-gaspath");
+    const cableSuctionpathNode = document.getElementById("v-cable-suctionpath");
+    const pneumoFillNode = document.getElementById("v-pneumo-fill");
+
+    const detailsCardBox = document.getElementById("details-card-box");
+    const hudCartTelemetry = document.getElementById("hud-cart-telemetry");
+
+    function loadCartComponentSpecs(clickedButton, itemKey) {
+        // Clear previous selection borders
+        const nodes = document.querySelectorAll(".hardware-node-btn");
+        nodes.forEach(n => n.classList.remove("node-selected"));
+
+        // Highlight selected node
+        clickedButton.classList.add("node-selected");
+
+        const targetData = towerInventoryMatrix[itemKey];
+
+        // Coordinate Vector Opacity Layers to highlight the active component's functional path
+        monitorScreenNode.style.fill = targetData.screen;
+        screenImagingNode.style.opacity = targetData.screenImg;
+        sourceBulbNode.style.opacity = targetData.bulb;
+        cableLightpathNode.style.opacity = targetData.lightC;
+        cableCamerapathNode.style.opacity = targetData.camC;
+        cableGaspathNode.style.opacity = targetData.gasC;
+        cableSuctionpathNode.style.opacity = targetData.sucC;
+        pneumoFillNode.style.opacity = targetData.pneumo;
+
+        // Render variables to telemetry interface card components
+        hudCartTelemetry.innerText = targetData.telemetry;
+        detailsCardBox.innerHTML = `
+            <h4>${targetData.title}</h4>
+            <p>${targetData.desc}</p>
+            <span class="mdrt-directive-badge">${targetData.action}</span>
+        `;
+    }
+</script>
+
+</body>
+</html>

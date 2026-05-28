@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Powered Equipment Decontamination Simulator</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-red: #C62828;
+        --status-amber: #EF6C00;
+        --drill-body: #78909C;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 10px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .powered-app-container {
+        max-width: 100%;
+        margin: 0 auto;
+        border: 2px solid var(--mdrt-border);
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        overflow: hidden;
+        background: #FFFFFF;
+        position: relative;
+    }
+
+    /* App Banner header */
+    .app-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 4px solid var(--mdrt-blue);
+    }
+
+    .app-header h2 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .telemetry-gauge {
+        background: var(--mdrt-blue);
+        font-size: 0.8rem;
+        font-weight: bold;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-family: monospace;
+    }
+
+    /* Split Screen Grid */
+    .app-split-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        background: #ECEFF1;
+    }
+
+    @media (min-width: 768px) {
+        .app-split-grid {
+            grid-template-columns: 1fr 420px;
+        }
+    }
+
+    /* Left Side: Decontamination Bench Viewport Window */
+    .decon-bench-viewport {
+        padding: 25px;
+        height: 340px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-right: 1px solid var(--mdrt-border);
+        position: relative;
+        background: linear-gradient(180deg, #CFD8DC 0%, #90A4AE 100%);
+    }
+
+    .bench-sink-basin {
+        width: 100%;
+        max-width: 440px;
+        height: 100%;
+        background: #FFFFFF;
+        border: 5px solid #607D8B;
+        border-radius: 6px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Interactive Orthopedic Rotary Drill Handpiece Vector Skin */
+    .powered-drill-handpiece {
+        width: 180px;
+        height: 180px;
+        position: relative;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    /* Internal Fluid Invasion Risk Track Indicator Overlay */
+    .fluid-warning-seal-ring {
+        position: absolute;
+        top: 35px; left: 45px;
+        width: 40px; height: 40px;
+        border: 3px dashed var(--status-green);
+        border-radius: 50%;
+        animation: pulseGlow 2s infinite ease-in-out;
+        pointer-events: none;
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.15); opacity: 0.3; }
+    }
+
+    /* Right Side: Step Matrix Task Controls Panels */
+    .task-controls-panel {
+        background: #FFFFFF;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .scaffold-briefcard {
+        background: var(--mdrt-sky);
+        border-left: 5px solid var(--mdrt-blue);
+        border-radius: 4px;
+        padding: 12px 15px;
+    }
+
+    .scaffold-briefcard h4 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+        color: var(--mdrt-navy);
+    }
+
+    .scaffold-briefcard p {
+        margin: 0;
+        font-size: 0.88rem;
+        color: #37474F;
+        line-height: 1.4;
+    }
+
+    /* Operational Tool Action Grid button blocks */
+    .action-button-matrix {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .tool-action-btn {
+        padding: 10px;
+        border: 1px solid var(--mdrt-border);
+        background: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        font-weight: bold;
+        font-size: 0.78rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .tool-action-btn:hover:not(:disabled) {
+        border-color: var(--mdrt-blue);
+        background-color: var(--mdrt-sky);
+        color: var(--mdrt-blue);
+    }
+
+    .tool-action-btn:disabled {
+        background-color: #ECEFF1 !important;
+        color: #B0BEC5 !important;
+        border-color: var(--mdrt-border) !important;
+        cursor: not-allowed;
+    }
+
+    /* Live QA Terminal Feed Screen */
+    .bench-terminal-monitor {
+        background: #1A1A1A;
+        color: #69F0AE;
+        border-radius: 6px;
+        padding: 12px 15px;
+        font-family: monospace;
+        font-size: 0.84rem;
+        min-height: 90px;
+        line-height: 1.4;
+        box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .txt-clear { color: #69F0AE; }
+    .txt-warning { color: #FFD740; }
+    .txt-error { color: #FF5252; }
+
+    /* Completion Overlay Layout */
+    .game-over-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,43,73,0.97);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        text-align: center;
+        z-index: 100;
+        display: none;
+    }
+
+    .game-over-overlay h3 { font-size: 1.8rem; margin: 0 0 10px 0; }
+    .game-over-overlay p { max-width: 540px; line-height: 1.5; font-size: 1.05rem; margin-bottom: 20px; }
+
+    .action-btn-restart {
+        background: #FFFFFF;
+        color: var(--mdrt-navy);
+        padding: 12px 24px;
+        border: none;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        text-transform: uppercase;
+    }
+</style>
+</head>
+<body>
+
+<div class="powered-app-container">
+    <header class="app-header">
+        <h2>Powered Equipment QA Processing Bench</h2>
+        <span class="telemetry-gauge" id="hud-drill-status">Drill State: SECURE</span>
+    </header>
+
+    <div class="app-split-grid">
+        <section class="decon-bench-viewport">
+            <h3 style="margin: 0; font-size: 0.85rem; text-transform: uppercase; color: #37474F; letter-spacing: 0.75px; font-weight: 800; align-self: flex-start; width:100%; padding-bottom:4px;">Decontamination Utility Bay</h3>
+            <div class="bench-sink-basin">
+                <div class="fluid-warning-seal-ring" id="seal-shield-ring"></div>
+
+                <div class="powered-drill-handpiece" id="drill-handpiece-vector">
+                    <svg viewBox="0 0 100 100" width="100%" height="100%">
+                        <path d="M75,35 L90,45 L75,55 Z" fill="#90A4AE" stroke="#455A64" stroke-width="2"/>
+                        <rect x="25" y="30" width="50" height="30" rx="4" fill="var(--drill-body)" stroke="#37474F" stroke-width="3"/>
+                        <line x1="20" y1="45" x2="92" y2="45" stroke="#37474F" stroke-width="2" stroke-dasharray="3 3"/>
+                        <path d="M35,60 L45,90 L60,90 L50,60 Z" fill="var(--drill-body)" stroke="#37474F" stroke-width="3"/>
+                        <path d="M52,65 L56,70 L52,75 Z" fill="#CFD8DC" stroke="#37474F" stroke-width="1.5"/>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <section class="task-controls-panel">
+            <div class="scaffold-briefcard" id="narrative-briefcard">
+                <h4>Active Task Manifest: Step 1 / 4</h4>
+                <p><strong>Point-of-Use Handling:</strong> The orthopedic surgery has concluded. The dirty rotary handpiece rests on your reprocessing table covered in raw blood debris. Initialize point-of-use cleaning steps.</p>
+            </div>
+
+            <h3 style="margin: 0; font-size: 0.8rem; text-transform: uppercase; color: var(--mdrt-slate); letter-spacing: 0.5px; font-weight: 800;">Processing Tool Chest</h3>
+            <div class="action-button-matrix">
+                <button class="tool-action-btn" id="act-saline" onclick="executeReprocessingStep('SALINE')">❌ Saline Gauze</button>
+                <button class="tool-action-btn" id="act-wipe" onclick="executeReprocessingStep('ENZYMATIC_WIPE')">💧 Enzymatic Cloth</button>
+                <button class="tool-action-btn" id="act-dunk" onclick="executeReprocessingStep('FULL_SUBMERSION')">🌊 Submerge Handpiece</button>
+                <button class="tool-action-btn" id="act-brush" onclick="executeReprocessingStep('LUMEN_BRUSH')">🖌️ Cannulated Brush</button>
+                <button class="tool-action-btn" id="act-syringe" onclick="executeReprocessingStep('SYRINGE_PURGE')">💉 Volumetric Purge</button>
+                <button class="tool-action-btn" id="act-air" onclick="executeReprocessingStep('COMPRESSED_AIR')">💨 HEPA Compressed Air</button>
+            </div>
+
+            <h3 style="margin: 0; font-size: 0.8rem; text-transform: uppercase; color: var(--mdrt-slate); letter-spacing: 0.5px; font-weight: 800;">Real-time Technical QA Feed</h3>
+            <div class="bench-terminal-monitor" id="terminal-readout">
+                [SYSTEM READY] Awaiting point-of-use mitigation selection controls...
+            </div>
+        </section>
+    </div>
+
+    <div class="game-over-overlay" id="game-over-screen">
+        <h3 id="modal-title-field">Audit Parameter Warning</h3>
+        <p id="modal-body-field"></p>
+        <button class="action-btn-restart" onclick="rebootSimulatorSuite()">Reset Reprocessing Bench</button>
+    </div>
+</div>
+
+<script>
+    // System sequence control variables tracking user progression limits
+    let ongoingWorkflowStepIndex = 1;
+    let totalLumenBrushPassesCount = 0;
+
+    const narrativeBriefcardElement = document.getElementById("narrative-briefcard");
+    const terminalReadoutElement = document.getElementById("terminal-readout");
+    const statusDrillHudElement = document.getElementById("hud-drill-status");
+    const drillHandpieceVectorElement = document.getElementById("drill-handpiece-vector");
+    const sealShieldRingElement = document.getElementById("seal-shield-ring");
+    const gameOverScreenElement = document.getElementById("game-over-screen");
+
+    function executeReprocessingStep(userSelectedAction) {
+        terminalReadoutElement.className = "bench-terminal-monitor";
+
+        // Step 1: Point-of-Use Handling Operations Loop
+        if (ongoingWorkflowStepIndex === 1) {
+            if (userSelectedAction === "SALINE") {
+                triggerInfectionFailureOverlay(
+                    "CRITICAL CORROSION INITIATED",
+                    "You applied saline-soaked gauze to high-speed steel alloys. The sodium chloride molecules immediately initiated chemical oxidation, causing rapid, irreversible surface pitting. The handpiece has suffered structural damage and must be taken out of service for repair."
+                );
+            } else if (userSelectedAction === "ENZYMATIC_WIPE") {
+                terminalReadoutElement.className = "bench-terminal-monitor txt-clear";
+                terminalReadoutElement.innerHTML = "[SUCCESS] Exterior surface wiped down safely using a damp, pH-neutral enzymatic cloth. Bulk bioburden layer dissolved without surface pitting. Proceeding to Step 2.";
+                
+                ongoingWorkflowStepIndex = 2;
+                updateNarrativeBriefcardDisplay();
+            } else {
+                terminalReadoutElement.className = "bench-terminal-monitor txt-warning";
+                terminalReadoutElement.innerHTML = "[INVALID SEQUENCE] Point-of-use care requires prompt manual breakdown and exterior mitigation before internal canal processing can occur.";
+            }
+            return;
+        }
+
+        // Step 2: Fluid-Invasion Prevention Boundaries Loop
+        if (ongoingWorkflowStepIndex === 2) {
+            if (userSelectedAction === "FULL_SUBMERSION") {
+                document.documentElement.style.setProperty('--drill-body', '#C62828');
+                statusDrillHudElement.innerText = "DRILL STATE: SHORT-CIRCUIT";
+                statusDrillHudElement.style.backgroundColor = "var(--status-red)";
+                
+                triggerInfectionFailureOverlay(
+                    "INTERNAL MOTOR FLOODED",
+                    "Never submerge a powered handpiece unless explicit manufacturer validation allows it. Water has leaked past the unsealed switch housings into the motor cavity, causing immediate gear-train oxidation and internal short-circuiting."
+                );
+            } else if (userSelectedAction === "LUMEN_BRUSH") {
+                totalLumenBrushPassesCount++;
+                if (totalLumenBrushPassesCount < 3) {
+                    terminalReadoutElement.className = "bench-terminal-monitor txt-warning";
+                    terminalReadoutElement.innerHTML = `[PROCESSING] Cannulated lumen brush pushed through the central drive canal. Pass counter: ${totalLumenBrushPassesCount}/3. Remember to rinse bristles in enzymatic mixture between each pass to prevent dragging loosened debris back inside.`;
+                } else {
+                    terminalReadoutElement.className = "bench-terminal-monitor txt-clear";
+                    terminalReadoutElement.innerHTML = "[SUCCESS] Internal channel brushed completely 3 times with a tight-fit brush. Structural bioburden blockages safely loosened. Proceeding to Volumetric Purging phase.";
+                    
+                    ongoingWorkflowStepIndex = 3;
+                    updateNarrativeBriefcardDisplay();
+                }
+            } else {
+                terminalReadoutElement.className = "bench-terminal-monitor txt-warning";
+                terminalReadoutElement.innerHTML = "[INVALID SEQUENCE] The inner drill canal has complex geometries that require brushing before volumetric fluid displacement can safely occur.";
+            }
+            return;
+        }
+
+        // Step 3: Volumetric Purging Operations Loop
+        if (ongoingWorkflowStepIndex === 3) {
+            if (userSelectedAction === "SYRINGE_PURGE") {
+                terminalReadoutElement.className = "bench-terminal-monitor txt-clear";
+                terminalReadoutElement.innerHTML = "[SUCCESS] Connected a 60cc syringe filled with pH-neutral solution. Calibrated volume forced through the canal, physically displacing the suspended bioburden residues out of the device. Proceeding to final stage.";
+                
+                ongoingWorkflowStepIndex = 4;
+                updateNarrativeBriefcardDisplay();
+            } else {
+                terminalReadoutElement.className = "bench-terminal-monitor txt-warning";
+                terminalReadoutElement.innerHTML = "[INVALID SEQUENCE] Loosened particles are trapped inside the inner lumen. You must deploy a volumetric purge to flush the channel clean.";
+            }
+            return;
+        }
+
+        // Step 4: Moisture Extraction and Final HEPA Drying Loop
+        if (ongoingWorkflowStepIndex === 4) {
+            if (userSelectedAction === "COMPRESSED_AIR") {
+                sealShieldRingElement.style.borderColor = "var(--status-green)";
+                statusDrillHudElement.innerText = "DRILL STATE: CERTIFIED CLEAN";
+                statusDrillHudElement.style.backgroundColor = "var(--status-green)";
+                
+                triggerInfectionFailureOverlay(
+                    "REPROCESSING AUDIT SUCCESSFUL",
+                    "Excellent! You successfully decontaminated a high-risk piece of powered surgical equipment without fluid invasion errors. By executing an enzymatic point-of-use wipe, precise internal canal brushing, a volumetric purge, and HEPA-filtered compressed air drying, you eliminated residual moisture—preventing internal motor failure and ensuring the tool is safe for sterilization and patient care."
+                );
+            } else {
+                terminalReadoutElement.className = "bench-terminal-monitor txt-warning";
+                terminalReadoutElement.innerHTML = "[FINAL SAFEGUARD REJECTED] Residual interior moisture is the leading cause of internal motor failure and gear rust. You must finalize processing using the HEPA compressed air line to clear water away from the internal seals.";
+            }
+        }
+    }
+
+    function updateNarrativeBriefcardDisplay() {
+        const briefcardTitle = narrativeBriefcardElement.querySelector("h4");
+        const briefcardText = narrativeBriefcardElement.querySelector("p");
+
+        if (ongoingWorkflowStepIndex === 2) {
+            briefcardTitle.innerText = "Active Task Manifest: Step 2 / 4";
+            briefcardText.innerHTML = "<strong>Technical Manual Cleaning:</strong> The handpiece exterior is stabilized. Now address the internal components. The device frame possesses an open, hollow **cannulated lumen** down its centerline. Select the correct manual cleaning tool and use it for the required number of passes without submerging the handle housing.";
+        } else if (ongoingWorkflowStepIndex === 3) {
+            briefcardTitle.innerText = "Active Task Manifest: Step 3 / 4";
+            briefcardText.innerHTML = "<strong>Volumetric Canal Displacement:</strong> Brushing has successfully dislodged internal debris, but these particles remain trapped inside the dark lumen pathways. Select a tool to purge the canal and wash away the loosened bioburden.";
+        } else if (ongoingWorkflowStepIndex === 4) {
+            briefcardTitle.innerText = "Active Task Manifest: Step 4 / 4";
+            briefcardText.innerHTML = "<strong>Terminal Rinse and Seal Moisture Extraction:</strong> The internal pathways have been flushed with critical-quality water. Liquid water is trapped inside the deep recesses and around the motor seals. Deploy the mandatory final safeguard to extract moisture and prevent engine failure.";
+        }
+    }
+
+    function triggerInfectionFailureOverlay(titleString, descriptionString) {
+        document.getElementById("modal-title-field").innerText = titleString;
+        document.getElementById("modal-body-field").innerHTML = descriptionString;
+        
+        if (titleString.includes("SUCCESS")) {
+            document.getElementById("modal-title-field").style.color = "#69F0AE";
+        } else {
+            document.getElementById("modal-title-field").style.color = "#FF5252";
+        }
+        
+        gameOverScreenElement.style.display = "flex";
+    }
+
+    function rebootSimulatorSuite() {
+        ongoingWorkflowStepIndex = 1;
+        totalLumenBrushPassesCount = 0;
+        
+        document.documentElement.style.setProperty('--drill-body', '#78909C');
+        statusDrillHudElement.innerText = "DRILL STATE: SECURE";
+        statusDrillHudElement.style.backgroundColor = "var(--mdrt-blue)";
+        sealShieldRingElement.style.borderColor = "var(--status-green)";
+        terminalReadoutElement.className = "bench-terminal-monitor";
+        terminalReadoutElement.innerHTML = "[SYSTEM READY] Awaiting point-of-use mitigation selection controls...";
+        
+        gameOverScreenElement.style.display = "none";
+        updateNarrativeBriefcardDisplay();
+        
+        const briefcardTitle = narrativeBriefcardElement.querySelector("h4");
+        const briefcardText = narrativeBriefcardElement.querySelector("p");
+        briefcardTitle.innerText = "Active Task Manifest: Step 1 / 4";
+        briefcardText.innerHTML = "<strong>Point-of-Use Handling:</strong> The orthopedic surgery has concluded. The dirty rotary handpiece rests on your reprocessing table covered in raw blood debris. Initialize point-of-use cleaning steps.";
+    }
+</script>
+
+</body>
+</html>

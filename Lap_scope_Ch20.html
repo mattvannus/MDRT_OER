@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introduction to Endoscopy Component Explorer</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-amber: #EF6C00;
+        --glass-lens: rgba(128, 222, 234, 0.4);
+        --fiber-glow: #FFF176;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 10px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .endo-app-container {
+        max-width: 100%;
+        margin: 0 auto;
+        border: 2px solid var(--mdrt-border);
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        overflow: hidden;
+        background: #FFFFFF;
+        position: relative;
+    }
+
+    /* Top Display Ribbon Header */
+    .app-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 4px solid var(--mdrt-blue);
+    }
+
+    .app-header h2 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .system-status-pill {
+        background: var(--mdrt-blue);
+        font-size: 0.8rem;
+        font-weight: bold;
+        padding: 4px 12px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        font-family: monospace;
+    }
+
+    /* Main Split Screen Presentation Grid */
+    .app-split-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        background: #ECEFF1;
+    }
+
+    @media (min-width: 768px) {
+        .app-split-grid {
+            grid-template-columns: 1fr 400px;
+        }
+    }
+
+    /* Left Column: Endoscopic Optical Workspace Window */
+    .optical-bench-viewport {
+        padding: 25px;
+        height: 340px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-right: 1px solid var(--mdrt-border);
+        position: relative;
+        background: linear-gradient(180deg, #37474F 0%, #212121 100%);
+    }
+
+    .scope-blueprint-frame {
+        width: 100%;
+        max-width: 440px;
+        height: 100%;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Interactive Pin Hotspots Overlay */
+    .hotspot-pin {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        background: var(--status-amber);
+        border: 2px solid #FFFFFF;
+        color: #FFFFFF;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.85rem;
+        cursor: pointer;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        transition: all 0.2s ease;
+        z-index: 20;
+    }
+
+    .hotspot-pin:hover {
+        background: var(--mdrt-blue);
+        transform: scale(1.2);
+    }
+
+    .hotspot-pin.active-pin {
+        background: var(--status-green);
+        box-shadow: 0 0 0 4px rgba(46,125,50,0.4);
+    }
+
+    /* Right Column: Dynamic Instructional Telemetry Dashboards */
+    .telemetry-dashboard-panel {
+        background: #FFFFFF;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .instruction-helper-box {
+        background: #F5F7F8;
+        border: 1px solid var(--mdrt-border);
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 0.88rem;
+        line-height: 1.3;
+        color: var(--mdrt-slate);
+    }
+
+    .component-spec-card {
+        background: var(--mdrt-sky);
+        border-left: 5px solid var(--mdrt-blue);
+        border-radius: 4px;
+        padding: 15px;
+        min-height: 160px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .component-spec-card h4 {
+        margin: 0 0 6px 0;
+        color: var(--mdrt-navy);
+        font-size: 1.05rem;
+    }
+
+    .component-spec-card p {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        color: #1A237E;
+    }
+
+    .scaffold-badge-tag {
+        display: inline-block;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        background: var(--mdrt-blue);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin-top: 10px;
+        align-self: flex-start;
+    }
+</style>
+</head>
+<body>
+
+<div class="endo-app-container">
+    <header class="app-header">
+        <h2>Introduction to Endoscopy: Key MIS Components</h2>
+        <span class="system-status-pill" id="hud-system-status">System: Standby</span>
+    </header>
+
+    <div class="app-split-grid">
+        <section class="optical-bench-viewport">
+            <div class="scope-blueprint-frame">
+                <svg viewBox="0 0 200 100" width="100%" height="100%">
+                    <rect x="15" y="35" width="30" height="30" rx="3" fill="#455A64" stroke="#CFD8DC" stroke-width="2"/>
+                    <circle cx="30" cy="50" r="8" fill="var(--glass-lens)" stroke="#90A4AE"/>
+                    
+                    <path d="M40,35 L48,20 L56,20 L50,35 Z" fill="#78909C" stroke="#CFD8DC" stroke-width="1.5"/>
+                    <line x1="48" y1="20" x2="48" y2="38" stroke="var(--fiber-glow)" stroke-width="3" opacity="0.3" id="vector-light-glow"/>
+                    
+                    <rect x="45" y="44" width="130" height="12" fill="#B0BEC5" stroke="#90A4AE" stroke-width="1.5"/>
+                    
+                    <line x1="50" y1="50" x2="170" y2="50" stroke="#00E676" stroke-dasharray="8 4" stroke-width="2" opacity="0.2" id="vector-laser-line"/>
+                    
+                    <path d="M175,44 L180,47 L180,53 L175,56 Z" fill="var(--glass-lens)" stroke="#00E676" stroke-width="1.5"/>
+                </svg>
+
+                <button class="hotspot-pin active-pin" style="top: 44%; left: 10%;" onclick="revealEndoComponentSpecs(this, 'camera')">1</button>
+                <button class="hotspot-pin" style="top: 14%; left: 22%;" onclick="revealEndoComponentSpecs(this, 'light')">2</button>
+                <button class="hotspot-pin" style="top: 44%; left: 45%;" onclick="revealEndoComponentSpecs(this, 'shaft')">3</button>
+                <button class="hotspot-pin" style="top: 44%; left: 84%;" onclick="revealEndoComponentSpecs(this, 'distal')">4</button>
+            </div>
+        </section>
+
+        <section class="telemetry-dashboard-panel">
+            <div class="instruction-helper-box">
+                🔍 <strong>Interactive Optical Audit:</strong> Click on the gold numbered hotspot pins across the endoscope blueprint layout to decode the structural components, engineering rules, and clean-bench care directives.
+            </div>
+
+            <div class="component-spec-card" id="spec-card-target">
+                <h4>1. HD Camera Head &amp; Coupler</h4>
+                <p>The proximal control housing interface. It locks securely onto the scope eyepiece, capturing the incoming reflected light image and translating it into electronic high-definition video signals displayed on the operating room monitor screens.</p>
+                <span class="scaffold-badge-tag" id="spec-action-target">MDRT Action: Inspect glass prism for moisture condensation or visual fogging</span>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    // Component database isolating technical definitions and clean-room directives
+    const endoComponentsMatrix = {
+        camera: {
+            title: "1. HD Camera Head &amp; Coupler",
+            text: "The proximal control housing interface. It locks securely onto the scope eyepiece, capturing the incoming reflected light image and translating it into electronic high-definition video signals displayed on the operating room monitor screens.",
+            action: "MDRT Action: Inspect glass prism for moisture condensation or visual fogging",
+            status: "System: Camera Linked",
+            laserOpacity: "0.2",
+            lightOpacity: "0.3"
+        },
+        light: {
+            title: "2. Light Post &amp; Fiber-Optic Adaptor",
+            text: "The mechanical entry port where the fiber-optic light cable connects. High-intensity illumination (Xenon or LED) travels down this channel, bending through packed glass fiber bundles to illuminate the dark interior of the patient's body cavity.",
+            action: "MDRT Action: Check adaptor threads for internal debris and verify fiber-optic integrity",
+            status: "System: Illumination Active",
+            laserOpacity: "0.2",
+            lightOpacity: "1.0"
+        },
+        shaft: {
+            title: "3. Rigid Stainless Steel Shaft &amp; Rod Lenses",
+            text: "A highly protective outer tube composed of surgical-grade stainless steel. Inside this narrow shaft rests a delicate series of precisely aligned glass <strong>rod lenses</strong> separated by structural spacers. This rigid system transmits images from inside the patient back out to the camera head without distortion.",
+            action: "MDRT Action: Roll scope slowly on a flat counter to check for tiny bends or internal rod fractures",
+            status: "System: Optical Path Locked",
+            laserOpacity: "1.0",
+            lightOpacity: "0.4"
+        },
+        distal: {
+            title: "4. Distal Tip &amp; Objective Lens Bevel",
+            text: "The forward-facing terminal workspace window that enters the patient's body cavity. It contains a specialized, biocompatible sapphire or glass objective lens, manufactured at precise angles (e.g., 0°, 30°, or 70°) to provide different directional views of the surgical field.",
+            action: "MDRT Action: Use maximum magnification to check for edge chips, deep scratches, or burnt blood rings",
+            status: "System: Target Field Visualized",
+            laserOpacity: "1.0",
+            lightOpacity: "1.0"
+        }
+    };
+
+    const specCardTarget = document.getElementById("spec-card-target");
+    const specActionTarget = document.getElementById("spec-action-target");
+    const hudStatusNode = document.getElementById("hud-system-status");
+    const vLightGlowNode = document.getElementById("vector-light-glow");
+    const vLaserLineNode = document.getElementById("vector-laser-line");
+
+    function revealEndoComponentSpecs(clickedButton, componentKey) {
+        // Clear active status markers across all coordinate buttons
+        const pins = document.querySelectorAll(".hotspot-pin");
+        pins.forEach(p => p.classList.remove("active-pin"));
+
+        // Highlight selected node
+        clickedButton.classList.add("active-pin");
+
+        const data = endoComponentsMatrix[componentKey];
+
+        // Animate vector layers based on selection profile
+        vLightGlowNode.style.opacity = data.lightOpacity;
+        vLaserLineNode.style.opacity = data.laserOpacity;
+
+        // Render variables to telemetry interface card components
+        hudStatusNode.innerText = data.status;
+        specCardTarget.innerHTML = `
+            <h4>${data.title}</h4>
+            <p>${data.text}</p>
+            <span class="scaffold-badge-tag">${data.action}</span>
+        `;
+    }
+</script>
+
+</body>
+</html>

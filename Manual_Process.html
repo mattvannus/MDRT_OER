@@ -127,7 +127,7 @@
 
 <div class="sim-wrapper">
     <h2 class="sim-title">Interactive Lab: Manual Reprocessing Sequence</h2>
-    <p class="sim-intro">Deploy proper barrier controls, adjust vital fluid chemistry variables, and use manual scrubbing tools to clear organic soil matrices across a validated three-sink architecture[cite: 2].</p>
+    <p class="sim-intro">Deploy proper barrier controls, adjust vital fluid chemistry variables, and use manual scrubbing tools to clear organic soil matrices across a validated three-sink architecture.</p>
 
     <div class="main-layout">
         <!-- Live Action Viewport -->
@@ -182,7 +182,7 @@
     </div>
 
     <div class="terminal-deck" id="terminal">
-        <strong>Station Log:</strong> Workstation idle. Begin processing by selecting and configuring required personal protective equipment parameters[cite: 2].
+        <strong>Station Log:</strong> Workstation idle. Begin processing by selecting and configuring required personal protective equipment parameters.
     </div>
 </div>
 
@@ -211,7 +211,7 @@
         if (type === 'full') {
             state.ppeConfigured = true;
             terminal.className = "terminal-deck success-state";
-            terminal.innerHTML = "<strong>✅ PPE Configuration Compliant:</strong> Long-sleeved fluid gown, full-face protection shield, and heavy decon gloves deployed[cite: 2]. Three-sink station controls unlocked[cite: 2].";
+            terminal.innerHTML = "<strong>✅ PPE Configuration Compliant:</strong> Long-sleeved fluid gown, full-face protection shield, and heavy decon gloves deployed. Three-sink station controls unlocked.";
             document.getElementById('card-sink').style.opacity = "1";
             document.getElementById('card-sink').style.pointerEvents = "auto";
             document.getElementById('hud-phase').innerText = "2. SINK ARCHITECTURE";
@@ -219,7 +219,7 @@
         } else {
             state.ppeConfigured = false;
             terminal.className = "terminal-deck error-state";
-            terminal.innerHTML = "<strong>❌ Safety Violation: Incorrect Dress Code.</strong> Reprocessing uncleaned instruments in standard attire creates immediate mucosal splash and aerosol cross-contamination risks[cite: 2]. Workstation locked.";
+            terminal.innerHTML = "<strong>❌ Safety Violation: Incorrect Dress Code.</strong> Reprocessing uncleaned instruments in standard attire creates immediate mucosal splash and aerosol cross-contamination risks. Workstation locked.";
             document.getElementById('card-sink').style.opacity = "0.5";
             document.getElementById('card-sink').style.pointerEvents = "none";
             document.getElementById('card-tool').style.opacity = "0.5";
@@ -254,19 +254,19 @@
             sView.style.borderColor = "#22c55e"; document.getElementById('hud-chem').innerText = "TEMP: 38°C | pH: NEUTRAL ENZYMATIC";
             document.getElementById('hud-loc').innerText = "WASH BAY (SINK 1)";
             terminal.className = "textbox shaded";
-            terminal.innerHTML = "<strong>Sink 1 Configured: Enzymatic Cleaning Bath.</strong> Water temperature set precisely at 38°C to prevent protein coagulation[cite: 2]. <em>Standard: Submerge item fully before executing scrubbing options to limit infectious aerosol creation[cite: 2].</em>";
+            terminal.innerHTML = "<strong>Sink 1 Configured: Enzymatic Cleaning Bath.</strong> Water temperature set precisely at 38°C to prevent protein coagulation. <em>Standard: Submerge item fully before executing scrubbing options to limit infectious aerosol creation.</em>";
         } else if (sinkNum === 2) {
             sView.style.backgroundColor = "#1e293b"; fLayer.className = "sink-fluid fill-rinse";
             sView.style.borderColor = "#0ea5e9"; document.getElementById('hud-chem').innerText = "TEMP: 40°C | UTILITY FLUID";
             document.getElementById('hud-loc').innerText = "INTERMEDIATE RINSE (SINK 2)";
             terminal.className = "textbox shaded";
-            terminal.innerHTML = "<strong>Sink 2 Configured: Intermediate Utility Rinse.</strong> Clean, flowing water architecture deployed to rinse away chemical detergent aggregates and suspended gross bioburden fields[cite: 2].";
+            terminal.innerHTML = "<strong>Sink 2 Configured: Intermediate Utility Rinse.</strong> Clean, flowing water architecture deployed to rinse away chemical detergent aggregates and suspended gross bioburden fields.";
         } else if (sinkNum === 3) {
             sView.style.backgroundColor = "#1e293b"; fLayer.className = "sink-fluid fill-critical";
             sView.style.borderColor = "#a855f7"; document.getElementById('hud-chem').innerText = "TEMP: 43°C | PURE RO/DI CRITICAL WATER";
             document.getElementById('hud-loc').innerText = "CRITICAL FINAL RINSE (SINK 3)";
             terminal.className = "textbox shaded";
-            terminal.innerHTML = "<strong>Sink 3 Configured: Critical Final Pure Water Rinse.</strong> High-purity Reverse Osmosis / Deionized water bed deployed to strip municipal water minerals and scale footprints from instrument surfaces[cite: 2].";
+            terminal.innerHTML = "<strong>Sink 3 Configured: Critical Final Pure Water Rinse.</strong> High-purity Reverse Osmosis / Deionized water bed deployed to strip municipal water minerals and scale footprints from instrument surfaces.";
         }
     }
 
@@ -301,28 +301,28 @@
             toolSprite.innerText = "🪥"; toolSprite.className = "tool-overlay tool-active";
             state.washed = true;
             terminal.className = "terminal-deck success-state";
-            terminal.innerHTML = "<strong>Friction Mechanical Action Engaged:</strong> Soft nylon bristles are safely removing microscopic bioburden from serrations, box-locks, and hinges below the surface fluid barrier[cite: 2].";
+            terminal.innerHTML = "<strong>Friction Mechanical Action Engaged:</strong> Soft nylon bristles are safely removing microscopic bioburden from serrations, box-locks, and hinges below the surface fluid barrier.";
             setTimeout(() => { toolSprite.className = "tool-overlay"; }, 1500);
         } 
         
         else if (action === 'flush') {
             toolSprite.innerText = "💉"; toolSprite.className = "tool-overlay tool-active";
             terminal.className = "terminal-deck success-state";
-            terminal.innerHTML = "<strong>Hydraulic Lumen Volumetric Flushing:</strong> Solution forces out deep organic material clots from the internal channels[cite: 2]. Bore matrix cleared.";
+            terminal.innerHTML = "<strong>Hydraulic Lumen Volumetric Flushing:</strong> Solution forces out deep organic material clots from the internal channels. Bore matrix cleared.";
             setTimeout(() => { toolSprite.className = "tool-overlay"; }, 1500);
         } 
         
         else if (action === 'dry') {
             if (!state.critRinsed) {
                 terminal.className = "terminal-deck error-state";
-                terminal.innerHTML = "<strong>❌ Process Violation: Incomplete Decontamination Sequence.</strong> You cannot execute the final air purge drying loop until the device has received all certified treated rinsing steps[cite: 2].";
+                terminal.innerHTML = "<strong>❌ Process Violation: Incomplete Decontamination Sequence.</strong> You cannot execute the final air purge drying loop until the device has received all certified treated rinsing steps.";
                 return;
             }
             toolSprite.innerText = "💨"; toolSprite.className = "tool-overlay tool-active";
             state.dried = true;
             document.getElementById('hud-phase').innerText = "4. COMPLETED";
             terminal.className = "terminal-deck success-state";
-            terminal.innerHTML = "<strong>🎉 Manual Process Validated & Successful!</strong> Internal lumens purged with oil-free compressed air, and external surfaces dried with low-linting textiles[cite: 2]. Moisture limits are compliant; item is ready for clean-side sorting[cite: 2].";
+            terminal.innerHTML = "<strong>🎉 Manual Process Validated & Successful!</strong> Internal lumens purged with oil-free compressed air, and external surfaces dried with low-linting textiles. Moisture limits are compliant; item is ready for clean-side sorting.";
             setTimeout(() => { toolSprite.className = "tool-overlay"; }, 1500);
         }
     }
@@ -331,17 +331,17 @@
         if (state.currentSink === 2 && state.washed) {
             state.rinsed = true;
             terminal.className = "terminal-deck success-state";
-            terminal.innerHTML = "<strong>Intermediate Rinse Activated:</strong> Chemical cleaning solution footprints and heavy biological soils have been diluted and separated from structural instrument joints[cite: 2]. Proceed to Sink 3[cite: 2].";
+            terminal.innerHTML = "<strong>Intermediate Rinse Activated:</strong> Chemical cleaning solution footprints and heavy biological soils have been diluted and separated from structural instrument joints. Proceed to Sink 3.";
         } else if (state.currentSink === 2 && !state.washed) {
             terminal.className = "terminal-deck error-state";
-            terminal.innerHTML = "<strong>⚠️ Reprocessing Loop Inefficiency noted:</strong> You are rinsing a tool that skipped the Sink 1 enzymatic disintegration loop[cite: 2]. Cross-contamination layer danger.";
+            terminal.innerHTML = "<strong>⚠️ Reprocessing Loop Inefficiency noted:</strong> You are rinsing a tool that skipped the Sink 1 enzymatic disintegration loop. Cross-contamination layer danger.";
         } else if (state.currentSink === 3 && state.rinsed) {
             state.critRinsed = true;
             terminal.className = "terminal-deck success-state";
-            terminal.innerHTML = "<strong>Critical Final Ion-Free Rinse Complete:</strong> Raw municipal chlorides and limestone minerals are completely eliminated by the pure water matrix[cite: 2]. Remove from fluid to trigger the compressed air drying options[cite: 2].";
+            terminal.innerHTML = "<strong>Critical Final Ion-Free Rinse Complete:</strong> Raw municipal chlorides and limestone minerals are completely eliminated by the pure water matrix. Remove from fluid to trigger the compressed air drying options.";
         } else if (state.currentSink === 3 && !state.rinsed) {
             terminal.className = "terminal-deck error-state";
-            terminal.innerHTML = "<strong>❌ Critical Workflow Break: Skip Error.</strong> Directly entering the critical final rinse without a Sink 2 preliminary clearing bath destroys filter membranes, causing rapid mineral carryover[cite: 2]. Load rejected.";
+            terminal.innerHTML = "<strong>❌ Critical Workflow Break: Skip Error.</strong> Directly entering the critical final rinse without a Sink 2 preliminary clearing bath destroys filter membranes, causing rapid mineral carryover. Load rejected.";
         }
     }
 </script>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automated Washer-Sterilizer Cycle Simulator</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-amber: #EF6C00;
+        --status-red: #C62828;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 10px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .washer-app-wrapper {
+        max-width: 100%;
+        margin: 0 auto;
+        border: 2px solid var(--mdrt-border);
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        overflow: hidden;
+        background: #FFFFFF;
+        position: relative;
+    }
+
+    /* Top Interface Ribbon */
+    .app-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 4px solid var(--mdrt-blue);
+    }
+
+    .app-header h2 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .cycle-badge {
+        background: var(--mdrt-blue);
+        font-size: 0.8rem;
+        font-weight: bold;
+        padding: 4px 12px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        font-family: monospace;
+    }
+
+    /* Split Presentation Layout */
+    .app-layout-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        background: #ECEFF1;
+    }
+
+    @media (min-width: 768px) {
+        .app-layout-grid {
+            grid-template-columns: 1fr 400px;
+        }
+    }
+
+    /* Left Side: Animated Mechanical Washer Chamber Window */
+    .washer-chamber-viewport {
+        background: #37474F;
+        padding: 25px;
+        height: 340px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-right: 1px solid var(--mdrt-border);
+        position: relative;
+    }
+
+    .chamber-glass-window {
+        width: 100%;
+        max-width: 420px;
+        height: 100%;
+        background: #263238;
+        border: 8px solid #78909C;
+        border-radius: 6px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Mechanical Spray Arm Graphic */
+    .rotating-spray-arm {
+        position: absolute;
+        top: 20px;
+        width: 80%;
+        height: 8px;
+        background: #90A4AE;
+        border-radius: 4px;
+        z-index: 5;
+        transform-origin: center center;
+    }
+
+    /* Active Spray Water Overlay Particles */
+    .spray-particles-layer {
+        position: absolute;
+        top: 28px; left: 10%; right: 10%; bottom: 10px;
+        pointer-events: none;
+        z-index: 4;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .spray-prewash { background: repeating-linear-gradient(180deg, transparent, transparent 15px, rgba(41, 182, 246, 0.2) 15px, rgba(41, 182, 246, 0.2) 30px); }
+    .spray-wash { background: repeating-linear-gradient(180deg, transparent, transparent 10px, rgba(129, 199, 132, 0.25) 10px, rgba(129, 199, 132, 0.25) 20px); }
+    .spray-neutral { background: repeating-linear-gradient(180deg, transparent, transparent 15px, rgba(255, 183, 77, 0.2) 15px, rgba(255, 183, 77, 0.2) 30px); }
+    .spray-thermal { background: rgba(255, 255, 255, 0.15); filter: blur(3px); }
+    .spray-drying { background: transparent; }
+
+    /* Telemetry Overlays representing digital washer readouts */
+    .telemetry-overlay-box {
+        position: absolute;
+        top: 15px; left: 15px;
+        background: rgba(0,0,0,0.75);
+        border: 1px solid #00E676;
+        color: #00E676;
+        font-family: monospace;
+        font-size: 0.75rem;
+        padding: 6px 10px;
+        border-radius: 4px;
+        z-index: 10;
+        line-height: 1.4;
+    }
+
+    /* Instrument Tray Base Object inside Chamber */
+    .instrument-mesh-tray {
+        width: 160px;
+        height: 45px;
+        border: 2px solid #B0BEC5;
+        border-radius: 2px;
+        position: absolute;
+        bottom: 30px;
+        background: rgba(255,255,255,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+
+    .instrument-silhouette {
+        width: 120px;
+        height: 8px;
+        background: #78909C;
+        border-radius: 2px;
+    }
+
+    /* Right Side: Step Descriptions & Controls */
+    .controls-dashboard-panel {
+        background: #FFFFFF;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .description-scaffold-card {
+        background: var(--mdrt-sky);
+        border-left: 5px solid var(--mdrt-blue);
+        border-radius: 4px;
+        padding: 15px;
+        min-height: 160px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .description-scaffold-card h4 {
+        margin: 0 0 6px 0;
+        color: var(--mdrt-navy);
+        font-size: 1.05rem;
+    }
+
+    .description-scaffold-card p {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        color: #1A237E;
+    }
+
+    .navigation-button-bar {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .step-btn {
+        flex: 1;
+        padding: 12px;
+        background-color: var(--mdrt-blue);
+        color: #FFFFFF;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        text-transform: uppercase;
+    }
+
+    .step-btn:hover:not(:disabled) { background-color: var(--mdrt-navy); }
+    .step-btn:disabled {
+        background-color: #B0BEC5;
+        color: #78909C;
+        cursor: not-allowed;
+    }
+</style>
+</head>
+<body>
+
+<div class="washer-app-wrapper">
+    <header class="app-header">
+        <h2>Automated Washer-Disinfector Operational Cycle</h2>
+        <span class="cycle-badge" id="hud-cycle-name">Phase 1 / 5</span>
+    </header>
+
+    <div class="app-layout-grid">
+        <section class="washer-chamber-viewport">
+            <div class="chamber-glass-window">
+                <div class="telemetry-overlay-box" id="telemetry-readout">
+                    TEMP: 20°C<br/>
+                    WATER: COLD UTILITY<br/>
+                    CHEM: NONE
+                </div>
+
+                <div class="rotating-spray-arm" id="spray-arm"></div>
+
+                <div class="spray-particles-layer" id="fluid-layer"></div>
+
+                <div class="instrument-mesh-tray">
+                    <div class="instrument-silhouette"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="controls-dashboard-panel">
+            <div class="description-scaffold-card" id="narrative-card-target">
+                <h4>1. Pre-Wash Phase</h4>
+                <p>A 1 to 5-minute injection of cold utility water to safely clear away raw blood and tissue suspension without coagulating proteins.</p>
+            </div>
+
+            <div class="navigation-button-bar">
+                <button class="step-btn" id="btn-back" onclick="advanceWasherCycleStep(-1)" disabled>◀ Previous Stage</button>
+                <button class="step-btn" id="btn-forward" onclick="advanceWasherCycleStep(1)">Next Stage ▶</button>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    // Configuration dictionary tracking telemetry data variables, text blocks, and fluid overlay styles
+    const machineCyclePhases = [
+        {
+            index: 1,
+            title: "1. Pre-Wash Phase",
+            text: "A 1 to 5-minute injection of <strong>cold utility water</strong> to safely rinse and clear away raw blood and loose tissue suspensions. Cold water is mandatory here; hot water would bake and <em>coagulate</em> (harden) the proteins into the metal surfaces, pinning bacteria to the tools.",
+            temp: "20°C",
+            water: "COLD UTILITY",
+            chem: "NONE",
+            layerClass: "spray-particles-layer spray-prewash",
+            opacity: "1",
+            animationSpeed: "1.5s"
+        },
+        {
+            index: 2,
+            title: "2. Main Chemical Wash Phase",
+            text: "Introduction of precisely measured alkaline or enzymatic detergents into heated water (50°C to 65°C) running for 10 to 30 minutes. High-RPM rotating spray arms deliver consistent <strong>water impingement force</strong> (mechanical hitting pressure) to physically strip away stubborn dirt layers across all surfaces.",
+            temp: "60°C",
+            water: "HOT PURIFIED",
+            chem: "ENZYMATIC / ALKALINE",
+            layerClass: "spray-particles-layer spray-wash",
+            opacity: "1",
+            animationSpeed: "0.5s"
+        },
+        {
+            index: 3,
+            title: "3. Neutralization & Intermediate Rinse",
+            text: "A localized rinse phase that introduces <strong>acidic neutralizers</strong> to offset harsh alkaline chemical residues left behind by the detergent. This critical chemical balancing stage prevents chemical spotting, white powder layers, and dull cosmetic stains from etching the stainless steel surfaces.",
+            temp: "52°C",
+            water: "PURIFIED INJECTION",
+            chem: "ACIDIC NEUTRALIZER",
+            layerClass: "spray-particles-layer spray-neutral",
+            opacity: "1",
+            animationSpeed: "1s"
+        },
+        {
+            index: 4,
+            title: "4. Thermal Disinfection Phase",
+            text: "A non-chemical sanitization stage. Pure water is heated to high thermal levels (90°C to 93°C) and held for a validated contact period. This intense heat completely <strong>denatures</strong> (melts) the inner cell structures of vegetative pathogens, rendering the tools completely safe for human handling without gloves on the clean room side.",
+            temp: "92°C",
+            water: "CRITICAL (PURE STEAM)",
+            chem: "NONE (THERMAL SANITIZATION)",
+            layerClass: "spray-particles-layer spray-thermal",
+            opacity: "1",
+            animationSpeed: "0.2s"
+        },
+        {
+            index: 5,
+            title: "5. HEPA Drying Phase",
+            text: "Internal blowers circulate clean, hot air through a high-efficiency particulate air (<strong>HEPA</strong>) filter for up to 40 minutes at temperatures reaching up to 120°C. This completely removes hidden moisture trails inside box locks or lumens, preventing rust and preparing devices for safe inspection.",
+            temp: "115°C",
+            water: "NONE (AIR CYCLING)",
+            chem: "HEPA FILTERED AIRFLOW",
+            layerClass: "spray-particles-layer spray-drying",
+            opacity: "0",
+            animationSpeed: "0s"
+        }
+    ];
+
+    let currentActiveStepIndex = 0;
+    let rotationAnimationIntervalId = null;
+    let ongoingCurrentRotationAngle = 0;
+
+    const narrativeCardTargetElement = document.getElementById("narrative-card-target");
+    const telemetryReadoutElement = document.getElementById("telemetry-readout");
+    const hudCycleNameElement = document.getElementById("hud-cycle-name");
+    const fluidLayerElement = document.getElementById("fluid-layer");
+    const sprayArmElement = document.getElementById("spray-arm");
+
+    function advanceWasherCycleStep(directionValue) {
+        currentActiveStepIndex = Math.max(0, Math.min(machineCyclePhases.length - 1, currentActiveStepIndex + directionValue));
+        syncWasherSimulationState();
+    }
+
+    function syncWasherSimulationState() {
+        const stageConfig = machineCyclePhases[currentActiveStepIndex];
+
+        // Update Textual Layout Strings
+        hudCycleNameElement.innerText = `Phase ${stageConfig.index} / 5: ${stageConfig.title.split('. ')[1]}`;
+        narrativeCardTargetElement.innerHTML = `
+            <h4>${stageConfig.title}</h4>
+            <p>${stageConfig.text}</p>
+        `;
+
+        // Update Screen Telemetry Data Readings
+        telemetryReadoutElement.innerHTML = `
+            TEMP: ${stageConfig.temp}<br/>
+            WATER: ${stageConfig.water}<br/>
+            CHEM: ${stageConfig.chem}
+        `;
+
+        // Adjust spray particle properties matching phase criteria
+        fluidLayerElement.className = stageConfig.layerClass;
+        fluidLayerElement.style.opacity = stageConfig.opacity;
+
+        // Manage mechanical rotation animation intervals based on speed criteria
+        clearInterval(rotationAnimationIntervalId);
+        if (stageConfig.animationSpeed !== "0s") {
+            const calculatedMsStepInterval = stageConfig.animationSpeed === "0.5s" ? 15 : stageConfig.animationSpeed === "1s" ? 30 : 45;
+            rotationAnimationIntervalId = setInterval(() => {
+                ongoingCurrentRotationAngle = (ongoingCurrentRotationAngle + 4) % 360;
+                // Model perspective rotation depth via 3D scale transforms
+                sprayArmElement.style.transform = `rotate(${ongoingCurrentRotationAngle}deg) scaleY(${Math.cos(ongoingCurrentRotationAngle * Math.PI / 180) * 0.3 + 0.7})`;
+            }, calculatedMsStepInterval);
+        } else {
+            sprayArmElement.style.transform = "rotate(0deg)";
+        }
+
+        // Enforce boundary lock controls across navigation buttons
+        document.getElementById("btn-back").disabled = (currentActiveStepIndex === 0);
+        document.getElementById("btn-forward").disabled = (currentActiveStepIndex === machineCyclePhases.length - 1);
+    }
+
+    // Instantiation listener initialization hooks
+    window.addEventListener("DOMContentLoaded", () => {
+        syncWasherSimulationState();
+    });
+</script>
+
+</body>
+</html>
