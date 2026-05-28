@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Endoscope Leak Testing Action Sequence</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-red: #C62828;
+        --bg-light: #F8F9FA;
+        --accent-blue: #0288D1;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        padding: 4px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .seq-app-wrapper {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        border: 1px solid var(--mdrt-border);
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        overflow: hidden;
+        background: #FFFFFF;
+    }
+
+    .seq-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 10px 15px;
+        border-bottom: 3px solid var(--mdrt-blue);
+    }
+
+    .seq-header h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .seq-header p {
+        margin: 2px 0 0 0;
+        font-size: 0.75rem;
+        color: #B0BEC5;
+    }
+
+    .seq-layout-body {
+        display: flex;
+        flex-direction: column;
+        background: #ECEFF1;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .instruction-box {
+        background: #FFFFFF;
+        border-left: 4px solid var(--accent-blue);
+        padding: 8px 12px;
+        border-radius: 0 4px 4px 0;
+        font-size: 0.82rem;
+        line-height: 1.3;
+        border-top: 1px solid var(--mdrt-border);
+        border-right: 1px solid var(--mdrt-border);
+        border-bottom: 1px solid var(--mdrt-border);
+    }
+
+    /* Step Pool and Target Slots Workspaces */
+    .workspace-section {
+        background: #FFFFFF;
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid var(--mdrt-border);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .workspace-title {
+        margin: 0;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: var(--mdrt-slate);
+        letter-spacing: 0.5px;
+        font-weight: 800;
+        border-bottom: 1px solid var(--mdrt-border);
+        padding-bottom: 3px;
+    }
+
+    .steps-container {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 50px;
+    }
+
+    /* Draggable/Clickable Cards */
+    .step-card {
+        background: #F5F7FA;
+        border: 1px solid #B0BEC5;
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--mdrt-charcoal);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.15s ease;
+        position: relative;
+    }
+
+    .step-card:hover {
+        background: var(--mdrt-sky);
+        border-color: var(--mdrt-blue);
+    }
+
+    .step-number-badge {
+        background: var(--mdrt-slate);
+        color: #FFFFFF;
+        font-size: 0.7rem;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* Terminal Validation Display Logger */
+    .feedback-logger {
+        background: #212121;
+        color: #69F0AE;
+        border-radius: 4px;
+        padding: 10px 12px;
+        font-family: monospace;
+        font-size: 0.78rem;
+        min-height: 55px;
+        line-height: 1.3;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .log-error { color: #FF5252; }
+    .log-success { color: #69F0AE; }
+
+    /* Footer Navigation controls */
+    .seq-footer {
+        background: #ECEFF1;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--mdrt-border);
+    }
+
+    .footer-btn {
+        padding: 8px 16px;
+        font-weight: bold;
+        font-size: 0.8rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: none;
+        text-transform: uppercase;
+    }
+
+    .btn-action-validate {
+        background: var(--mdrt-blue);
+        color: #FFFFFF;
+    }
+    .btn-action-validate:hover:not(:disabled) { background: var(--mdrt-navy); }
+    .btn-action-validate:disabled {
+        background: #B0BEC5;
+        color: #78909C;
+        cursor: not-allowed;
+    }
+
+    .btn-action-reset {
+        background: #78909C;
+        color: #FFFFFF;
+    }
+    .btn-action-reset:hover { background: var(--mdrt-slate); }
+
+    /* Visual Highlighting Profiles */
+    .step-card.correct-inline {
+        border-color: var(--status-green) !important;
+        background-color: #E8F5E9 !important;
+    }
+    .step-card.incorrect-inline {
+        border-color: var(--status-red) !important;
+        background-color: #FFEBEE !important;
+    }
+</style>
+</head>
+<body>
+
+<div class="seq-app-wrapper">
+    <header class="seq-header">
+        <h2>Flexible Endoscope Reprocessing</h2>
+        <p>Wet Leak Testing Protocol Action Sequence Matrix</p>
+    </header>
+
+    <div class="seq-layout-body">
+        <div class="instruction-box">
+            📋 <strong>Task Instructions:</strong> Rebuild the exact standard protocol for a wet leak test. Click the action statements below in the correct clinical order (Step 1 through Step 6) to construct your processing pipeline.
+        </div>
+
+        <section class="workspace-section">
+            <h3 class="workspace-title">Your Sequence Pipeline (Active Steps)</h3>
+            <div class="steps-container" id="target-pipeline-zone">
+                </div>
+        </section>
+
+        <section class="workspace-section" id="pool-section-frame">
+            <h3 class="workspace-title">Available Action Statements Pool</h3>
+            <div class="steps-container" id="source-pool-zone">
+                </div>
+        </section>
+
+        <div class="feedback-logger" id="process-logger-console">
+            [SYSTEM SILENT] Awaiting sequence assembly. Select an action statement from the pool to begin...
+        </div>
+    </div>
+
+    <footer class="seq-footer">
+        <button class="footer-btn btn-action-reset" onclick="resetSequenceEngine()">Clear Steps</button>
+        <button class="footer-btn btn-action-validate" id="validate-sequence-trigger" onclick="validateUserSequence()" disabled>Verify Sequence Integrity</button>
+    </footer>
+</div>
+
+<script>
+    // Master data sequence configuration representing strict real world alignment rules
+    const masterSequenceData = [
+        {
+            id: "pressurize",
+            text: "Pressurize the Scope Completely",
+            failExplanation: "[CRITICAL PROCESS FAILURE] You submerged a depressurized scope! Fluid will instantly siphon through any micro-holes, flooding the fiber-optic channels and causing thousands of dollars in internal component water damage."
+        },
+        {
+            id: "submerge",
+            text: "Submerge the Entire Scope in Water",
+            failExplanation: "[CRITICAL PROCESS FAILURE] You cannot actuate knobs or check for air bubbles before the scope is fully underwater. Submerging must happen immediately after structural pressurization is verified."
+        },
+        {
+            id: "actuate",
+            text: "Actuate Control Knobs & Deflect Tips",
+            failExplanation: "[CRITICAL PROCESS FAILURE] You checked for bubbles or pulled the scope out without flexing the bending section. Micro-tears hidden beneath the rubber sheath slits only stretch open and leak when the internal control wires are fully tensioned."
+        },
+        {
+            id: "check",
+            text: "Check for Continuous Streams of Bubbles",
+            failExplanation: "[PROCESS TIMING ERROR] Checking for bubbles must happen while the scope is fully deflected underwater. You cannot verify integrity after extracting the device from the test environment."
+        },
+        {
+            id: "extract",
+            text: "Extract Scope Safely from the Water Basin",
+            failExplanation: "[CRITICAL PROCESS FAILURE] You depressurized the device while it was still underwater! The dropping pressure gradient will vacuum water directly backward into the internal electronics through the leak test port."
+        },
+        {
+            id: "depressurize",
+            text: "Depressurize and Disconnect Leak Tester",
+            failExplanation: "[PROCESS TIMING ERROR] Depressurization is the absolute final step. Doing this earlier at any stage will drop internal housing protection and trigger automatic interior fluid invasion."
+        }
+    ];
+
+    let userSelectedPipeline = [];
+    let randomizedPoolData = [];
+
+    const sourcePoolElement = document.getElementById("source-pool-zone");
+    const targetPipelineElement = document.getElementById("target-pipeline-zone");
+    const loggerConsoleElement = document.getElementById("process-logger-console");
+    const validateButtonElement = document.getElementById("validate-sequence-trigger");
+
+    // Initialize application state
+    function initSequenceEngine() {
+        // Clone and securely shuffle pool elements
+        randomizedPoolData = [...masterSequenceData].sort(() => Math.random() - 0.5);
+        userSelectedPipeline = [];
+        
+        renderPoolItems();
+        renderPipelineItems();
+        
+        loggerConsoleElement.className = "feedback-logger";
+        loggerConsoleElement.innerHTML = `[SYSTEM READY] Click an action card from the pool to set Step 1.`;
+        validateButtonElement.disabled = true;
+        document.getElementById("pool-section-frame").style.display = "flex";
+    }
+
+    function renderPoolItems() {
+        sourcePoolElement.innerHTML = "";
+        randomizedPoolData.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "step-card";
+            card.innerHTML = `<span>${item.text}</span>`;
+            card.onclick = () => moveItemToPipeline(item);
+            sourcePoolElement.appendChild(card);
+        });
+        
+        if(randomizedPoolData.length === 0) {
+            document.getElementById("pool-section-frame").style.display = "none";
+        }
+    }
+
+    function renderPipelineItems() {
+        targetPipelineElement.innerHTML = "";
+        userSelectedPipeline.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "step-card";
+            card.id = `pipeline-card-${index}`;
+            card.innerHTML = `
+                <span class="step-number-badge">${index + 1}</span>
+                <span>${item.text}</span>
+            `;
+            card.onclick = () => removeItemFromPipeline(index);
+            targetPipelineElement.appendChild(card);
+        });
+    }
+
+    function moveItemToPipeline(item) {
+        userSelectedPipeline.push(item);
+        randomizedPoolData = randomizedPoolData.filter(poolItem => poolItem.id !== item.id);
+        
+        renderPoolItems();
+        renderPipelineItems();
+        evaluateValidationTriggerEligibility();
+    }
+
+    function removeItemFromPipeline(index) {
+        const item = userSelectedPipeline[index];
+        randomizedPoolData.push(item);
+        userSelectedPipeline.splice(index, 1);
+        
+        // Reset inline validation style states if any exist
+        loggerConsoleElement.className = "feedback-logger";
+        loggerConsoleElement.innerHTML = `[PIPELINE MODIFIED] Structural sequence altered. Readjust steps and verify again.`;
+        
+        renderPoolItems();
+        renderPipelineItems();
+        evaluateValidationTriggerEligibility();
+    }
+
+    function evaluateValidationTriggerEligibility() {
+        validateButtonElement.disabled = userSelectedPipeline.length !== masterSequenceData.length;
+    }
+
+    function validateUserSequence() {
+        let structuralSequenceIsValid = true;
+        let diagnosticFailureIndex = -1;
+
+        // Verify position matching integrity
+        for (let i = 0; i < masterSequenceData.length; i++) {
+            const pipelineCard = document.getElementById(`pipeline-card-${i}`);
+            pipelineCard.classList.remove("correct-inline", "incorrect-inline");
+
+            if (userSelectedPipeline[i].id === masterSequenceData[i].id) {
+                pipelineCard.classList.add("correct-inline");
+            } else {
+                pipelineCard.classList.add("incorrect-inline");
+                structuralSequenceIsValid = false;
+                if (diagnosticFailureIndex === -1) {
+                    diagnosticFailureIndex = i; // Pinpoint original point of procedural failure
+                }
+            }
+        }
+
+        if (structuralSequenceIsValid) {
+            loggerConsoleElement.className = "feedback-logger log-success";
+            loggerConsoleElement.innerHTML = `✔ <strong>INTEGRITY PASSED:</strong> Sequence is 100% accurate. You safely balanced internal air pressure lines, verified joint deflection ranges, and successfully protected the scope from internal fluid invasion. Clean to advance!`;
+        } else {
+            loggerConsoleElement.className = "feedback-logger log-error";
+            // Leverage explicit real-world failure statements based on the user's first mistep
+            const failedItemObj = userSelectedPipeline[diagnosticFailureIndex];
+            loggerConsoleElement.innerHTML = `❌ <strong>SEQUENCE ERROR AT STEP ${diagnosticFailureIndex + 1}:</strong><br/>${failedItemObj.failExplanation}`;
+        }
+    }
+
+    function resetSequenceEngine() {
+        initSequenceEngine();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        initSequenceEngine();
+    });
+</script>
+
+</body>
+</html>
