@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biological Indicator Lifecycle Simulation</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-red: #C62828;
+        --status-amber: #EF6C00;
+        --bg-light: #F8F9FA;
+        --bi-purple: #6A1B9A;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        padding: 4px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .bi-app-wrapper {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        border: 1px solid var(--mdrt-border);
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        overflow: hidden;
+        background: #FFFFFF;
+    }
+
+    .bi-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 10px 15px;
+        border-bottom: 3px solid var(--mdrt-blue);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .bi-header h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .step-badge {
+        background: var(--mdrt-blue);
+        font-size: 0.75rem;
+        font-weight: bold;
+        padding: 3px 8px;
+        border-radius: 3px;
+        white-space: nowrap;
+    }
+
+    .bi-layout-body {
+        display: flex;
+        flex-direction: column;
+        background: #ECEFF1;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    /* Animation & Graphics Theater Frame */
+    .bi-theater-card {
+        background: #FFFFFF;
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid var(--mdrt-border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .svg-canvas {
+        width: 100%;
+        max-width: 480px;
+        height: auto;
+        background: #F0F4F8;
+        border-radius: 4px;
+        border: 1px solid var(--mdrt-border);
+    }
+
+    /* Step Documentation Information Content Block */
+    .bi-info-panel {
+        background: #FFFFFF;
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid var(--mdrt-border);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .step-title {
+        font-size: 0.95rem;
+        font-weight: bold;
+        color: var(--mdrt-navy);
+        margin: 0;
+        border-bottom: 2px solid var(--mdrt-sky);
+        padding-bottom: 4px;
+    }
+
+    .step-description {
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.35;
+        color: var(--mdrt-charcoal);
+    }
+
+    .insight-alert-box {
+        background: #E8F5E9;
+        border-left: 4px solid var(--status-green);
+        padding: 6px 10px;
+        border-radius: 0 4px 4px 0;
+        font-size: 0.8rem;
+        line-height: 1.3;
+    }
+
+    .insight-alert-box.danger-style {
+        background: #FFEBEE;
+        border-left-color: var(--status-red);
+    }
+
+    /* Footer Navigation controls */
+    .bi-footer {
+        background: #ECEFF1;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--mdrt-border);
+    }
+
+    .footer-btn {
+        padding: 8px 14px;
+        font-weight: bold;
+        font-size: 0.8rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: none;
+        text-transform: uppercase;
+    }
+
+    .btn-prev {
+        background: #78909C;
+        color: #FFFFFF;
+    }
+    .btn-prev:disabled {
+        background: #CFD8DC;
+        color: #90A4AE;
+        cursor: not-allowed;
+    }
+
+    .btn-next {
+        background: var(--mdrt-blue);
+        color: #FFFFFF;
+    }
+    .btn-next:hover:not(:disabled) { background: var(--mdrt-navy); }
+
+    /* CSS Animations for Sterilizer and Incubator phases */
+    @keyframes steamPulse {
+        0% { fill: #E3F2FD; }
+        50% { fill: #BBDEFB; }
+        100% { fill: #E3F2FD; }
+    }
+    .steam-active { animation: steamPulse 1.5s infinite ease-in-out; }
+</style>
+</head>
+<body>
+
+<div class="bi-app-wrapper">
+    <header class="bi-header">
+        <h2>Sterilization Quality Assurance</h2>
+        <span class="step-badge" id="step-timeline-indicator">Phase 1 of 4</span>
+    </header>
+
+    <div class="bi-layout-body">
+        <section class="bi-theater-card">
+            <svg class="svg-canvas" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" id="bi-svg-viewport">
+                </svg>
+        </section>
+
+        <section class="bi-info-panel" id="bi-text-info-block">
+            </section>
+    </div>
+
+    <footer class="bi-footer">
+        <button class="footer-btn btn-prev" id="btn-pipeline-prev" onclick="changeSimulationPhase(-1)">Back</button>
+        <button class="footer-btn btn-next" id="btn-pipeline-next" onclick="changeSimulationPhase(1)">Advance Phase</button>
+    </footer>
+</div>
+
+<script>
+    let activePhaseIndex = 1;
+    const totalAvailablePhases = 4;
+
+    const timelineIndicator = document.getElementById("step-timeline-indicator");
+    const svgViewport = document.getElementById("bi-svg-viewport");
+    const textInfoBlock = document.getElementById("bi-text-info-block");
+    const prevButton = document.getElementById("btn-pipeline-prev");
+    const nextButton = document.getElementById("btn-pipeline-next");
+
+    const phaseConfigurations = {
+        1: {
+            title: "Phase 1: Preparing the Process Challenge Device (PCD)",
+            description: "A Biological Indicator (BI) vial containing highly resistant <em>Geobacillus stearothermophilus</em> spores is placed inside a Process Challenge Device (PCD), often called a test pack. The PCD is engineered to create a strict barrier, simulating the hardest-to-reach micro-environments inside complex surgical instrument trays.",
+            insight: "📌 <strong>MDRT Protocol:</strong> According to Canadian standards (CSA Z314), the PCD must be placed flat on the bottom shelf of the sterilizer cart, directly over the chamber drain, as this is the coldest zone where air pockets or cold condensate are most likely to collect.",
+            drawGraphics: () => {
+                return `
+                    <line x1="20" y1="170" x2="380" y2="170" stroke="#CFD8DC" stroke-width="3"/>
+                    
+                    <rect x="60" y="50" width="160" height="100" rx="4" fill="#FFFFFF" stroke="#455A64" stroke-width="2" stroke-dasharray="4,4"/>
+                    <text x="75" y="75" fill="#546E7A" font-size="11" font-weight="bold">PCD / Test Pack Wrap</text>
+                    
+                    <g transform="translate(125, 90)">
+                        <rect x="0" y="0" width="26" height="50" rx="12" fill="#EEEEEE" stroke="#263238" stroke-width="2"/>
+                        <rect x="0" y="0" width="26" height="14" rx="3" fill="var(--bi-purple)"/> <circle cx="13" cy="32" r="6" fill="#B0BEC5"/> <line x1="5" y1="44" x2="21" y2="44" stroke="#78909C" stroke-width="2"/> </g>
+                    
+                    <path d="M 310 115 L 240 115" stroke="var(--mdrt-blue)" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <path d="M 245 110 L 238 115 L 245 120" stroke="var(--mdrt-blue)" stroke-width="3" fill="none"/>
+                    <text x="245" y="100" fill="var(--mdrt-blue)" font-size="10" font-weight="bold">Place BI inside PCD</text>
+                `;
+            }
+        },
+        2: {
+            title: "Phase 2: Exposure to the Sterilization Cycle",
+            description: "The PCD is locked inside the autoclave chamber. High-temperature, saturated steam under pressure is injected. The steam must forcefully penetrate the layers of the test pack wrapper to reach the internal spore carrier strip, aiming to denature and destroy all embedded microbial life.",
+            insight: "📌 <strong>MDRT Protocol:</strong> Chemical indicators on the outside of the pack verify exposure to heat, but only the biological test carrier can physically demonstrate that the critical threshold parameters required to kill microscopic spores were achieved.",
+            drawGraphics: () => {
+                return `
+                    <rect x="40" y="20" width="320" height="150" rx="8" fill="#F4F6F7" stroke="#78909C" stroke-width="4" class="steam-active"/>
+                    <text x="55" y="40" fill="#455A64" font-size="12" font-weight="bold">Sterilizer Chamber [ACTIVE CYCLE]</text>
+                    
+                    <rect x="130" y="70" width="140" height="80" rx="4" fill="#E3F2FD" stroke="#005A9C" stroke-width="2" stroke-dasharray="3,3"/>
+                    
+                    <path d="M 70 60 Q 90 70 110 60" stroke="#90A4AE" stroke-width="2" fill="none" stroke-dasharray="2,2"/>
+                    <path d="M 70 100 Q 90 110 110 100" stroke="#90A4AE" stroke-width="2" fill="none" stroke-dasharray="2,2"/>
+                    <path d="M 290 60 Q 310 70 330 60" stroke="#90A4AE" stroke-width="2" fill="none" stroke-dasharray="2,2"/>
+                    <path d="M 290 100 Q 310 110 330 100" stroke="#90A4AE" stroke-width="2" fill="none" stroke-dasharray="2,2"/>
+                    
+                    <g transform="translate(185, 95)">
+                        <rect x="0" y="0" width="22" height="42" rx="10" fill="#FFFFFF" stroke="#263238" stroke-width="1.5"/>
+                        <rect x="0" y="0" width="22" height="11" rx="2" fill="var(--bi-purple)"/>
+                    </g>
+                    <text x="160" y="160" fill="var(--mdrt-blue)" font-size="10" font-weight="bold">Steam Penetration Target</text>
+                `;
+            }
+        },
+        3: {
+            title: "Phase 3: Activation & Incubation Sequence",
+            description: "Following the cycle, the technician extracts the BI vial and manually crushes it to fracture the internal glass ampoule, releasing the nutrient growth medium directly onto the spore carrier strip. This processed 'Test BI' is placed inside the incubator alongside an un-sterilized 'Control BI' taken straight from the inventory supply batch.",
+            insight: "📌 <strong>MDRT Protocol:</strong> The un-sterilized control vial must come from the exact same lot number box. Incubating it is a mandatory quality rule to ensure that the spores are completely alive and viable before processing, validating that the incubator heating module is functioning normally.",
+            drawGraphics: () => {
+                return `
+                    <rect x="50" y="30" width="300" height="130" rx="6" fill="#263238" stroke="#37474F" stroke-width="3"/>
+                    <text x="65" y="52" fill="#69F0AE" font-size="11" font-family="monospace">DIGITAL INCUBATOR: 56°C - 60°C</text>
+                    
+                    <rect x="95" y="80" width="60" height="65" fill="#1E272C" stroke="#455A64" stroke-width="2"/>
+                    <g transform="translate(112, 65)">
+                        <rect x="0" y="0" width="24" height="48" rx="10" fill="#ECEFF1" stroke="#FFFFFF" stroke-width="2"/>
+                        <rect x="0" y="0" width="24" height="12" rx="2" fill="var(--bi-purple)"/>
+                        <circle cx="12" cy="30" r="5" fill="#E0E0E0" stroke="#B0BEC5"/> </g>
+                    <text x="102" y="160" fill="#FFFFFF" font-size="10" font-weight="bold">Slot 1: Test</text>
+                    
+                    <rect x="245" y="80" width="60" height="65" fill="#1E272C" stroke="#455A64" stroke-width="2"/>
+                    <g transform="translate(262, 65)">
+                        <rect x="0" y="0" width="24" height="48" rx="10" fill="#ECEFF1" stroke="#FFFFFF" stroke-width="2"/>
+                        <rect x="0" y="0" width="24" height="12" rx="2" fill="var(--bi-purple)"/>
+                        <circle cx="12" cy="30" r="5" fill="#E0E0E0" stroke="#B0BEC5"/>
+                    </g>
+                    <text x="248" y="160" fill="#FFFFFF" font-size="10" font-weight="bold">Slot 2: Control</text>
+                `;
+            }
+        },
+        4: {
+            title: "Phase 4: Interpreting the Biological Feedback Results",
+            description: "The results are analyzed after the incubation period. The <strong>Control Vial (Vial 2)</strong> turns distinctively <strong>YELLOW</strong> because the surviving spores metabolized the sugars, creating an acid that shifts the pH indicator. The <strong>Processed Test Vial (Vial 1)</strong> remains <strong>PURPLE</strong>, proving that the autoclave cycle successfully sterilized the load and destroyed 100% of the test spores.",
+            insight: "❌ <strong>CRITICAL WARNING:</strong> If the processed Test Vial turns yellow, it represents a catastrophic sterilization failure! The entire load is non-sterile. You must immediately recall all items processed in that sterilizer since the last negative BI, report the event, and initiate troubleshooting protocols.",
+            drawGraphics: () => {
+                return `
+                    <line x1="200" y1="20" x2="200" y2="180" stroke="#CFD8DC" stroke-width="2" stroke-dasharray="4,4"/>
+                    
+                    <g transform="translate(70, 40)">
+                        <rect x="0" y="0" width="40" height="85" rx="15" fill="#E3F2FD" stroke="var(--status-green)" stroke-width="3"/>
+                        <rect x="3" y="35" width="34" height="45" rx="5" fill="#4A148C" opacity="0.85"/>
+                        <rect x="0" y="0" width="40" height="20" rx="3" fill="var(--bi-purple)"/>
+                        <text x="-25" y="110" fill="var(--status-green)" font-size="11" font-weight="bold">VIAL 1: TEST (PASSED)</text>
+                        <text x="-12" y="125" fill="#546E7A" font-size="10">Fluid Stays Purple = Clean</text>
+                    </g>
+                    
+                    <g transform="translate(270, 40)">
+                        <rect x="0" y="0" width="40" height="85" rx="15" fill="#FFFDE7" stroke="var(--status-amber)" stroke-width="3"/>
+                        <rect x="3" y="35" width="34" height="45" rx="5" fill="#FDD835" opacity="0.85"/>
+                        <rect x="0" y="0" width="40" height="20" rx="3" fill="var(--bi-purple)"/>
+                        <circle cx="15" cy="50" r="2" fill="#E65100"/>
+                        <circle cx="25" cy="65" r="2" fill="#E65100"/>
+                        <circle cx="12" cy="70" r="2" fill="#E65100"/>
+                        <text x="-35" y="110" fill="var(--status-amber)" font-size="11" font-weight="bold">VIAL 2: CONTROL (VALID)</text>
+                        <text x="-32" y="125" fill="#546E7A" font-size="10">Fluid Turns Yellow = Microbes Alive</text>
+                    </g>
+                `;
+            }
+        }
+    };
+
+    function renderSimulationState() {
+        // Track and lock navigation limits
+        timelineIndicator.innerText = `Phase ${activePhaseIndex} of ${totalAvailablePhases}`;
+        prevButton.disabled = activePhaseIndex === 1;
+        
+        if (activePhaseIndex === totalAvailablePhases) {
+            nextButton.innerText = "Restart Sequence";
+            nextButton.className = "footer-btn btn-prev"; // Transition button color pattern smoothly
+        } else {
+            nextButton.innerText = "Advance Phase";
+            nextButton.className = "footer-btn btn-next";
+        }
+
+        const dataRecord = phaseConfigurations[activePhaseIndex];
+
+        // Draw fresh vector layers
+        svgViewport.innerHTML = dataRecord.drawGraphics();
+
+        // Update technical text tracking block
+        let alertClass = (activePhaseIndex === 4) ? "insight-alert-box danger-style" : "insight-alert-box";
+        textInfoBlock.innerHTML = `
+            <h3 class="step-title">${dataRecord.title}</h3>
+            <p class="step-description">${dataRecord.description}</p>
+            <div class="${alertClass}">${dataRecord.insight}</div>
+        `;
+    }
+
+    function changeSimulationPhase(directionOffset) {
+        if (directionOffset === 1 && activePhaseIndex === totalAvailablePhases) {
+            activePhaseIndex = 1; // Loop back around to stage 1 if restart button clicked
+        } else {
+            activePhaseIndex += directionOffset;
+            if (activePhaseIndex < 1) activePhaseIndex = 1;
+            if (activePhaseIndex > totalAvailablePhases) activePhaseIndex = totalAvailablePhases;
+        }
+        renderSimulationState();
+    }
+
+    // Initialize module on application launch
+    window.addEventListener("DOMContentLoaded", () => {
+        renderSimulationState();
+    });
+</script>
+
+</body>
+</html>

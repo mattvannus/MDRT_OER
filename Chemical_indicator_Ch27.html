@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chemical Indicator Verification Matrix</title>
+<style>
+    :root {
+        --mdrt-navy: #002B49;
+        --mdrt-blue: #005A9C;
+        --mdrt-sky: #E3F2FD;
+        --mdrt-slate: #455A64;
+        --mdrt-charcoal: #263238;
+        --mdrt-border: #CFD8DC;
+        --status-green: #2E7D32;
+        --status-red: #C62828;
+        --status-amber: #EF6C00;
+        --ci-unprocessed: #FFCC00; /* Unprocessed indicator yellow-gold */
+        --ci-processed: #212121;   /* Correctly processed dark black-brown */
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        padding: 4px;
+        background-color: #FFFFFF;
+        color: var(--mdrt-charcoal);
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .ci-app-wrapper {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        border: 1px solid var(--mdrt-border);
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        overflow: hidden;
+        background: #FFFFFF;
+    }
+
+    .ci-header {
+        background: var(--mdrt-navy);
+        color: #FFFFFF;
+        padding: 10px 15px;
+        border-bottom: 3px solid var(--mdrt-blue);
+    }
+
+    .ci-header h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .ci-header p {
+        margin: 2px 0 0 0;
+        font-size: 0.75rem;
+        color: #B0BEC5;
+    }
+
+    .ci-layout-body {
+        display: flex;
+        flex-direction: column;
+        background: #ECEFF1;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .instruction-box {
+        background: #FFFFFF;
+        border-left: 4px solid var(--mdrt-blue);
+        padding: 8px 12px;
+        border-radius: 0 4px 4px 0;
+        font-size: 0.82rem;
+        line-height: 1.3;
+        border: 1px solid var(--mdrt-border);
+        border-left-width: 4px;
+    }
+
+    /* Simulation Control Hub */
+    .dashboard-panel {
+        background: #FFFFFF;
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid var(--mdrt-border);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .control-label {
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--mdrt-slate);
+        margin: 0 0 4px 0;
+    }
+
+    .cycle-select-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    @media (min-width: 480px) {
+        .cycle-select-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .cycle-btn {
+        background: #F4F6F7;
+        border: 1px solid #B0BEC5;
+        border-radius: 4px;
+        padding: 8px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .cycle-btn:hover {
+        background: var(--mdrt-sky);
+        border-color: var(--mdrt-blue);
+    }
+
+    .cycle-btn.active {
+        background: var(--mdrt-blue);
+        color: #FFFFFF;
+        border-color: var(--mdrt-navy);
+    }
+
+    /* Visual Strip Viewer Card */
+    .strip-theater {
+        background: #FAFAFA;
+        border: 1px solid var(--mdrt-border);
+        border-radius: 4px;
+        padding: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .svg-strip-canvas {
+        width: 100%;
+        max-width: 400px;
+        height: auto;
+    }
+
+    /* Technical Audit Readout Panel */
+    .readout-panel {
+        background: #FFFFFF;
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid var(--mdrt-border);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .readout-status-header {
+        font-size: 0.9rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        border-bottom: 2px solid var(--mdrt-sky);
+        padding-bottom: 4px;
+    }
+
+    .readout-text {
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.35;
+        color: var(--mdrt-charcoal);
+    }
+
+    .action-alert {
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        line-height: 1.3;
+    }
+
+    .action-pass {
+        background: #E8F5E9;
+        color: var(--status-green);
+        border-left: 4px solid var(--status-green);
+    }
+
+    .action-fail {
+        background: #FFEBEE;
+        color: var(--status-red);
+        border-left: 4px solid var(--status-red);
+    }
+</style>
+</head>
+<body>
+
+<div class="ci-app-wrapper">
+    <header class="ci-header">
+        <h2>Chemical Monitors &amp; Indicators</h2>
+        <p>Type 4 Internal Multi-Variable Strip Verification Matrix</p>
+    </header>
+
+    <div class="ci-layout-body">
+        <div class="instruction-box">
+            📋 <strong>Verification Challenge:</strong> Internal chemical indicators monitor critical variables inside packs (Steam, Time, and Temperature). Select a simulated autoclave cycle state below to observe the chemical reaction on the strip, then perform your safety audit.
+        </div>
+
+        <section class="dashboard-panel">
+            <h3 class="control-label">Select Simulated Cycle Parameters</h3>
+            <div class="cycle-select-grid">
+                <button class="cycle-btn" id="btn-unprocessed" onclick="setIndicatorState('unprocessed')">Unprocessed (Baseline)</button>
+                <button class="cycle-btn" id="btn-failed" onclick="setIndicatorState('failed')">Incomplete Cycle (Fail)</button>
+                <button class="cycle-btn" id="btn-passed" onclick="setIndicatorState('passed')">Validated Cycle (Pass)</button>
+            </div>
+        </section>
+
+        <section class="strip-theater">
+            <svg class="svg-strip-canvas" viewBox="0 0 320 80" xmlns="http://www.w3.org/2000/svg">
+                <rect x="5" y="10" width="310" height="60" rx="3" fill="#FFFDE7" stroke="#D7CCC8" stroke-width="2"/>
+                
+                <text x="15" y="28" fill="#78909C" font-size="9" font-weight="bold" font-family="sans-serif">MDRT SYSTEMS — TYPE 4</text>
+                <text x="15" y="40" fill="#90A4AE" font-size="7" font-family="sans-serif">STEAM AUTOCLAVE MONITOR</text>
+                <text x="15" y="52" fill="#90A4AE" font-size="7" font-family="sans-serif">132°C / 270°F — 4 MIN</text>
+                
+                <rect x="150" y="22" width="45" height="36" fill="#ECEFF1" stroke="#CFD8DC" rx="2"/>
+                <text x="155" y="34" fill="#607D8B" font-size="6" font-weight="bold">PASS GUIDE</text>
+                <rect x="155" y="40" width="35" height="12" fill="var(--ci-processed)" rx="1"/>
+                
+                <g id="chemical-ink-group">
+                    <rect x="220" y="20" width="80" height="40" rx="4" id="ci-ink-block" fill="var(--ci-unprocessed)" stroke="#B0BEC5" stroke-width="1"/>
+                    <path d="M 245 35 L 255 40 L 245 45" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+                    <path d="M 260 35 L 270 40 L 260 45" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+                    <text x="238" y="28" fill="#FFFFFF" font-size="7" font-weight="bold" letter-spacing="0.3" id="ci-ink-text">SIGNAL</text>
+                </g>
+                
+                <line x1="205" y1="10" x2="205" y2="70" stroke="#CFD8DC" stroke-width="1" stroke-dasharray="2,2"/>
+            </svg>
+        </section>
+
+        <section class="readout-panel" id="ci-readout-block">
+            </section>
+    </div>
+</div>
+
+<script>
+    const databaseStates = {
+        unprocessed: {
+            inkColor: "#FFCC00", // Yellow-gold indicator baseline
+            textColor: "#5D4037",
+            statusTitle: "Status: Unprocessed Baseline Storage",
+            statusClass: "action-fail",
+            actionText: "⚠️ STOP: This strip has not entered the sterilizer. If found inside an assembled surgical instrument tray at the clean work desk, it must be replaced with a fresh unexposed strip before packaging.",
+            evaluation: "The chemical ink is completely unreacted. It serves as a visual control to distinguish completely untreated packages from processed loads in sterile storage areas."
+        },
+        failed: {
+            inkColor: "#795548", // Incomplete chemical transition brown mud profile
+            textColor: "#FFFFFF",
+            statusTitle: "Status: CRITICAL CYCLE FAILURE — Incomplete Color Change",
+            statusClass: "action-fail",
+            actionText: "❌ REJECT LOAD: If an OR technician or nurse opens a tray in the surgical suite and discovers this incomplete muddy brown strip, they must immediately declare the tray non-sterile, halt the setup, reject the items, and open an completely fresh backup kit.",
+            evaluation: "The chemical ink failed to transition completely to dark black/charcoal. This indicates that one or more required parameters—either steam concentration saturation, exposure duration, or required temperature boundaries—was entirely missing inside that specific pack corner."
+        },
+        passed: {
+            inkColor: "#212121", // Validated dark black-brown completion profile
+            textColor: "#69F0AE",
+            statusTitle: "Status: Validation Standard Met — Clear Color Change",
+            statusClass: "action-pass",
+            actionText: "✔ SAFE TO RELEASE: The chemical ink successfully matches or surpasses the dark parameters specified by the target Pass Guide panel. Instruments are safe for release to the sterile clinical operating field.",
+            evaluation: "The full color transition confirms the strip was directly exposed to steam at 132°C for the mandated duration profile. It validates appropriate micro-environmental conditions were reached deep inside the metal instrument payload."
+        }
+    };
+
+    function setIndicatorState(stateKey) {
+        // Toggle interactive button highlight styles
+        document.querySelectorAll('.cycle-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-${stateKey}`).classList.add('active');
+
+        const stateData = databaseStates[stateKey];
+        
+        // Manipulate inline CSS properties directly within the SVG nodes
+        const inkBlock = document.getElementById("ci-ink-block");
+        const inkText = document.getElementById("ci-ink-text");
+        
+        inkBlock.style.fill = stateData.inkColor;
+        inkText.style.fill = stateData.textColor;
+
+        // Render technical text diagnostics panel
+        const readoutBlock = document.getElementById("ci-readout-block");
+        readoutBlock.innerHTML = `
+            <h4 class="readout-status-header">
+                ${stateData.statusTitle}
+            </h4>
+            <p class="readout-text"><strong>Technical Interpretation:</strong> ${stateData.evaluation}</p>
+            <div class="action-alert ${stateData.statusClass}">
+                ${stateData.actionText}
+            </div>
+        `;
+    }
+
+    // Auto-initialize module on DOM frame completion
+    window.addEventListener("DOMContentLoaded", () => {
+        setIndicatorState('unprocessed');
+    });
+</script>
+
+</body>
+</html>
