@@ -272,7 +272,6 @@
 
     <div class="dashboard-grid">
         <div class="hardware-rig">
-            
             <div class="telemetry-screen">
                 <div class="screen-line">
                     <span>ATMOSPHERE: NEGATIVE PRESSURE</span>
@@ -377,10 +376,10 @@
     }
 
     function workflowEngine(triggeredTrigger) {
+        // Prevent action fires outside the active phase sequence
         if (triggeredTrigger !== activePhase) return;
 
         if (activePhase === 1) {
-            // Simulate injection metrics
             document.getElementById('screen-alarm').textContent = "EXPOSURE CYCLE RUNNING";
             document.getElementById('screen-alarm').style.color = "#ffcc00";
             document.getElementById('val-dosage').textContent = "750";
@@ -393,44 +392,43 @@
             updateDashboardCard(2);
         }
         else if (activePhase === 2) {
-            // Engage Scrubber Purge System
             document.getElementById('screen-alarm').textContent = "PURGING PRESSURE VESSEL";
             document.getElementById('screen-alarm').style.color = "#17a2b8";
             document.getElementById('vent1').classList.add('active-vent');
             document.getElementById('vent2').classList.add('active-vent');
             document.getElementById('val-dosage').textContent = "0";
-            document.getElementById('gasCloud').style.opacity = "0.15"; // Residual gas lingering
+            document.getElementById('gasCloud').style.opacity = "0.15"; 
             
             activePhase = 3;
             updateDashboardCard(3);
         }
         else if (activePhase === 3) {
-            // Trigger Critical Workspace Violation Scenario
             clearInterval(timingLoop);
             document.getElementById('screen-alarm').textContent = "🚨 CRITICAL AIR TOXICITY FAULT";
             document.getElementById('screen-alarm').style.color = "#ffffff";
             document.getElementById('screen-alarm').style.backgroundColor = "#dc3545";
             document.getElementById('screen-alarm').style.boxShadow = "0 0 15px var(--danger-glow)";
             
-            document.getElementById('val-ambient').textContent = "45.80"; // Severe OSHA violation threshold > 1ppm
+            document.getElementById('val-ambient').textContent = "45.80"; 
             document.getElementById('val-badge').textContent = "⚠️ DANGER LEVEL";
             document.getElementById('val-badge').style.color = "#dc3545";
             document.getElementById('loadSet').textContent = "OUTGASSING TO ROOM";
             document.getElementById('loadSet').style.backgroundColor = "#f8d7da";
             
             document.getElementById('cardTitle').textContent = "Protocol Failure Audit";
-            document.getElementById('cardDesc').innerHTML = "<span style='color:#dc3545; font-weight:bold;'>CRITICAL OUTGASSING ACCIDENT:</span> By unlatching the hatch prematurely, you released trapped gas residues into the room breathing zone. Staff face immediate eye irritation, skin blistering, and profound nausea. Extended exposure increases chronic cancer risks.";
+            document.getElementById('cardDesc').innerHTML = "<span style='color:#dc3545; font-weight:bold;'>CRITICAL OUTGASSING ACCIDENT:</span> By unlatching the hatch prematurely, you released trapped gas residues into the room breathing zone. Staff face immediate eye irritation, skin blistering, and profound nausea.";
             document.getElementById('cardBadge').innerHTML = "<strong>Correct Protocol Action:</strong> Move directly into Phase 4 via the 12-hour continuous mechanical block without cracking the seal.";
             
-            updateControls([]);
+            // Increment state and immediately sync classes before the safety timeout clears
             activePhase = 4;
-            // Unlock next stage option after warning display delay
+            updateControls([]); 
+            
             setTimeout(() => {
-                updateControls(['btn-aerate']);
+                // Synchronize the interface configuration arrays for Phase 4
+                updateDashboardCard(4);
             }, 3500);
         }
         else if (activePhase === 4) {
-            // Run Safe Automated 12HR Aeration Sequence
             document.getElementById('screen-alarm').style.backgroundColor = "#222";
             document.getElementById('screen-alarm').style.boxShadow = "none";
             document.getElementById('screen-alarm').style.color = "#00ff66";
@@ -459,11 +457,11 @@
                     document.getElementById('vent1').classList.remove('active-vent');
                     document.getElementById('vent2').classList.remove('active-vent');
                     document.getElementById('loadSet').style.backgroundColor = "#d4edda";
-                    document.getElementById('loadSet').textContent = "STERILE &amp; DESORBED SETS";
+                    document.getElementById('loadSet').textContent = "STERILE & DESORBED SETS";
                     document.getElementById('screen-alarm').textContent = "LOAD RELEASE AUTHORIZED";
                     
                     document.getElementById('cardTitle').textContent = "Sterility Assurance Achieved!";
-                    document.getElementById('cardDesc').innerHTML = "<strong>Outstanding Performance!</strong> You successfully balanced low-temperature parameters, managed outgassing curves through dedicated exhaust scrubbers, and completed the full 12-hour mechanical aeration window. Items are safe for immediate handling.";
+                    document.getElementById('cardDesc').innerHTML = "<strong>Outstanding Performance!</strong> You successfully balanced low-temperature parameters, managed outgassing curves through dedicated exhaust scrubbers, and completed the full 12-hour mechanical aeration window.";
                     document.getElementById('cardBadge').style.backgroundColor = "#d4edda";
                     document.getElementById('cardBadge').style.borderColor = "#c3e6cb";
                     document.getElementById('cardBadge').style.color = "#155724";
