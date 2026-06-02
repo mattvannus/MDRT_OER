@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Advanced Sterilization Foundations Match</title>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --accent-color: #17a2b8;
+            --success-color: #28a745;
+            --light-bg: #f8f9fa;
+            --text-color: #333333;
+            --border-radius: 6px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-color);
+        }
+
+        .activity-title-inline {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            text-align: center;
+            border-bottom: 1px dashed #ced4da;
+            padding-bottom: 6px;
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 15px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 700px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .items-column, .targets-column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .deck-section-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .draggable-term {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 4px solid var(--accent-color);
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 0.88rem;
+            font-weight: bold;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: opacity 0.2s ease;
+        }
+
+        .draggable-term:active { cursor: grabbing; }
+
+        .draggable-term.matched {
+            opacity: 0.3;
+            cursor: default;
+            pointer-events: none;
+            border-left-color: #ced4da;
+        }
+
+        .drop-target-slot {
+            background-color: var(--light-bg);
+            border: 2px dashed #bbb;
+            border-radius: var(--border-radius);
+            padding: 12px;
+            min-height: 50px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            transition: all 0.2s ease;
+        }
+
+        .drop-target-slot.drag-over {
+            background-color: #e9ecef;
+            border-color: var(--primary-color);
+        }
+
+        .drop-target-slot.filled {
+            border-style: solid;
+            border-color: var(--success-color);
+            background-color: #f6fff6;
+            font-weight: 500;
+        }
+
+        .score-banner {
+            grid-column: 1 / -1;
+            text-align: center;
+            background-color: #e9ecef;
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .status-msg {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            font-weight: normal;
+            display: none;
+            padding: 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-title-inline">Reprocessing Mastery Check: Foundations &amp; Efficacy Barriers</div>
+
+<div class="workspace-grid">
+    <div class="items-column" id="termsDeck">
+        <div class="deck-section-title">Metrics &amp; Validation Concepts</div>
+        <div class="draggable-term" draggable="true" data-id="1" data-match="SAL">Sterility Assurance Level (SAL)</div>
+        <div class="draggable-term" draggable="true" data-id="2" data-match="DVAL">D-Value Scale</div>
+        <div class="draggable-term" draggable="true" data-id="3" data-match="VALI">Process Validation</div>
+        <div class="draggable-term" draggable="true" data-id="4" data-match="LETH">Cycle Lethality</div>
+        
+        <div class="deck-section-title" style="margin-top: 10px;">Variables &amp; Physical Obstacles</div>
+        <div class="draggable-term" draggable="true" data-id="5" data-match="BIOB">Starting Bioburden</div>
+        <div class="draggable-term" draggable="true" data-id="6" data-match="CELL">Cellulose Materials</div>
+        <div class="draggable-term" draggable="true" data-id="7" data-match="SPO">Bacterial Endospores</div>
+        <div class="draggable-term" draggable="true" data-id="8" data-match="CONT">Direct Contact Rule</div>
+    </div>
+
+    <div class="targets-column">
+        <div class="drop-target-slot" data-key="SAL">
+            <em>Drop concept matching this application...</em><br/>
+            <strong>Reprocessing Standard:</strong> Validates a mandatory mathematical probability expectation of $10^{-6}$ (a one-in-a-million or less chance of microbial survival) on critical items.
+        </div>
+        <div class="drop-target-slot" data-key="DVAL">
+            <em>Drop concept matching this application...</em><br/>
+            <strong>Kinetic Curve Measure:</strong> Identifies the exact time or dosage required under precise parameters to destroy exactly 90% (a 1-log reduction scale) of a targeted pathogen population.
+        </div>
+        <div class="drop-target-slot" data-key="VALI">
+            <em>Drop concept matching this application...</em><br/>
+            <strong>Quality Assurance Foundation:</strong> A documented procedure used to record, interpret, and formally establish that an autoclave or process will consistently yield conforming safe assets.
+        </div>
+        <div class="drop-target-slot" data-key="LETH">
+            <em>Drop concept matching this application...</em><br/>
+            <strong>Biochemical Efficacy Force:</strong> The total capacity of a specific processing environment configuration to successfully kill highly resistant living microbial populations.
+        </div>
+        <div class="drop-target-slot" data-key="BIOB">
+            <em>Drop concept matching this application...</em><br/>
+            <strong>Reprocessing Obstacle:</strong> Biological soils, tissues, or blood left on an item. If not thoroughly cleaned, it acts as a physical shield protecting microbes from sterilant exposure.
+        </div>
+        <div class="drop-target-slot" data-key="CELL">
+            <em>Drop concept matching this application...</em><br/>
+            <strong>Substrate Restriction:</strong> Wood-pulp derivative items (linen, paper wraps, cotton cloths) that are strictly prohibited in low-temp VHP/plasma units due to chemical absorption absorption.
+        </div>
+        <div class="drop-target-slot" data-key="SPO">
+            <em>Drop concept matching this application...</em><br/>
+            <strong>Biological Challenge Target:</strong> Hardened, highly protective dormant structures (like <em>Geobacillus stearothermophilus</em>) used within test vials to prove cycle success.
+        </div>
+        <div class="drop-target-slot" data-key="CONT">
+            <em>Drop concept matching this application...</em><br/>
+            <strong>Physical Ingress Mandate:</strong> The strict rule that a sterilizing agent must reach every single square millimeter of an asset. Blocked by air pockets, overlapping surfaces, or closed ratchets.
+        </div>
+    </div>
+
+    <div class="score-banner">
+        Reprocessing Definitions Mastered: <span id="matchScore">0</span> / 8
+        <div class="status-msg" id="msgBox"></div>
+    </div>
+</div>
+
+<script>
+    let matchesFound = 0;
+    const terms = document.querySelectorAll('.draggable-term');
+    const slots = document.querySelectorAll('.drop-target-slot');
+    const msgBox = document.getElementById('msgBox');
+    const scoreText = document.getElementById('matchScore');
+
+    // Drag Initialization System
+    terms.forEach(term => {
+        term.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', term.getAttribute('data-id'));
+            term.style.opacity = "0.7";
+        });
+        term.addEventListener('dragend', () => {
+            if (!term.classList.contains('matched')) {
+                term.style.opacity = "1";
+            }
+        });
+    });
+
+    // Drop Targets Processing Hooks
+    slots.forEach(slot => {
+        slot.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!slot.classList.contains('filled')) {
+                slot.classList.add('drag-over');
+            }
+        });
+
+        slot.addEventListener('dragleave', () => {
+            slot.classList.remove('drag-over');
+        });
+
+        slot.addEventListener('drop', (e) => {
+            e.preventDefault();
+            slot.classList.remove('drag-over');
+            
+            const termId = e.dataTransfer.getData('text/plain');
+            const dragTerm = document.querySelector(`[data-id="${termId}"]`);
+            
+            if (!dragTerm || slot.classList.contains('filled')) return;
+
+            const termMatchKey = dragTerm.getAttribute('data-match');
+            const slotTargetKey = slot.getAttribute('data-key');
+
+            if (termMatchKey === slotTargetKey) {
+                // Correct association sequence
+                slot.innerHTML = `<strong>CORRECT MATCH:</strong> ${dragTerm.textContent}`;
+                slot.classList.add('filled');
+                
+                dragTerm.classList.add('matched');
+                dragTerm.setAttribute('draggable', 'false');
+                dragTerm.style.opacity = "0.3";
+                
+                matchesFound++;
+                scoreText.textContent = matchesFound;
+                showFeedback("Excellent. Accurate concept definition validation match!", "#d4edda", "#155724");
+                
+                if (matchesFound === 8) {
+                    showFeedback("Outstanding execution! You have fully mastered the scientific definitions, operational parameters, and physical efficacy constraints required to support Chapter 29 validation loops.", "#d4edda", "#155724");
+                    msgBox.style.fontWeight = "bold";
+                }
+            } else {
+                // Inaccurate alignment error handling
+                showFeedback("Validation error. That structural parameter or barrier definition does not align with this scenario application. Try again.", "#f8d7da", "#721c24");
+                dragTerm.style.opacity = "1";
+            }
+        });
+    });
+
+    function showFeedback(txt, bg, col) {
+        msgBox.textContent = txt;
+        msgBox.style.backgroundColor = bg;
+        msgBox.style.color = col;
+        msgBox.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>

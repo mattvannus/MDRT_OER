@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Hydrogen Peroxide Vapor/Plasma Sterilization Simulator</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --plasma-purple: rgba(147, 51, 234, 0.3);
+            --plasma-glow: rgba(147, 51, 234, 0.6);
+            --screen-bg: #121212;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --light-bg: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Simulator Cockpit Layout Grid */
+        .simulator-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .simulator-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Left Column: Machine Console Enclosure */
+        .machine-console {
+            background-color: #ced4da;
+            border: 4px solid #adb5bd;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        /* Digital LCD Control Panel Screen */
+        .lcd-panel {
+            background-color: var(--screen-bg);
+            border: 3px solid #495057;
+            border-radius: 4px;
+            padding: 15px;
+            color: #00e5ff;
+            font-family: "Courier New", Courier, monospace;
+            min-height: 130px;
+            box-shadow: inset 0 0 10px rgba(0,229,255,0.15);
+        }
+
+        .lcd-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .lcd-status {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            margin: 8px 0;
+            text-transform: uppercase;
+        }
+
+        /* VISUAL CROSS-SECTION: Inner Vacuum Chamber Chamber */
+        .chamber-cross-section {
+            background-color: #2c3034;
+            border: 3px solid #1a1d20;
+            height: 190px;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+        }
+
+        /* Scalable Loading Cart Matrix and Trays */
+        .synthetic-package-cart {
+            position: absolute;
+            bottom: 25px; left: 100%; width: 70%; height: 75px;
+            background-color: #6c757d;
+            border: 2px solid #fff;
+            border-radius: 4px;
+            transition: left 0.5s cubic-bezier(0.1, 0.8, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding: 4px;
+            box-sizing: border-box;
+            z-index: 5;
+        }
+        .synthetic-package-cart.inserted { left: 15%; }
+
+        .pouch-item-graphic {
+            width: 90%; height: 25px;
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+            border-left: 5px solid #28a745; /* Tyvek green chemical indicator tape track */
+            border-radius: 2px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            color: #0050b3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Dynamic Plasma / Liquid Overlays */
+        .plasma-cloud-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--plasma-purple);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #e0b0ff;
+            text-shadow: 0 0 8px var(--plasma-glow);
+            font-size: 1.1rem;
+        }
+
+        .moisture-droplet-fault {
+            position: absolute;
+            top: 50%; left: 50%; width: 14px; height: 14px;
+            background-color: #00e5ff;
+            border-radius: 0 50% 50% 50%;
+            transform: rotate(45deg) translate(-50%, -50%);
+            display: none;
+            z-index: 10;
+            box-shadow: 0 0 10px #00e5ff;
+        }
+
+        /* Control Array Hardware Interfaces */
+        .hardware-grid-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .action-trigger-btn {
+            background-color: #495057;
+            color: #ffffff;
+            border: 2px solid #343a40;
+            border-radius: 4px;
+            padding: 12px 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: not-allowed;
+            text-align: center;
+            user-select: none;
+            transition: all 0.1s ease;
+        }
+
+        .action-trigger-btn.ready-btn {
+            background-color: #6c757d;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #212529;
+        }
+
+        .action-trigger-btn.ready-btn:hover { background-color: var(--primary-blue); }
+        .action-trigger-btn.ready-btn:active { transform: translateY(3px); box-shadow: none; }
+        
+        .btn-inject-green { background-color: #28a745 !important; border-color: #1e7e34 !important; }
+        .btn-abort-red { background-color: #dc3545 !important; border-color: #bd2130 !important; }
+
+        /* Right Column: Educational Text Staging Checklist Card */
+        .educational-status-card {
+            background-color: var(--light-bg);
+            border-left: 5px solid var(--primary-blue);
+            padding: 20px;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-heading-text {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.15rem;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 8px;
+        }
+
+        .card-description-body {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 15px 0;
+            min-height: 110px;
+        }
+
+        .card-compliance-pills {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Hardware Lab: H₂O₂ Gas Plasma Reprocessing Suite</h3>
+    </header>
+    
+    <div class="instructions">
+        Low-temperature gas plasma systems sterilize delicate devices without leaving toxic chemical residues. Follow the strict protocol checkpoints below to execute a cycle and manage hidden vacuum moisture anomalies.
+    </div>
+
+    <div class="simulator-grid">
+        <div class="machine-console">
+            
+            <div class="lcd-panel">
+                <div class="lcd-row">
+                    <span>PLATFORM: LOW-TEMP PLASMA</span>
+                    <span id="lcd-timer">TIME OUT: --:--</span>
+                </div>
+                <div class="lcd-status" id="lcd-status" style="color: #00e5ff;">STANDBY: INITIALIZE WORKFLOW</div>
+                <div class="lcd-row" style="margin-top: 12px;">
+                    <span>INTERNAL TEMP: <span id="val-temp">22</span>°C</span>
+                    <span>VACUUM DEEP: <span id="val-vac">760</span> Torr</span>
+                </div>
+                <div class="lcd-row">
+                    <span>RF ENERGY LOAD: <span id="val-rf">0</span> W</span>
+                    <span>H₂O₂ MATRIX: <span id="val-conc">0.0</span> mg/L</span>
+                </div>
+            </div>
+
+            <div class="chamber-cross-section">
+                <div class="plasma-cloud-overlay" id="plasmaCloud">FREE RADICAL PLASMA ACTIVE</div>
+                
+                <div class="moisture-droplet-fault" id="moistureDrop"></div>
+
+                <div class="synthetic-package-cart" id="carriageCart">
+                    <div class="pouch-item-graphic">TYVEK: HEAT-SENSITIVE OP-CAMERA HEAD</div>
+                    <div class="pouch-item-graphic">POLYPROPYLENE WRAP: FLEXIBLE SCOPE</div>
+                </div>
+            </div>
+
+            <div class="hardware-grid-buttons">
+                <div class="action-trigger-btn ready-btn" id="btn-load" onclick="machineWorkflowEngine(1)">STAGE SYNTHETICS</div>
+                <div class="action-trigger-btn" id="btn-vacuum" onclick="machineWorkflowEngine(2)">PULL INITIAL VACUUM</div>
+                <div class="action-trigger-btn" id="btn-trigger-fault" style="background-color:#d39e00; color:#fff;" onclick="triggerMoistureFault()">INJECT LUMEN MOISTURE</div>
+                <div class="action-trigger-btn" id="btn-start" onclick="machineWorkflowEngine(3)">IGNITE PLASMA CYCLE</div>
+                <div class="action-trigger-btn btn-abort-red" style="grid-column: span 2;" id="btn-reset" onclick="resetSimulatorWorkspace()">RESET WORKSPACE</div>
+            </div>
+        </div>
+
+        <div class="educational-status-card" id="eduCard">
+            <div>
+                <h4 class="card-heading-text" id="cardTitle">Checkpoint 1: Load Staging and Packaging Verification</h4>
+                <div class="card-description-body" id="cardDesc">
+                    The surgical camera systems and delicate flexible fibers have been inspected and confirmed clean. Technicians verified that **no cellulose-based paper bags, lines, or cloth wraps exist** inside the set. Click <strong>STAGE SYNTHETICS</strong> to push the polyolefin carriage inside the vessel.
+                </div>
+                <div class="card-compliance-pills" id="cardBadge">
+                    <strong>Critical Substrate Rule:</strong> Cellulose physically absorbs and breaks down hydrogen peroxide vapor, completely killing plasma ignition loops and destroying cycle parameters.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let stepTracker = 1;
+    let operationInterval = null;
+
+    const checklistContent = {
+        1: {
+            title: "Checkpoint 1: Load Staging and Packaging Verification",
+            desc: "The surgical camera systems and delicate flexible fibers have been inspected and confirmed clean. Technicians verified that **no cellulose-based paper bags, lines, or cloth wraps exist** inside the set. Click <strong>STAGE SYNTHETICS</strong> to push the polyolefin carriage inside the vessel.",
+            badge: "<strong>Critical Substrate Rule:</strong> Cellulose physically absorbs and breaks down hydrogen peroxide vapor, completely killing plasma ignition loops and destroying cycle parameters.",
+            buttons: ['btn-load']
+        },
+        2: {
+            title: "Checkpoint 2: Pre-Conditioning Vacuum Draw",
+            desc: "The chamber door is mechanically hermetically sealed. Click <strong>PULL INITIAL VACUUM</strong> to engage internal suction lines, evacuating ambient oxygen and environmental atmospheric blocks from nested spaces.",
+            badge: "<strong>Thermodynamic Boundary:</strong> The machine requires an ultra-deep clean vacuum state to vaporize concentrated hydrogen peroxide cleanly at low temperature bounds.",
+            buttons: ['btn-vacuum']
+        },
+        3: {
+            title: "Checkpoint 3: The Moisture Abort Pitfall Tutorial",
+            desc: "The pressure has successfully descended to 1.0 Torr. To experience a real-life mechanical warning scenario encountered by technicians, click the orange <strong>INJECT LUMEN MOISTURE</strong> button. Alternatively, click <strong>IGNITE PLASMA CYCLE</strong> to skip the tutorial and initialize sterilization directly.",
+            badge: "<strong>Frontline Reality:</strong> Residual liquid water is one of the single most common execution failures inside a modern low-temperature department loop.",
+            buttons: ['btn-trigger-fault', 'btn-start']
+        },
+        4: {
+            title: "Checkpoint 4: Sterilant Vaporization & Free Radical Plasma Injection",
+            desc: "The chamber environment has passed absolute dry parameters! Click <strong>IGNITE PLASMA CYCLE</strong> to initiate automated chemical metering injections and engage high-frequency electrical fields.",
+            badge: "<strong>Biochemical Kill Vector:</strong> Pulsing active radiofrequency waves excites gaseous vapor into a low-temp plasma state, releasing hydroxyl radicals to target microbial DNA.",
+            buttons: ['btn-start']
+        }
+    };
+
+    function setButtonsUIVisibility(allowedList) {
+        const buttons = document.querySelectorAll('.action-trigger-btn');
+        buttons.forEach(b => {
+            if (allowedList.includes(b.id)) {
+                b.classList.add('ready-btn');
+            } else {
+                b.classList.remove('ready-btn');
+            }
+        });
+    }
+
+    function syncChecklistCardElements(idx) {
+        const data = checklistContent[idx];
+        document.getElementById('cardTitle').textContent = data.title;
+        document.getElementById('cardDesc').innerHTML = data.desc;
+        document.getElementById('cardBadge').innerHTML = data.badge;
+        setButtonsUIVisibility(data.buttons);
+    }
+
+    function machineWorkflowEngine(activeActionCall) {
+        // Handle step matches safely
+        if (activeActionCall === 1 && stepTracker === 1) {
+            document.getElementById('lcd-status').textContent = "LOAD ENGAGED: CHAMBER SEALED";
+            document.getElementById('carriageCart').classList.add('inserted');
+            stepTracker = 2;
+            syncChecklistCardElements(2);
+        }
+        else if (activeActionCall === 2 && stepTracker === 2) {
+            document.getElementById('lcd-status').textContent = "PHASE: DRAWING CONDITIONING VACUUM";
+            document.getElementById('lcd-status').style.color = "#ffcc00";
+            
+            let vacuumPressure = 760;
+            operationInterval = setInterval(() => {
+                vacuumPressure -= 125;
+                if(vacuumPressure <= 10) {
+                    clearInterval(operationInterval);
+                    vacuumPressure = 1;
+                    document.getElementById('lcd-status').textContent = "VACUUM STABLE - 1.0 TORR";
+                    document.getElementById('lcd-status').style.color = "#00e5ff";
+                    stepTracker = 3;
+                    syncChecklistCardElements(3);
+                }
+                document.getElementById('val-vac').textContent = vacuumPressure;
+            }, 300);
+        }
+        else if (activeActionCall === 3 && (stepTracker === 3 || stepTracker === 4)) {
+            // Direct execution of the automated run
+            executeAutomatedPlasmaRun();
+        }
+    }
+
+    function triggerMoistureFault() {
+        if (stepTracker !== 3) return;
+        
+        document.getElementById('moistureDrop').style.display = "block";
+        document.getElementById('lcd-status').textContent = "⚠️ REJECT: MOISTURE FAULT DETECTED";
+        document.getElementById('lcd-status').style.color = "#ffffff";
+        document.getElementById('lcd-status').style.backgroundColor = "var(--danger-red)";
+        
+        document.getElementById('cardTitle').textContent = "System Abort Diagnostics Audit";
+        document.getElementById('cardDesc').innerHTML = "<span style='color:var(--danger-red); font-weight:bold;'>CYCLE INTERRUPT CODE E-04:</span> Liquid water droplets left inside the lumened endoscope instantly vaporized under vacuum forces, expanding and destabilizing pressure variables. **The cycle has completely aborted to protect the assets**. This entire payload is non-sterile.";
+        document.getElementById('cardBadge').style.backgroundColor = "#f8d7da";
+        document.getElementById('cardBadge').style.borderColor = "#f5c6cb";
+        document.getElementById('cardBadge').style.color = "#721c24";
+        document.getElementById('cardBadge').innerHTML = "<strong>MDRT Emergency Spill Directive:</strong> Any liquid condensate remaining on packages after a hydrogen peroxide abort is highly concentrated, corrosive chemical sterilant. You must wear full thick-rubber PPE to handle.";
+
+        setButtonsUIVisibility([]);
+        
+        setTimeout(() => {
+            document.getElementById('moistureDrop').style.display = "none";
+            document.getElementById('lcd-status').style.backgroundColor = "transparent";
+            document.getElementById('lcd-status').style.color = "#00e5ff";
+            document.getElementById('lcd-status').textContent = "CHAMBER DRY RE-VACUUM PASSED";
+            
+            stepTracker = 4;
+            syncChecklistCardElements(4);
+            
+            document.getElementById('cardBadge').style.backgroundColor = "#fff3cd";
+            document.getElementById('cardBadge').style.borderColor = "#ffeeba";
+            document.getElementById('cardBadge').style.color = "#856404";
+        }, 5000);
+    }
+
+    function executeAutomatedPlasmaRun() {
+        setButtonsUIVisibility([]);
+        let timelineProgress = 0;
+        
+        const statusText = document.getElementById('lcd-status');
+        const tempText = document.getElementById('val-temp');
+        const vacText = document.getElementById('val-vac');
+        const concText = document.getElementById('val-conc');
+        const rfText = document.getElementById('val-rf');
+        const plasmaLayer = document.getElementById('plasmaCloud');
+
+        operationInterval = setInterval(() => {
+            timelineProgress++;
+
+            // Phase A: Liquid Vaporization and Gas Injection
+            if (timelineProgress <= 5) {
+                statusText.textContent = "PHASE: CHEMICAL STEADY VAPORIZATION";
+                document.getElementById('lcd-timer').textContent = "EXP: 00:0" + timelineProgress;
+                concText.textContent = "6.0";
+                tempText.textContent = "50";
+                vacText.textContent = "0.4";
+            }
+            // Phase B: RF Plasma Activation (The Free Radical Generation Phase)
+            else if (timelineProgress > 5 && timelineProgress <= 12) {
+                statusText.textContent = "💥 PHASE: ACTIVE PLASMA GENERATION";
+                statusText.style.color = "#e0b0ff";
+                document.getElementById('lcd-timer').textContent = "PULSE: 02/04";
+                rfText.textContent = "450";
+                concText.textContent = "2.1";
+                plasmaLayer.style.opacity = "1";
+            }
+            // Phase C: Deep HEPA Intake Exhaust and Equalization Venting
+            else if (timelineProgress > 12 && timelineProgress <= 17) {
+                statusText.textContent = "PHASE: HEPA INTAKE VENTING EQUALIZATION";
+                statusText.style.color = "#00e5ff";
+                document.getElementById('lcd-timer').textContent = "VENT: ACTIVE";
+                rfText.textContent = "0";
+                concText.textContent = "0.0";
+                vacText.textContent = (150 * (timelineProgress - 12));
+                plasmaLayer.style.opacity = "0";
+            }
+            // Successful Cycle Completion Boundaries reached
+            else {
+                clearInterval(operationInterval);
+                vacText.textContent = "760";
+                tempText.textContent = "24";
+                statusText.textContent = "CYCLE SUCCESS: LOAD RELEASE APPROVED";
+                statusText.style.color = "#28a745";
+                document.getElementById('lcd-timer').textContent = "DONE: 00:00";
+                
+                document.getElementById('cardTitle').textContent = "Sterility Validation Efficacy Achieved!";
+                document.getElementById('cardDesc').innerHTML = "<strong>Outstanding Performance Checklist Clear!</strong> The system successfully verified initial load layouts, executed conditioning vacuum boundaries, survived a simulated water abort trap, and completed catalytic radical decomposition loops. Instruments are completely dry, residue-free, and safe for immediate clinical reuse with no aeration needed.";
+                
+                const responseBadge = document.getElementById('cardBadge');
+                responseBadge.style.backgroundColor = "#d4edda";
+                responseBadge.style.borderColor = "#c3e6cb";
+                responseBadge.style.color = "#155724";
+                responseBadge.innerHTML = "<strong>Mandatory Quality Record Retention:</strong> Confirm that the *Geobacillus stearothermophilus* biological incubation test strip demonstrates complete destruction before releasing high-precision assets into operating cart rotation.";
+                stepTracker = 1; // Return loops back safely
+            }
+        }, 900);
+    }
+
+    function resetSimulatorWorkspace() {
+        if (operationInterval) clearInterval(operationInterval);
+        stepTracker = 1;
+        document.getElementById('lcd-status').textContent = "STANDBY: INITIALIZE WORKFLOW";
+        document.getElementById('lcd-status').style.color = "#00e5ff";
+        document.getElementById('lcd-status').style.backgroundColor = "transparent";
+        document.getElementById('lcd-timer').textContent = "TIME OUT: --:--";
+        document.getElementById('val-temp').textContent = "22";
+        document.getElementById('val-vac').textContent = "760";
+        document.getElementById('val-rf').textContent = "0";
+        document.getElementById('val-conc').textContent = "0.0";
+        document.getElementById('plasmaCloud').style.opacity = "0";
+        document.getElementById('moistureDrop').style.display = "none";
+        document.getElementById('carriageCart').classList.remove('inserted');
+        
+        document.getElementById('cardBadge').style.backgroundColor = "#fff3cd";
+        document.getElementById('cardBadge').style.borderColor = "#ffeeba";
+        document.getElementById('cardBadge').style.color = "#856404";
+        syncChecklistCardElements(1);
+    }
+</script>
+
+</body>
+</html>

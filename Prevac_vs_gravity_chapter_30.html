@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Pre-Vacuum vs. Gravity Displacement</title>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --accent-color: #17a2b8;
+            --gravity-color: #6c757d;
+            --prevac-color: #28a745;
+            --light-bg: #f8f9fa;
+            --text-color: #333333;
+            --border-radius: 6px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: transparent;
+            color: var(--text-color);
+        }
+
+        .activity-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: var(--border-radius);
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .activity-header {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+        
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Sorting Interface Layout */
+        .sorting-workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .sorting-workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .machine-column {
+            background-color: var(--light-bg);
+            border: 2px dashed #ccc;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            min-height: 250px;
+            transition: all 0.2s ease;
+        }
+
+        .machine-column.drag-over {
+            background-color: #e9ecef;
+            border-color: var(--primary-color);
+        }
+
+        .column-title {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding-bottom: 8px;
+            border-bottom: 2px solid;
+        }
+
+        .gravity-title { color: var(--gravity-color); border-bottom-color: var(--gravity-color); }
+        .prevac-title { color: var(--prevac-color); border-bottom-color: var(--prevac-color); }
+
+        /* Cards Deck Layout */
+        .cards-deck {
+            padding: 0 20px 20px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            background-color: #fff;
+        }
+
+        .spec-card {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.1s, box-shadow 0.1s;
+            max-width: 250px;
+        }
+
+        .spec-card:active {
+            cursor: grabbing;
+            transform: scale(0.98);
+        }
+
+        .spec-card.placed {
+            cursor: default;
+            max-width: 100%;
+            width: calc(100% - 20px);
+            margin-bottom: 8px;
+            animation: slideIn 0.2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Success States */
+        .correct-placement {
+            border-left: 5px solid var(--prevac-color) !important;
+            background-color: #f6fff6;
+        }
+
+        .score-panel {
+            text-align: center;
+            padding: 15px;
+            background-color: #e9ecef;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .feedback-message {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-container">
+    <header class="activity-header">
+        <h3>Interactive Comparison: Autoclave Mechanism Sort</h3>
+    </header>
+    
+    <div class="instructions">
+        Understanding the thermodynamic operational differences between mechanical cycles is critical for correct load staging. Drag the technical specification, cycle description, or test requirement card below and drop it into the correct sterilizer classification column.
+    </div>
+
+    <!-- Machine Target Drop Columns -->
+    <div class="sorting-workspace">
+        <div class="machine-column" id="gravity-col" data-target="gravity">
+            <h4 class="column-title gravity-title">Gravity Displacement</h4>
+            <div class="placed-cards-container"></div>
+        </div>
+        
+        <div class="machine-column" id="prevac-col" data-target="prevac">
+            <h4 class="column-title prevac-title">Pre-Vacuum (Dynamic Air Removal)</h4>
+            <div class="placed-cards-container"></div>
+        </div>
+    </div>
+
+    <!-- Cards Remaining Inventory Pile -->
+    <div class="cards-deck" id="deck">
+        <div class="spec-card" draggable="true" data-id="1" data-match="gravity">Steam pushes air naturally out through the bottom chamber drain</div>
+        <div class="spec-card" draggable="true" data-id="2" data-match="prevac">Mechanical vacuum pump actively extracts ambient air pockets via deep suction pulses</div>
+        <div class="spec-card" draggable="true" data-id="3" data-match="prevac">Requires a mandatory daily Bowie-Dick test pack to verify integrity</div>
+        <div class="spec-card" draggable="true" data-id="4" data-match="gravity">Best suited for simple nonporous items, laboratory solutions, or liquid waste</div>
+        <div class="spec-card" draggable="true" data-id="5" data-match="prevac">Standard exposure parameters are accelerated to a 4-minute block at 132°C</div>
+        <div class="spec-card" draggable="true" data-id="6" data-match="gravity">Standard exposure parameters require 30 minutes at 121°C for wrapped trays</div>
+        <div class="spec-card" draggable="true" data-id="7" data-match="prevac">Highly reliable for processing complex porous trays or lumened instruments</div>
+        <div class="spec-card" draggable="true" data-id="8" data-match="gravity">Air removal is slower and passive, making it prone to trapping air loops in dense linens</div>
+    </div>
+
+    <div class="score-panel" id="scorePanel">
+        Cards Sorted: <span id="placedCount">0</span> / 8
+        <div class="feedback-message" id="feedbackBox"></div>
+    </div>
+</div>
+
+<script>
+    const cards = document.querySelectorAll('.spec-card');
+    const columns = document.querySelectorAll('.machine-column');
+    const deck = document.getElementById('deck');
+    const placedCountText = document.getElementById('placedCount');
+    const feedbackBox = document.getElementById('feedbackBox');
+    
+    let totalPlaced = 0;
+
+    cards.forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', card.getAttribute('data-id'));
+            card.classList.add('dragging');
+        });
+
+        card.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+        });
+    });
+
+    columns.forEach(col => {
+        col.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            col.classList.add('drag-over');
+        });
+
+        col.addEventListener('dragleave', () => {
+            col.classList.remove('drag-over');
+        });
+
+        col.addEventListener('drop', (e) => {
+            e.preventDefault();
+            col.classList.remove('drag-over');
+            
+            const cardId = e.dataTransfer.getData('text/plain');
+            const dragCard = document.querySelector(`[data-id="${cardId}"]`);
+            
+            if (!dragCard) return;
+
+            const cardMatch = dragCard.getAttribute('data-match');
+            const columnTarget = col.getAttribute('data-target');
+
+            // Evaluate sorting match accuracy
+            if (cardMatch === columnTarget) {
+                // Correct match handling
+                const container = col.querySelector('.placed-cards-container');
+                
+                dragCard.removeAttribute('draggable');
+                dragCard.classList.add('placed', 'correct-placement');
+                container.appendChild(dragCard);
+                
+                totalPlaced++;
+                placedCountText.textContent = totalPlaced;
+                
+                triggerFeedback("Correct validation match!", "#d4edda", "#155724");
+                checkCompletion();
+            } else {
+                // Mismatch feedback
+                triggerFeedback("Incorrect mechanism parameters. Saturated steam moves differently through that chamber structural layout. Try again!", "#f8d7da", "#721c24");
+            }
+        });
+    });
+
+    function triggerFeedback(message, bgColor, textColor) {
+        feedbackBox.textContent = message;
+        feedbackBox.style.backgroundColor = bgColor;
+        feedbackBox.style.color = textColor;
+        feedbackBox.style.display = 'block';
+        
+        setTimeout(() => {
+            if (totalPlaced < 8) {
+                feedbackBox.style.display = 'none';
+            }
+        }, 3500);
+    }
+
+    function checkCompletion() {
+        if (totalPlaced === 8) {
+            deck.style.display = 'none';
+            triggerFeedback("Excellent! You have mastered the physical differences between Gravity Displacement and Pre-Vacuum steam sterilization units. You are ready to safely route trays based on engineering properties.", "#d4edda", "#155724");
+            feedbackBox.style.fontWeight = 'bold';
+        }
+    }
+</script>
+
+</body>
+</html>

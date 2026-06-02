@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Mechanical Indicator Parameter Audit</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-amber: #ffc107;
+            --bg-dark: #1e1e1e;
+            --bg-light: #f8f9fa;
+            --receipt-bg: #fcfbf4;
+            --text-main: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-main);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--bg-light);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Physical Sterilizer Receipt Tape Simulation */
+        .receipt-tape {
+            background-color: var(--receipt-bg);
+            border: 1px solid #d4cba5;
+            border-top: 8px solid #495057;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            padding: 15px;
+            font-family: "Courier New", Courier, monospace;
+            color: #111;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            max-height: 320px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .receipt-tape::after {
+            content: "";
+            position: absolute;
+            bottom: 0; left: 0; right: 0; height: 20px;
+            background: linear-gradient(transparent, var(--receipt-bg));
+            pointer-events: none;
+        }
+
+        .receipt-header {
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 1px dashed #495057;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .param-alert {
+            background-color: #fde8e8;
+            color: var(--danger-red);
+            font-weight: bold;
+            padding: 0 4px;
+            border-radius: 2px;
+        }
+
+        /* Sensor Graph Visualization */
+        .chart-mockup {
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        .control-array {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .panel-btn {
+            padding: 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #ffffff;
+            transition: opacity 0.15s ease;
+        }
+
+        .panel-btn:hover { opacity: 0.9; }
+        .btn-release { background-color: var(--success-green); }
+        .btn-quarantine { background-color: var(--danger-red); }
+
+        .feedback-pane {
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Mockup: Mechanical Parameter Verification Station</h3>
+    </header>
+    
+    <div class="instructions">
+        Mechanical indicators monitor real-time physical conditions inside the chamber but cannot independently verify microbial death. As the quality gatekeeper, audit the mockup printout trace receipt and chart variables below to see if parameters comply with baseline safety targets.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <!-- LEFT PANEL: MECHANICAL TRACE LOG MOCKUP -->
+        <div class="workspace-card">
+            <h4 class="card-title">1. Physical Autoclave Printout Log</h4>
+            
+            <div class="receipt-tape" id="receiptContainer">
+                <div class="receipt-header">
+                    *** TRANS-CANADA MEDICAL QA SYSTEMS ***<br>
+                    UNIT REFERENCE: AUTOCLAVE #3 (PRE-VAC)
+                </div>
+                <div class="param-row"><span>DATE:</span><span>JUN 02 2026</span></div>
+                <div class="param-row"><span>CYCLE COMMAND:</span><span>WRAPPED INSTRUMENTS</span></div>
+                <div class="param-row"><span>LOAD RUN NUMBER:</span><span>LOAD #03</span></div>
+                <div class="param-row"><span>OPERATOR TECH:</span><span>MDRT_08</span></div>
+                <div style="border-bottom: 1px dashed #495057; margin: 8px 0;"></div>
+                
+                <div style="font-weight: bold; text-align: center; margin-bottom: 5px;">[PHASE PARAMETERS TRACE LOG]</div>
+                <div class="param-row"><span>08:15:02 COND. VACUUM 01:</span><span>PASSED (-14.2 PSI)</span></div>
+                <div class="param-row"><span>08:18:40 COND. STEAM PULSE:</span><span>PASSED (+15.0 PSI)</span></div>
+                <div class="param-row"><span>08:22:11 COND. VACUUM 02:</span><span>PASSED (-14.5 PSI)</span></div>
+                <div style="border-bottom: 1px dotted #999; margin: 4px 0;"></div>
+                
+                <div class="param-row" style="font-weight: bold; color: #0056b3;"><span>08:25:00 STEADY EXPOSURE START</span><span>TEMP: 132.1°C</span></div>
+                <div class="param-row"><span>08:26:00 EXPOSURE MIN 01:</span><span>TEMP: 132.4°C / PRES: 27.2 PSI</span></div>
+                <div class="param-row"><span>08:27:00 EXPOSURE MIN 02:</span><span>TEMP: 132.5°C / PRES: 27.5 PSI</span></div>
+                <div class="param-row"><span>08:28:00 EXPOSURE MIN 03:</span><span class="param-alert" id="faultPoint">TEMP: 129.8°C / PRES: 24.1 PSI</span></div>
+                <div class="param-row"><span>08:29:00 EXPOSURE MIN 04:</span><span>TEMP: 132.2°C / PRES: 27.1 PSI</span></div>
+                <div class="param-row" style="font-weight: bold; color: #0056b3;"><span>08:29:00 EXPOSURE TIMEFRAME END</span><span>TOTAL TIME: 04:00 MIN</span></div>
+                <div style="border-bottom: 1px dotted #999; margin: 4px 0;"></div>
+                
+                <div class="param-row"><span>08:29:30 EXHAUST VENTING:</span><span>COMPLETE</span></div>
+                <div class="param-row"><span>08:30:00 VACUUM DRY START:</span><span>30:00 MIN COUNTDOWN</span></div>
+                <div class="param-row"><span>09:00:00 DRY PHASE END:</span><span>PASSED (DRY SENSOR CLEAR)</span></div>
+                <div style="border-bottom: 1px dashed #495057; margin: 10px 0;"></div>
+                <div style="text-align: center; font-weight: bold;">CYCLE COMPLETE // BASIN BASES EQUALIZED</div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: OPERATIONAL AUDIT DECISIONS -->
+        <div class="workspace-card">
+            <h4 class="card-title">2. Parametric Decision Interface</h4>
+            
+            <div style="font-size: 0.9rem; line-height: 1.4; color: #444;">
+                <strong>Diagnostic Temperature Sensor Profile:</strong><br>
+                Review the real-time sensor waveform mapping out the temperature curve recorded inside the chamber during the 4-minute exposure block:
+            </div>
+
+            <!-- VISUAL SCALABLE SENSOR CHART -->
+            <div class="chart-mockup">
+                <svg viewBox="0 0 400 130" style="width: 100%; display: block;">
+                    <line x1="40" y1="10" x2="380" y2="10" stroke="#eee" stroke-width="1" />
+                    <line x1="40" y1="50" x2="380" y2="50" stroke="#eee" stroke-width="1" />
+                    <line x1="40" y1="100" x2="380" y2="100" stroke="#ccc" stroke-width="1" />
+                    <text x="35" y="54" fill="#666" font-size="9" text-anchor="end">132°C Target</text>
+                    <text x="35" y="104" fill="#666" font-size="9" text-anchor="end">100°C</text>
+                    
+                    <path d="M 40 120 L 70 100 L 100 115 L 130 95 L 160 50 
+                             L 200 48 L 240 47 L 280 68 L 320 49 L 350 50 L 380 110" 
+                          fill="none" stroke="#0056b3" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                          
+                    <circle cx="280" cy="68" r="5" fill="var(--danger-red)" />
+                    <text x="280" y="83" fill="var(--danger-red)" font-size="9" font-weight="bold" text-anchor="middle">Pressure Drop Fault</text>
+                </svg>
+            </div>
+
+            <div style="font-size: 0.88rem; color: #555; margin-top: 5px;">
+                <strong>Quality Assurance Assessment Challenge:</strong><br>
+                Based on the real-time parameter variations documented on the receipt tape and the visual sensor line graph plot, submit your official release determination below:
+            </div>
+
+            <div class="control-array">
+                <button class="panel-btn btn-release" onclick="evaluateMechanicalAudit('release')">APPROVE AND RELEASE LOAD FOR CLINICAL USE</button>
+                <button class="panel-btn btn-quarantine" onclick="evaluateMechanicalAudit('quarantine')">REJECT AND QUARANTINE LOAD IMMEDIATELY</button>
+            </div>
+
+            <div class="feedback-pane" id="auditFeedbackBox"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function evaluateMechanicalAudit(decision) {
+        const feedback = document.getElementById('auditFeedbackBox');
+        feedback.style.display = 'block';
+
+        if (decision === 'release') {
+            feedback.style.backgroundColor = '#f8d7da';
+            feedback.style.color = '#721c24';
+            feedback.innerHTML = '<strong>CRITICAL STEWARDSHIP BREACH:</strong> You have released a non-sterile load into hospital distribution! Look closely at the trace data profile during Exposure Minute 03. The temperature dropped down to <strong>129.8°C</strong> and pressure collapsed to 24.1 PSI. Pre-vacuum high-temperature configurations strictly require a sustained minimum parameter baseline of <strong>132°C</strong> across the entire time block to safely denature microorganisms. This thermal boundary drop constitutes a failed cold cycle.';
+        } else {
+            feedback.style.backgroundColor = '#d4edda';
+            feedback.style.color = '#155724';
+            feedback.innerHTML = '<strong>CORRECT ADVANCED AUDIT COMPLIANCE DIRECTION!</strong> Outstanding technical precision. You successfully detected the mechanical system failure. Even though the overall duration timer logged a full 4-minute baseline, the internal physical transducers captured a sharp thermal dip below standard operating parameters at Minute 03 (129.8°C). This indicates an air insulation loop pocket or a steam drop inside the vessel chamber. This load must be quarantined, and a complete in-house recall protocol must be initialized immediately.';
+        }
+    }
+</script>
+</body>
+</html>

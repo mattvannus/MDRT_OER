@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Autoclave Operation Simulator with Cross-Section</title>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --accent-color: #17a2b8;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --dark-chassis: #495057;
+            --screen-bg: #111111;
+            --light-bg: #f8f9fa;
+            --text-color: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: transparent;
+            color: var(--text-color);
+        }
+
+        .activity-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: var(--border-radius);
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .activity-header {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+        
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .simulator-layout {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .simulator-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Autoclave Structural Body Shell */
+        .sterilizer-unit {
+            background-color: #ced4da;
+            border: 4px solid #adb5bd;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        /* Computerized Command Dashboard screen */
+        .control-screen {
+            background-color: var(--screen-bg);
+            border: 3px solid #495057;
+            border-radius: 4px;
+            padding: 15px;
+            color: #00ff00;
+            font-family: "Courier New", Courier, monospace;
+            min-height: 140px;
+            box-shadow: inset 0 0 10px rgba(0,255,0,0.2);
+        }
+
+        .screen-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .screen-status {
+            text-align: center;
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin: 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* NEW: Graphic Cross-Section Schematic Chamber View */
+        .cross-section-display {
+            background-color: #343a40;
+            border: 3px solid #212529;
+            height: 200px;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        /* Structural Jacket Liner */
+        .metal-jacket {
+            position: absolute;
+            top: 10px; bottom: 10px; left: 15px; right: 15px;
+            border: 4px solid #6c757d;
+            border-radius: 4px;
+            background-color: #495057;
+            transition: all 0.3s ease;
+        }
+
+        /* Pressure Vessel Inner Atmosphere */
+        .inner-chamber {
+            position: absolute;
+            top: 8px; bottom: 8px; left: 8px; right: 8px;
+            background-color: #dee2e6;
+            border-radius: 2px;
+            transition: background-color 0.5s ease;
+        }
+
+        /* Mechanical Components Schematics */
+        .door-seal {
+            position: absolute;
+            top: 0; bottom: 0; left: 0; width: 12px;
+            background-color: #dc3545;
+            transform: translateX(-15px);
+            transition: transform 0.4s ease, background-color 0.3s ease;
+            z-index: 10;
+        }
+        .door-seal.locked {
+            transform: translateX(0);
+            background-color: #28a745;
+        }
+
+        .drain-port {
+            position: absolute;
+            bottom: -12px; left: 50%; width: 30px; height: 12px;
+            background-color: #212529;
+            transform: translateX(-50%);
+        }
+
+        /* Interactive Staged Items Cart Graphic */
+        .loading-cart {
+            position: absolute;
+            bottom: 15px; left: 100%; width: 75%; height: 70px;
+            background: repeating-linear-gradient(90deg, #6c757d, #6c757d 10px, #adb5bd 10px, #adb5bd 20px);
+            border: 3px solid #343a40;
+            border-radius: 4px;
+            transition: left 0.6s cubic-bezier(0.1, 0.6, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
+        .loading-cart.inserted {
+            left: 20%;
+        }
+
+        /* Thermodynamic Fluid overlays */
+        .fluid-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+        }
+        .fluid-steam {
+            background: radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(240,240,240,0.6) 70%);
+            color: #495057;
+        }
+        .fluid-vacuum {
+            background-color: rgba(0, 86, 179, 0.25);
+            color: #0056b3;
+            border: 2px dashed #0056b3;
+        }
+
+        /* Control Array Hardware */
+        .buttons-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .btn-panel {
+            background-color: #495057;
+            color: #ffffff;
+            border: 2px solid #343a40;
+            border-radius: 4px;
+            padding: 12px 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: not-allowed;
+            text-align: center;
+            user-select: none;
+            transition: all 0.1s ease;
+        }
+
+        .btn-panel.active-btn {
+            background-color: #6c757d;
+            border-color: #111;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #212529;
+        }
+
+        .btn-panel.active-btn:hover {
+            background-color: var(--primary-color);
+        }
+
+        .btn-panel.active-btn:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+        .btn-start { background-color: #1e7e34 !important; border-color: #116229 !important; }
+        .btn-stop { background-color: #bd2130 !important; border-color: #7e121c !important; }
+
+        /* Checklist Instructions Board Layout */
+        .step-panel {
+            background-color: var(--light-bg);
+            border-left: 5px solid var(--primary-color);
+            padding: 20px;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .step-title {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1.15rem;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 8px;
+        }
+
+        .step-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 15px 0;
+            min-height: 105px;
+        }
+
+        .step-alert {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-container">
+    <header class="activity-header">
+        <h3>Interactive Simulation: Autoclave Cross-Section and Operations Board</h3>
+    </header>
+    
+    <div class="instructions">
+        Enforcing perfect parameter discipline guarantees absolute sterilization outcomes. Click the action triggers step-by-step and track how the atmospheric variables shift inside the internal chamber cross-section view.
+    </div>
+
+    <div class="simulator-layout">
+        <div class="sterilizer-unit">
+            
+            <div class="control-screen">
+                <div class="screen-row">
+                    <span>UNIT: PRE-VAC AUTOCLAVE #1</span>
+                    <span id="screen-cycle">CYCLE: --</span>
+                </div>
+                <div class="screen-status" id="screen-status">READY TO INITIALIZE</div>
+                <div class="screen-row" style="margin-top: 12px;">
+                    <span>TEMPERATURE: <span id="val-temp">22</span>°C</span>
+                    <span>PRESSURE: <span id="val-pres">0.0</span> PSIG</span>
+                </div>
+                <div class="screen-row">
+                    <span>ELAPSED TIME: <span id="val-time">00:00</span></span>
+                    <span>VACUUM DEPLETION: <span id="val-vac">0.0</span> in.Hg</span>
+                </div>
+            </div>
+
+            <div class="cross-section-display">
+                <div class="metal-jacket">
+                    <div class="inner-chamber" id="chamberInterior">
+                        <div class="door-seal" id="doorGasket"></div>
+                        
+                        <div class="loading-cart" id="instrumentCart">SURGICAL TRays</div>
+                        
+                        <div class="fluid-overlay fluid-steam" id="steamLayer">Saturated Steam (+27 PSIG)</div>
+                        <div class="fluid-overlay fluid-vacuum" id="vacuumLayer">Air Removal Vacuum</div>
+                        
+                        <div class="drain-port"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="buttons-panel">
+                <div class="btn-panel active-btn" id="btn-load" onclick="stepController(1)">LOAD TRAYS</div>
+                <div class="btn-panel" id="btn-close" onclick="stepController(2)">CLOSE DOOR</div>
+                <div class="btn-panel" id="btn-select" onclick="stepController(3)">SELECT PRE-VAC</div>
+                <div class="btn-panel btn-start" id="btn-start" onclick="stepController(4)">START CYCLE</div>
+                <div class="btn-panel" id="btn-cool" onclick="stepController(5)">COOLING RACK</div>
+                <div class="btn-panel btn-stop" id="btn-abort" onclick="abortCycle()">ABORT</div>
+            </div>
+        </div>
+
+        <div class="step-panel" id="stepPanel">
+            <div>
+                <h4 class="step-title" id="stepTitle">Step 1: Staging and Carriage Insertion</h4>
+                <div class="step-desc" id="stepDesc">
+                    Instrument trays are clean, dry, and securely wrapped within weight limits (&le; 11.3 kg / 25 lbs). Click the <strong>LOAD TRAYS</strong> button to push the instrument cart into the stainless steel pressure vessel chamber.
+                </div>
+                <div class="step-alert" id="stepAlert">
+                    <strong>Standard Warning:</strong> Heavy rigid metal containers must always reside on the lower tiers to prevent condensation drips from contaminating wrapped soft packages below.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStep = 1;
+    let timerInterval = null;
+
+    const stepData = {
+        1: {
+            title: "Step 1: Staging and Carriage Insertion",
+            desc: "Instrument trays are clean, dry, and securely wrapped within weight limits (&le; 11.3 kg / 25 lbs). Click the <strong>LOAD TRAYS</strong> button to push the instrument cart into the stainless steel pressure vessel chamber.",
+            alert: "<strong>Standard Warning:</strong> Heavy rigid metal containers must always reside on the lower tiers to prevent condensation drips from contaminating wrapped soft packages below.",
+            buttons: ['btn-load']
+        },
+        2: {
+            title: "Step 2: Securing the Pressure Lockout Hatch",
+            desc: "The instrument sets have been rolled in safely without touching the interior walls. Click <strong>CLOSE DOOR</strong> to slide the heavy pressure hatch closed and engage the physical interlocks.",
+            alert: "<strong>Mechanical Safety:</strong> Modern doors feature safety interlocks that physically prevent unlatching or opening while the chamber environment remains pressurized, eliminating hazardous steam release.",
+            buttons: ['btn-close']
+        },
+        3: {
+            title: "Step 3: Configuration Parameter Selection",
+            desc: "This mixed payload includes multi-tier instrument setups and porous synthetic wraps. Click <strong>SELECT PRE-VAC</strong> to program active dynamic mechanical air removal parameters rather than a slower gravity run.",
+            alert: "<strong>Thermodynamic Principle:</strong> Air acts as an insulating cold barrier. It must be forcefully evacuated for saturated steam to achieve direct contact with device surfaces.",
+            buttons: ['btn-select']
+        },
+        4: {
+            title: "Step 4: Cycle Ignition & Parameter Monitoring",
+            desc: "The computerized system parameters are calibrated (Pre-Vac configuration, 4 mins exposure, 30 mins vacuum dry). Click <strong>START CYCLE</strong> to fire up the integrated vacuum pumps and automated steam lines.",
+            alert: "<strong>MDRT Mandate:</strong> Technicians must monitor active loops on the display trace to intercept faults or pressure drop alarms instantly.",
+            buttons: ['btn-start']
+        },
+        5: {
+            title: "Step 5: Carriage Extraction and Cooling Discipline",
+            desc: "The cycle completed flawlessly. Saturated steam achieved 132°C for 4 minutes, and deep vacuum draws evaporated all moisture. The environment matches atmospheric levels (0 PSIG). Click <strong>COOLING RACK</strong> to extract the load.",
+            alert: "<strong>Inviolable Protocol:</strong> Hot metal loads act as thermodynamic heat sinks. Touching them with bare hands or parking them beneath cool ventilation grates triggers immediate condensation sweating, creating a rejected 'wet pack'.",
+            buttons: ['btn-cool']
+        }
+    };
+
+    function setButtonsState(activeIdList) {
+        const buttons = document.querySelectorAll('.btn-panel');
+        buttons.forEach(btn => {
+            if (activeIdList.includes(btn.id)) {
+                btn.classList.add('active-btn');
+            } else {
+                btn.classList.remove('active-btn');
+            }
+        });
+    }
+
+    function stepController(triggeredStep) {
+        if (triggeredStep !== currentStep) return;
+
+        if (currentStep === 1) {
+            document.getElementById('screen-status').textContent = "CARRIAGE ENGAGED";
+            document.getElementById('instrumentCart').classList.add('inserted');
+            currentStep = 2;
+            updateChecklistCard(2);
+        } 
+        else if (currentStep === 2) {
+            document.getElementById('screen-status').textContent = "HATCH CLOSED / SEALED";
+            document.getElementById('doorGasket').classList.add('locked');
+            currentStep = 3;
+            updateChecklistCard(3);
+        } 
+        else if (currentStep === 3) {
+            document.getElementById('screen-cycle').textContent = "CYCLE: DYNAMIC PRE-VAC";
+            document.getElementById('screen-status').textContent = "TARGET: 4 MIN @ 132°C";
+            currentStep = 4;
+            updateChecklistCard(4);
+        } 
+        else if (currentStep === 4) {
+            runAutomatedCycleSequence();
+        }
+        else if (currentStep === 5) {
+            document.getElementById('screen-status').textContent = "LOAD EXTRACTED - SUCCESS";
+            document.getElementById('instrumentCart').classList.remove('inserted');
+            document.getElementById('doorGasket').classList.remove('locked');
+            document.getElementById('chamberInterior').style.backgroundColor = "#dee2e6";
+            
+            document.getElementById('stepTitle').textContent = "Operational Simulation Completed!";
+            document.getElementById('stepDesc').innerHTML = "<strong>Flawless Technical Execution!</strong> You successfully handled the physical loading constraints, locked down structural interlocks, matched cycle parameters to item classifications, tracked real-time waveforms, and executed proper cooling post-cycle. You are prepared for safe clinical practice.";
+            
+            const alertBox = document.getElementById('stepAlert');
+            alertBox.style.backgroundColor = "#d4edda";
+            alertBox.style.borderColor = "#c3e6cb";
+            alertBox.style.color = "#155724";
+            alertBox.innerHTML = "<strong>Quality Management Checkpoint:</strong> Meticulously review and sign the mechanical printout chart and verify that interior chemical indicators have completed their color transformation before releasing assets to sterile inventory.";
+            setButtonsState([]);
+        }
+    }
+
+    function updateChecklistCard(idx) {
+        const data = stepData[idx];
+        document.getElementById('stepTitle').textContent = data.title;
+        document.getElementById('stepDesc').innerHTML = data.desc;
+        document.getElementById('stepAlert').innerHTML = data.alert;
+        setButtonsState(data.buttons);
+    }
+
+    function runAutomatedCycleSequence() {
+        setButtonsState([]); // Freeze control array adjustments during active processing runs
+        let progress = 0;
+        
+        const statusEl = document.getElementById('screen-status');
+        const tempEl = document.getElementById('val-temp');
+        const presEl = document.getElementById('val-pres');
+        const vacEl = document.getElementById('val-vac');
+        const timeEl = document.getElementById('val-time');
+        
+        const interior = document.getElementById('chamberInterior');
+        const steamLayer = document.getElementById('steamLayer');
+        const vacLayer = document.getElementById('vacuumLayer');
+
+        timerInterval = setInterval(() => {
+            progress++;
+
+            // Phase A: Conditioning Phase (Mechanical Vacuum Extraction vs Steam Ingress Pulses)
+            if (progress <= 6) {
+                statusEl.textContent = "PHASE: CONDITIONING (AIR REMOVAL)";
+                timeEl.textContent = "00:0" + progress;
+                if (progress % 2 === 0) {
+                    vacEl.textContent = "15.0"; presEl.textContent = "0.0"; tempEl.textContent = "55";
+                    vacLayer.style.opacity = "1"; steamLayer.style.opacity = "0";
+                    interior.style.backgroundColor = "#b0c4de";
+                } else {
+                    vacEl.textContent = "0.0"; presEl.textContent = "10.5"; tempEl.textContent = "98";
+                    vacLayer.style.opacity = "0"; steamLayer.style.opacity = "0.4";
+                    interior.style.backgroundColor = "#e2e6ea";
+                }
+            } 
+            // Phase B: Peak Thermodynamic Exposure Phase
+            else if (progress > 6 && progress <= 13) {
+                statusEl.textContent = "PHASE: EXPOSURE TIME BLOCK";
+                timeEl.textContent = "03:" + (progress - 6);
+                vacEl.textContent = "0.0";
+                presEl.textContent = "27.8";
+                tempEl.textContent = "132";
+                
+                vacLayer.style.opacity = "0";
+                steamLayer.style.opacity = "1";
+                interior.style.backgroundColor = "#ffffff";
+            } 
+            // Phase C: Deep Post-Exposure Vacuum Drying Phase
+            else if (progress > 13 && progress <= 19) {
+                statusEl.textContent = "PHASE: DEEP VACUUM DRYING";
+                timeEl.textContent = "18:" + (progress - 13);
+                presEl.textContent = "0.0";
+                tempEl.textContent = "88";
+                vacEl.textContent = "24.2";
+                
+                steamLayer.style.opacity = "0";
+                vacLayer.style.opacity = "0.8";
+                vacLayer.textContent = "VACUUM MOISTURE EXTRACTION";
+                interior.style.backgroundColor = "#9fbcdb";
+            } 
+            // Phase D: Chamber Venting/Atmospheric Equalization
+            else {
+                clearInterval(timerInterval);
+                statusEl.textContent = "READY - EQUALIZATION BALANCED";
+                timeEl.textContent = "00:00";
+                tempEl.textContent = "65";
+                presEl.textContent = "0.0";
+                vacEl.textContent = "0.0";
+                
+                vacLayer.style.opacity = "0";
+                interior.style.backgroundColor = "#e2e6ea";
+                currentStep = 5;
+                updateChecklistCard(5);
+            }
+        }, 900);
+    }
+
+    function abortCycle() {
+        if(timerInterval) clearInterval(timerInterval);
+        document.getElementById('screen-status').textContent = "ALARM INTERRUPT - CYCLE ABORTED";
+        document.getElementById('screen-cycle').textContent = "CYCLE: FAULT ERROR";
+        document.getElementById('val-temp').textContent = "22";
+        document.getElementById('val-pres').textContent = "0.0";
+        document.getElementById('val-vac').textContent = "0.0";
+        
+        document.getElementById('steamLayer').style.opacity = "0";
+        document.getElementById('vacuumLayer').style.opacity = "0";
+        document.getElementById('chamberInterior').style.backgroundColor = "#f8d7da";
+        
+        document.getElementById('stepDesc').innerHTML = "<span style='color:var(--danger-color); font-weight:bold;'>CRITICAL SYSTEM FAULT:</span> Emergency override commands dump pressurized parameters instantaneously. Saturated steam quality bounds have collapsed. This complete device load is non-sterile and must be routed back for a complete disassembly tear-down loop.";
+        currentStep = 1;
+        setTimeout(() => {
+            document.getElementById('chamberInterior').style.backgroundColor = "#dee2e6";
+            updateChecklistCard(1);
+        }, 4000);
+    }
+</script>
+
+</body>
+</html>

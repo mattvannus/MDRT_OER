@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Emergency In-House Recall Simulation</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-amber: #ffc107;
+            --dark-panel: #212529;
+            --light-bg: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Simulator Cockpit Grid Layout */
+        .simulator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .simulator-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--light-bg);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Incident Status Display Screen */
+        .incident-monitor {
+            background-color: var(--dark-panel);
+            border: 3px solid #495057;
+            border-radius: 4px;
+            padding: 15px;
+            color: #ff3333;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.9rem;
+            min-height: 110px;
+            box-shadow: inset 0 0 15px rgba(220,53,69,0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .monitor-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .monitor-alert {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin: 6px 0;
+            animation: pulse-glow 2s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            from { text-shadow: 0 0 2px var(--danger-red); opacity: 0.8; }
+            to { text-shadow: 0 0 12px var(--danger-red); opacity: 1; }
+        }
+
+        /* Action Decision Tree Choices */
+        .choices-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .choice-btn {
+            background-color: #ffffff;
+            border: 2px solid #ced4da;
+            border-left: 5px solid var(--primary-blue);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 0.88rem;
+            font-weight: bold;
+            color: #212529;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s ease;
+        }
+
+        .choice-btn:hover {
+            background-color: #e9ecef;
+            border: #adb5bd;
+            transform: translateX(3px);
+        }
+
+        .choice-btn:active { background-color: #dee2e6; }
+
+        /* Simulation Log Output Window */
+        .incident-log-terminal {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            height: 160px;
+            overflow-y: auto;
+            color: #2b2b2b;
+        }
+
+        .log-entry-text {
+            margin-bottom: 4px;
+            padding-bottom: 2px;
+            border-bottom: 1px dotted #eee;
+        }
+
+        .badge-success-inline { color: var(--success-green); font-weight: bold; }
+        .badge-danger-inline { color: var(--danger-red); font-weight: bold; }
+        .badge-warning-inline { color: #d39e00; font-weight: bold; }
+
+        .btn-reset {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+        .btn-reset:hover { background-color: #5a6268; }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Incident Command Board: Emergency In-House Recall Tree</h3>
+    </header>
+    
+    <div class="instructions">
+        When a sterility assurance indicator fails, you must assume every device processed since the last negative verification is a potential contamination hazard. Step into this real-time morning shift scenario and execute a synchronized recall protocol.
+    </div>
+
+    <div class="simulator-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title">1. Critical Event Telemetry</h4>
+            
+            <div class="incident-monitor">
+                <div class="monitor-line"><span>INCIDENT STATUS:</span><span id="mon-time">07:05 AM</span></div>
+                <div class="monitor-alert" id="mon-alert">🚨 BI GROWTH POSITIVE</div>
+                <div class="monitor-line" style="margin-top:8px;"><span>TARGET MACHINE:</span><span>AUTOCLAVE #2 (ST-02)</span></div>
+                <div class="monitor-line"><span>LAST NEGATIVE CHECK:</span><span>JUN 01 2026 (SHIFT 1)</span></div>
+            </div>
+
+            <div style="font-size:0.88rem; font-weight:bold; color:var(--primary-blue);">
+                Select Your Immediate Next Operational Command Phase:
+            </div>
+            
+            <div class="choices-stack" id="choicesBox">
+                </div>
+
+            <button class="btn-reset" onclick="resetRecallSimulation()">RESET INCIDENT SIMULATOR</button>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">2. Quality Control Incident Report Log</h4>
+            <div style="font-size:0.85rem; color:#555; margin-bottom:5px;">
+                Track your deployment outcomes and timeline auditing events below:
+            </div>
+
+            <div class="incident-log-terminal" id="terminalLog">
+                <div class="log-entry-text">[07:05 AM] Night-shift biological indicator incubation reader completes loop. ST-02 test vial triggers fluorescence amplification alarm. Spores survived cycle. Load hazard initialized.</div>
+            </div>
+
+            <div id="simulationFeedback" style="padding:12px; border-radius:4px; font-size:0.9rem; line-height:1.4; font-weight:500; display:none;"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let currentStepKey = "START";
+
+    const recallTree = {
+        "START": {
+            choices: [
+                { text: "Option A: Unload ST-02 and continue running standard wrapped instruments.", next: "FAIL_CONTINUE" },
+                { text: "Option B: Issue a physical lockout-tagout on ST-02 and notify Biomedical Engineering.", next: "STEP_LOCKOUT" }
+            ]
+        },
+        "STEP_LOCKOUT": {
+            log: "<span class='badge-success-inline'>[SUCCESS]</span> ST-02 isolated. Emergency warning signs posted on chamber doors. Machine neutralized to prevent further processing hazards.",
+            choices: [
+                { text: "Option A: Generate an Instrument Tracking System (ITS) report to trace all sets run in ST-02 back to yesterday morning's clean BI loop.", next: "STEP_REPORT" },
+                { text: "Option B: Send an email list to the department supervisor requesting an internal investigation at their next convenience.", next: "FAIL_DELAY" }
+            ]
+        },
+        "STEP_REPORT": {
+            log: "<span class='badge-success-inline'>[SUCCESS]</span> Recall Manifest compiled. Target payload detected: 4 Major Orthopedic Cases, 3 Laparoscopic Trays, and 12 Lumened Suction Pouches dispersed across the facility storage zones.",
+            choices: [
+                { text: "Option A: Wait for the afternoon shift to dispatch retrieval runners so main sterile core storage remains quiet.", next: "FAIL_DELAY" },
+                { text: "Option B: Dispatch immediate high-priority recall alerts to the Operating Room desk, Ambulatory Surgical Units, and Core Sterile Storage.", next: "STEP_INTERCEPT" }
+            ]
+        },
+        "STEP_INTERCEPT": {
+            log: "<span class='badge-warning-inline'>[CRITICAL AUDIT]</span> Alerts deployed. Core storage racks cleared. Retrieval teams arrive at OR Case-Cart staging room. 2 Ortho sets are wrapped on a cart for OR Room 3; 1 Ortho set has already been unsealed and used on a patient.",
+            choices: [
+                { text: "Option A: Retrieve the unopened sets immediately. File an urgent incident containment report with Infection Prevention & Control (IPAC) regarding the used device.", next: "STEP_COMPLETE" },
+                { text: "Option B: Silently swap the unopened sets, but skip reporting the used set to prevent administrative paperwork escalation.", next: "FAIL_SILENT" }
+            ]
+        },
+        "STEP_COMPLETE": {
+            log: "<span class='badge-success-inline'>[CONTAINED]</span> Unopened trays safely hauled back to decontamination sinks. IPAC containment alert submitted successfully for the single clinical exposure case.",
+            choices: []
+        }
+    };
+
+    function renderChoices(stepKey) {
+        const container = document.getElementById('choicesBox');
+        container.innerHTML = "";
+        
+        const node = recallTree[stepKey];
+        if (!node || !node.choices) return;
+
+        node.choices.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = "choice-btn";
+            btn.innerHTML = c.text;
+            btn.onclick = () => advanceSimulationTree(c.next);
+            container.appendChild(btn);
+        });
+    }
+
+    function advanceSimulationTree(nextKey) {
+        const terminal = document.getElementById('terminalLog');
+        const fb = document.getElementById('simulationFeedback');
+        
+        fb.style.display = "none";
+
+        if (nextKey.startsWith("FAIL_")) {
+            fb.style.display = "block";
+            fb.style.backgroundColor = "#f8d7da";
+            fb.style.color = "#721c24";
+            document.getElementById('choicesBox').innerHTML = "";
+
+            if (nextKey === "FAIL_CONTINUE") {
+                fb.innerHTML = "<strong>CRITICAL LIFE SAFETY VIOLATION:</strong> By continuing to run loads on a failing machine, you are actively releasing non-sterile medical devices into patient circulation. This is a profound breach of Canadian standards and personal professional ethics.";
+                appendLogEntry("[07:07 AM] <span class='badge-danger-inline'>CRITICAL INCIDENT FAULT</span> ST-02 kept online. Hazard extended to subsequent surgical payloads.");
+            } else if (nextKey === "FAIL_DELAY") {
+                fb.innerHTML = "<strong>CONTAINMENT BREACH:</strong> Rushing or delaying a recall gives the Operating Room windows of vulnerability to unseal, assemble, and use those non-sterile components on active patients. Emergency containment actions must occur immediately.";
+                appendLogEntry("[07:10 AM] <span class='badge-danger-inline'>CONTAINMENT FAILURE</span> Retrieval delays allowed contaminated hardware components to breach the main surgical perimeter field.");
+            } else if (nextKey === "FAIL_SILENT") {
+                fb.innerHTML = "<strong>LEGAL AND ETHICAL REPRIMAND:</strong> Failing to immediately log an un-sterilized device exposure with Infection Prevention and Control (IPAC) leaves a surgical patient at severe, un-monitored risk for a cross-contamination healthcare-associated infection. This constitutes a severe regulatory violation.";
+                appendLogEntry("[07:15 AM] <span class='badge-danger-inline'>ETHICAL COLLAPSE CODE RED</span> Patient asset tracking hidden. System accountability compromised.");
+            }
+            return;
+        }
+
+        // Advance via valid path branch
+        currentStepKey = nextKey;
+        const config = recallTree[nextKey];
+        
+        const timestamp = getSimulatedTimestamp(nextKey);
+        appendLogEntry(`[${timestamp}] ${config.log}`);
+
+        if (nextKey === "STEP_COMPLETE") {
+            fb.style.display = "block";
+            fb.style.backgroundColor = "#d4edda";
+            fb.style.color = "#155724";
+            fb.innerHTML = "<strong>OUTSTANDING INCIDENT MANAGEMENT BRIEF CLEAR!</strong> You executed a textbook synchronized emergency recall loop. By implementing immediate lockouts, compiling an active ITS manifest trace, dispatching immediate perimeter alerts, retrieving un-opened items, and maintaining transparency with IPAC regarding patient exposure, you successfully upheld patient safety and protected the facility from systemic risk.";
+            document.getElementById('choicesBox').innerHTML = "";
+            document.getElementById('mon-alert').textContent = "INCIDENT RESOLVED - LOCKED";
+            document.getElementById('mon-alert').style.color = "#28a745";
+        } else {
+            renderChoices(nextKey);
+        }
+    }
+
+    function appendLogEntry(htmlText) {
+        const terminal = document.getElementById('terminalLog');
+        const entry = document.createElement('div');
+        entry.className = "log-entry-text";
+        entry.innerHTML = htmlText;
+        terminal.appendChild(entry);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function getSimulatedTimestamp(stepKey) {
+        if (stepKey === "STEP_LOCKOUT") return "07:07 AM";
+        if (stepKey === "STEP_REPORT") return "07:12 AM";
+        if (stepKey === "STEP_INTERCEPT") return "07:20 AM";
+        if (stepKey === "STEP_COMPLETE") return "07:35 AM";
+        return "07:00 AM";
+    }
+
+    function resetRecallSimulation() {
+        currentStepKey = "START";
+        document.getElementById('terminalLog').innerHTML = `<div class="log-entry-text">[07:05 AM] Night-shift biological indicator incubation reader completes loop. ST-02 test vial triggers fluorescence amplification alarm. Spores survived cycle. Load hazard initialized.</div>`;
+        document.getElementById('simulationFeedback').style.display = "none";
+        document.getElementById('mon-alert').textContent = "🚨 BI GROWTH POSITIVE";
+        document.getElementById('mon-alert').style.color = "#ff3333";
+        renderChoices("START");
+    }
+
+    // Initialize Workspace Engine on launch
+    renderChoices("START");
+</script>
+
+</body>
+</html>

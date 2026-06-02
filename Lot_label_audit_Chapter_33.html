@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Lot Label Generator &amp; Staging Audit Tool</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-amber: #ffc107;
+            --light-bg: #f8f9fa;
+            --label-bg: #fffdf0;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Module Split Layout Grid */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--light-bg);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Lot Label Presentation Layout */
+        .sticker-canvas {
+            background-color: var(--label-bg);
+            border: 2px dashed #b5a469;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: "Courier New", Courier, monospace;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            color: #000;
+        }
+
+        .sticker-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
+
+        .sticker-input {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.9rem;
+            border: 1px solid #ced4da;
+            padding: 2px 4px;
+            width: 80px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background-color: #ffffff;
+        }
+
+        .date-input-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Automated Archival Display Matrix */
+        .log-terminal {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: "Courier New", Courier, monospace;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #333;
+        }
+
+        .log-row-clickable {
+            padding: 6px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .log-row-clickable:hover {
+            background-color: #2b2b2b;
+        }
+
+        .log-row-clickable.selected-error {
+            background-color: rgba(220, 53, 69, 0.3);
+            border-left: 4px solid var(--danger-red);
+        }
+
+        .action-btn {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            text-align: center;
+        }
+
+        .action-btn:hover { background-color: #004085; }
+
+        .feedback-pane {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive QA Hub: Lot Control Label Generator &amp; Record Auditor</h3>
+    </header>
+    
+    <div class="instructions">
+        Documentation provides the legal proof of sterilization compliance inside an MDRD. Use the left panel to construct an alphanumeric lot control tag for a fresh steam cycle, then use the right panel to intercept critical data logging errors on historical logs.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title">1. Alphanumeric Lot Label Builder</h4>
+            <div style="font-size: 0.88rem; color: #555; margin-bottom: 5px;">
+                <strong>Scenario:</strong> You are wrapping and staging a major orthopedic carriage. The load is running on <strong>Sterilizer #1 (ST-01)</strong> on the current calendar date: <strong>June 2, 2026</strong>. It is the <strong>4th load</strong> of the morning shift. Build the tracking parameters configuration below:
+            </div>
+
+            <div class="sticker-canvas">
+                <div style="text-align: center; border-bottom: 1px solid #b5a469; padding-bottom: 5px; margin-bottom: 12px; font-size: 0.8rem; letter-spacing: 1px;">
+                    MDRD QUALITY TRACEABILITY
+                </div>
+                <div class="sticker-line">
+                    <span>STERILIZER ID:</span>
+                    <select class="sticker-input" id="lbl-unit" style="width: 100px;">
+                        <option value="">SELECT</option>
+                        <option value="ST-01">ST-01</option>
+                        <option value="ST-02">ST-02</option>
+                        <option value="LT-01">LT-01</option>
+                    </select>
+                </div>
+                <div class="sticker-line">
+                    <span>REPROCESSING DATE:</span>
+                    <div class="date-input-group">
+                        <select class="sticker-input" id="lbl-month" style="width: 65px;">
+                            <option value="">MON</option>
+                            <option value="JAN">JAN</option>
+                            <option value="FEB">FEB</option>
+                            <option value="MAR">MAR</option>
+                            <option value="APR">APR</option>
+                            <option value="MAY">MAY</option>
+                            <option value="JUN">JUN</option>
+                            <option value="JUL">JUL</option>
+                            <option value="AUG">AUG</option>
+                            <option value="SEP">SEP</option>
+                            <option value="OCT">OCT</option>
+                            <option value="NOV">NOV</option>
+                            <option value="DEC">DEC</option>
+                        </select>
+                        <input type="text" class="sticker-input" id="lbl-day" placeholder="DD" maxlength="2" style="width: 30px; text-align: center;">
+                        <input type="text" class="sticker-input" id="lbl-year" placeholder="YYYY" value="2026" maxlength="4" style="width: 45px; text-align: center;">
+                    </div>
+                </div>
+                <div class="sticker-line">
+                    <span>CYCLE / LOAD #:</span>
+                    <input type="text" class="sticker-input" id="lbl-load" placeholder="00" maxlength="2" style="text-align: center; width: 45px;">
+                </div>
+                <div class="sticker-line">
+                    <span>TECH SIGN-OFF:</span>
+                    <input type="text" class="sticker-input" id="lbl-tech" placeholder="ID" maxlength="3" style="width: 45px; text-align: center;">
+                </div>
+            </div>
+
+            <button class="action-btn" onclick="validateLotLabel()">GENERATE &amp; PRINT LOT STICKER</button>
+            <div class="feedback-pane" id="labelFeedback"></div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">2. Traceability Manifest Audit Window</h4>
+            <div style="font-size: 0.88rem; color: #555; margin-bottom: 5px;">
+                <strong>Scenario:</strong> Review the operational tracking entries processed during the current shift. Click directly on the specific data line containing a critical patient-safety compliance violation.
+            </div>
+
+            <div class="log-terminal">
+                <div class="log-row-clickable" id="log-row-1" onclick="auditLogSelect(1)">
+                    [JUN 02 2026 07:15] LOAD #01 // UNIT: ST-02 // CONTENT: PAN-SURGICAL LAP TRUCK // TEMP: 132C // EXPOSURE: 4:00 MIN // DRY: 30 MIN // BOWIE-DICK: PASSED // BI CONTROLS: VALIDATED
+                </div>
+                <div class="log-row-clickable" id="log-row-2" onclick="auditLogSelect(2)">
+                    [JUN 02 2026 08:30] LOAD #02 // UNIT: ST-01 // CONTENT: RECONSTRUCTIVE IMPLANT SETS // TEMP: 132C // EXPOSURE: 4:00 MIN // DRY: 30 MIN // BI VIAL RETENTION ID: #V-32B // RELEASE STATUS: DELIVERED TO OR 1A (BI CELL INCUBATION TIMELINE IN PROGRESS)
+                </div>
+                <div class="log-row-clickable" id="log-row-3" onclick="auditLogSelect(3)">
+                    [JUN 02 2026 09:12] LOAD #03 // UNIT: LT-01 // CONTENT: RADICAL ARTHROSCOPE RESIN MATS // METRICS: PLASMA PULSE CONFIRMED // LOW-TEMP INDICATION: VERIFIED COMPLETE
+                </div>
+                <div class="log-row-clickable" id="log-row-4" onclick="auditLogSelect(4)">
+                    [JUN 02 2026 10:05] LOAD #04 // UNIT: ST-02 // CONTENT: HOLLOW VENTED SUCTION LUMENS // TEMP: 132C // EXPOSURE: 4:00 MIN // DRY: 30 MIN // INTERNAL TYPE 5 STRIPS: CONVERTED
+                </div>
+            </div>
+
+            <button class="action-btn" style="background-color: #6c757d;" onclick="verifyAuditSelection()">SUBMIT COMPLIANCE AUDIT REPORT</button>
+            <div class="feedback-pane" id="auditFeedback"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let selectedLogId = 0;
+
+    function validateLotLabel() {
+        const unit = document.getElementById('lbl-unit').value;
+        const month = document.getElementById('lbl-month').value;
+        const day = document.getElementById('lbl-day').value.trim();
+        const year = document.getElementById('lbl-year').value.trim();
+        const load = document.getElementById('lbl-load').value.trim();
+        const tech = document.getElementById('lbl-tech').value.trim();
+        const fb = document.getElementById('labelFeedback');
+        
+        fb.style.display = 'block';
+
+        if (!unit || !month || !day || !year || !load || !tech) {
+            fb.style.backgroundColor = '#fff3cd';
+            fb.style.color = '#856404';
+            fb.innerHTML = '<strong>Data Fields Missing:</strong> Every structural segment of the alphanumeric lot control sticker (Machine ID, explicit date matrices, cycle count, and tracking initials) must be fully completed to print.';
+            return;
+        }
+
+        // Validate the exact clinical user context strings
+        if (unit === 'ST-01' && month === 'JUN' && (day === '2' || day === '02') && year === '2026' && (load === '4' || load === '04') && tech.length >= 2) {
+            fb.style.backgroundColor = '#d4edda';
+            fb.style.color = '#155724';
+            fb.innerHTML = '<strong>Sticker Successfully Printed &amp; Logged!</strong> Flawless compliance. The alphanumeric matrix locks in a clear record trace (`ST-01 JUN 02 2026 LOAD 04`) that allows clinical staff to visually audit device processing histories in seconds.';
+        } else {
+            fb.style.backgroundColor = '#f8d7da';
+            fb.style.color = '#721c24';
+            fb.innerHTML = '<strong>Label Compilation Error:</strong> Input tracking metrics do not align with the requested scenario variables. Double-check your shift criteria: ensure you select <strong>ST-01</strong>, date parameters matching <strong>JUN 02 2026</strong>, Load <strong>04</strong>, and your tracking ID initial string.';
+        }
+    }
+
+    function auditLogSelect(rowId) {
+        for (let i = 1; i <= 4; i++) {
+            document.getElementById(`log-row-${i}`).classList.remove('selected-error');
+        }
+        document.getElementById(`log-row-${rowId}`).classList.add('selected-error');
+        selectedLogId = rowId;
+    }
+
+    function verifyAuditSelection() {
+        const fb = document.getElementById('auditFeedback');
+        fb.style.display = 'block';
+
+        if (selectedLogId === 0) {
+            fb.style.backgroundColor = '#fff3cd';
+            fb.style.color = '#856404';
+            fb.innerHTML = '<strong>Selection Target Missing:</strong> Please highlight an entry line directly in the active logging stream view panel above to submit a quality analysis review.';
+            return;
+        }
+
+        if (selectedLogId === 2) {
+            fb.style.backgroundColor = '#d4edda';
+            fb.style.color = '#155724';
+            fb.innerHTML = '<strong>Correct Quality Interception Audit!</strong> Outstanding catch. Entry line #02 details processing implantable hardware sets. Canadian standard operating protocols (CSA Z314) rigidly enforce that **every implant load must be held under structural quarantine bounds until biological indicator cultures yield a confirmed negative growth result**. Releasing the set to an operating theater while cell incubation is active breaks down safety controls and introduces immediate infection liabilities.';
+        } else {
+            fb.style.backgroundColor = '#f8d7da';
+            fb.style.color = '#721c24';
+            fb.innerHTML = '<strong>Audit Verification Failure:</strong> This load manifest details correct tracking variables and matches programmatic release parameters. Re-evaluate the logging sheet carefully to locate the early release implant configuration error.';
+        }
+    }
+</script>
+
+</body>
+</html>

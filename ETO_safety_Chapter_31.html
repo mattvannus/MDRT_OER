@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Ethylene Oxide (EtO) Safety and Aeration Simulator</title>
+    <style>
+        :root {
+            --primary-dark: #2b2b2b;
+            --screen-bg: #151515;
+            --panel-border: #495057;
+            --gas-color: rgba(23, 162, 184, 0.25);
+            --danger-glow: rgba(220, 53, 69, 0.4);
+            --text-color: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: transparent;
+            color: var(--text-color);
+        }
+
+        .activity-container {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .activity-header {
+            background-color: #0056b3;
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Dashboard Workspace Layout Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Left Side: Industrial Mechanical Control Rig */
+        .hardware-rig {
+            background-color: #ced4da;
+            border: 4px solid #adb5bd;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        /* Matrix Telemetry Digital Display Screen */
+        .telemetry-screen {
+            background-color: var(--screen-bg);
+            border: 3px solid var(--panel-border);
+            border-radius: 4px;
+            padding: 15px;
+            color: #00ff66;
+            font-family: "Courier New", Courier, monospace;
+            min-height: 130px;
+            box-shadow: inset 0 0 10px rgba(0,255,102,0.15);
+        }
+
+        .screen-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .alarm-indicator {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            padding: 4px;
+            border-radius: 3px;
+            margin: 5px 0;
+            background-color: #222;
+        }
+
+        /* VISUAL REPRESENTATION: Schematic Isolation Cross-Section */
+        .isolation-cross-section {
+            background-color: #212529;
+            border: 3px solid #111;
+            height: 200px;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Chamber Vessel Housing */
+        .chamber-vessel {
+            position: absolute;
+            top: 15px; bottom: 15px; left: 20px; right: 120px;
+            border: 5px solid #6c757d;
+            background-color: #495057;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Porous Device Matrices */
+        .porous-load-set {
+            width: 70%;
+            height: 60%;
+            background-color: #adb5bd;
+            border: 2px solid #343a40;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #212529;
+            z-index: 5;
+            transition: background-color 0.5s ease;
+            position: relative;
+        }
+
+        /* Dynamic Outgassing Gas Overlay Cloud */
+        .gas-cloud-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--gas-color);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        /* Integrated Ventilation Lines and Scrubber Array Graphic */
+        .scrubber-module {
+            position: absolute;
+            top: 15px; bottom: 15px; right: 15px; width: 85px;
+            background-color: #343a40;
+            border: 2px solid #6c757d;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            color: #ced4da;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .scrubber-vent {
+            width: 80%; height: 25px;
+            background-color: #222;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+        .scrubber-vent.active-vent {
+            color: #00ff66;
+            box-shadow: 0 0 8px rgba(0,255,102,0.4);
+        }
+
+        /* Interface Input Controls Panel Array */
+        .controls-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .trigger-btn {
+            background-color: #495057;
+            color: #ffffff;
+            border: 2px solid #343a40;
+            border-radius: 4px;
+            padding: 12px 6px;
+            font-size: 0.82rem;
+            font-weight: bold;
+            cursor: not-allowed;
+            text-align: center;
+            user-select: none;
+            transition: all 0.1s ease;
+        }
+
+        .trigger-btn.active-btn {
+            background-color: #6c757d;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #212529;
+        }
+
+        .trigger-btn.active-btn:hover { background-color: #0056b3; }
+        .trigger-btn.active-btn:active { transform: translateY(3px); box-shadow: none; }
+        
+        .btn-green { background-color: #28a745 !important; border-color: #1e7e34 !important; }
+        .btn-amber { background-color: #ffc107 !important; border-color: #d39e00 !important; color: #212529 !important; }
+
+        /* Right Side: Educational Checklist Card Board */
+        .educational-card {
+            background-color: var(--light-bg);
+            border-left: 5px solid #0056b3;
+            padding: 20px;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: #0056b3;
+            font-size: 1.15rem;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 8px;
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 15px 0;
+            min-height: 110px;
+        }
+
+        .card-safety-badge {
+            background-color: #e8f4fd;
+            border: 1px solid #d2e4f9;
+            color: #1c4976;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-container">
+    <header class="activity-header">
+        <h3>Interactive Laboratory: EtO Safety &amp; Outgassing Aeration Engine</h3>
+    </header>
+    
+    <div class="instructions">
+        Because Ethylene Oxide is a volatile carcinogen, post-sterilization outgassing curves are strictly non-negotiable. Simulate a low-temperature cycle, analyze molecular absorption rates, and validate compliance criteria.
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="hardware-rig">
+            
+            <div class="telemetry-screen">
+                <div class="screen-line">
+                    <span>ATMOSPHERE: NEGATIVE PRESSURE</span>
+                    <span id="screen-timer">COUNTDOWN: --:--</span>
+                </div>
+                <div class="alarm-indicator" id="screen-alarm" style="color: #00ff66;">SYSTEM INITIALIZED</div>
+                <div class="screen-line" style="margin-top: 12px;">
+                    <span>GAS DOSAGE: <span id="val-dosage">0</span> mg/L</span>
+                    <span>AMBIENT AIR: <span id="val-ambient">0.00</span> ppm</span>
+                </div>
+                <div class="screen-line">
+                    <span>CORE TEMPERATURE: <span id="val-temp">22</span>°C</span>
+                    <span>DOSIMETER BADGE: <span id="val-badge">SAFE</span></span>
+                </div>
+            </div>
+
+            <div class="isolation-cross-section">
+                <div class="gas-cloud-overlay" id="gasCloud"></div>
+                
+                <div class="chamber-vessel">
+                    <div class="porous-load-set" id="loadSet">HEAT-SENSITIVE RESINS</div>
+                </div>
+
+                <div class="scrubber-module">
+                    <span>EXHAUST RIG</span>
+                    <div class="scrubber-vent" id="vent1">CATALYST</div>
+                    <div class="scrubber-vent" id="vent2">SCRUBBER</div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="trigger-btn active-btn" id="btn-inject" onclick="workflowEngine(1)">PUNCTURE CARTRIDGE</div>
+                <div class="trigger-btn" id="btn-purge" onclick="workflowEngine(2)">PURGE CHAMBER</div>
+                <div class="trigger-btn btn-amber" id="btn-open" onclick="workflowEngine(3)">OPEN DOOR GASKET</div>
+                <div class="trigger-btn btn-green" id="btn-aerate" onclick="workflowEngine(4)">START 12HR AERATION</div>
+                <div class="trigger-btn" style="grid-column: span 2; background-color:#343a40; color:#fff;" id="btn-reset" onclick="resetSim()">RESET WORKSPACE</div>
+            </div>
+        </div>
+
+        <div class="educational-card" id="eduCard">
+            <div>
+                <h4 class="card-title" id="cardTitle">Phase 1: Micro-Dose Chemical Injection</h4>
+                <div class="card-desc" id="cardDesc">
+                    The heat- and moisture-sensitive components have been loaded inside the negative-pressure system. Relative humidity is pre-conditioned to 55% to soften endospore shells. Click <strong>PUNCTURE CARTRIDGE</strong> to rupture the single-use 100% liquid canister.
+                </div>
+                <div class="card-safety-badge" id="cardBadge">
+                    <strong>QMS Safeguard:</strong> Utilizing single-dose internal cartridges eliminates the historical risk of catastrophic building explosions linked to massive external pressurized cylinders.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activePhase = 1;
+    let timingLoop = null;
+
+    const phaseConfig = {
+        1: {
+            title: "Phase 1: Micro-Dose Chemical Injection",
+            desc: "The heat- and moisture-sensitive components have been loaded inside the negative-pressure system. Relative humidity is pre-conditioned to 55% to soften endospore shells. Click <strong>PUNCTURE CARTRIDGE</strong> to rupture the single-use 100% liquid canister.",
+            badge: "<strong>QMS Safeguard:</strong> Utilizing single-dose internal cartridges eliminates the historical risk of catastrophic building explosions linked to massive external pressurized cylinders.",
+            buttons: ['btn-inject']
+        },
+        2: {
+            title: "Phase 2: Progressive Chemical Alkylation",
+            desc: "The single-use canister has ruptured. EtO gas density has reached 750 mg/L at 55°C. At a molecular level, the gas is bonding with microbial DNA blocks. Once exposure is complete, click <strong>PURGE CHAMBER</strong> to engage exhaust lines.",
+            badge: "<strong>Biochemical Physics:</strong> The gas functions like a sponge, deeply dissolving into porous synthetics, plastic housings, and rubber light cords.",
+            buttons: ['btn-purge']
+        },
+        3: {
+            title: "Phase 3: The Premature Extraction Pitfall",
+            desc: "The main chemical mass has been pumped out through the acid catalytic scrubber, but the items remain saturated with dissolved gas. Test your adherence to protocols: Click the yellow <strong>OPEN DOOR GASKET</strong> button to bypass automated safety lines.",
+            badge: "<strong>Frontline Hazard:</strong> Opening the chamber door immediately following primary exhaust draws initiates sudden workspace outgassing.",
+            buttons: ['btn-open', 'btn-aerate']
+        },
+        4: {
+            title: "Phase 4: Mandatory Mechanical Aeration Cycle",
+            desc: "The environment has returned to normal baselines. Click <strong>START 12HR AERATION</strong> to engage the continuous high-volume heated airflow system ($50^{\\circ}\\text{C}$) required to strip lingering gas from the load.",
+            badge: "<strong>Engineering Standards:</strong> Aeration is completely mandatory. Lowering temperatures slows down molecular kinetics, requiring up to 7 full days of ambient isolation if mechanical ventilation is bypassed.",
+            buttons: ['btn-aerate']
+        }
+    };
+
+    function updateControls(allowedIdList) {
+        const triggers = document.querySelectorAll('.trigger-btn');
+        triggers.forEach(t => {
+            if (allowedIdList.includes(t.id)) {
+                t.classList.add('active-btn');
+            } else {
+                t.classList.remove('active-btn');
+            }
+        });
+    }
+
+    function updateDashboardCard(phaseIdx) {
+        const data = phaseConfig[phaseIdx];
+        document.getElementById('cardTitle').textContent = data.title;
+        document.getElementById('cardDesc').innerHTML = data.desc;
+        document.getElementById('cardBadge').innerHTML = data.badge;
+        updateControls(data.buttons);
+    }
+
+    function workflowEngine(triggeredTrigger) {
+        if (triggeredTrigger !== activePhase) return;
+
+        if (activePhase === 1) {
+            // Simulate injection metrics
+            document.getElementById('screen-alarm').textContent = "EXPOSURE CYCLE RUNNING";
+            document.getElementById('screen-alarm').style.color = "#ffcc00";
+            document.getElementById('val-dosage').textContent = "750";
+            document.getElementById('val-temp').textContent = "55";
+            document.getElementById('gasCloud').style.opacity = "1";
+            document.getElementById('loadSet').style.backgroundColor = "#c5d6d8";
+            document.getElementById('loadSet').textContent = "ABSORBING EtO GAS";
+            
+            activePhase = 2;
+            updateDashboardCard(2);
+        }
+        else if (activePhase === 2) {
+            // Engage Scrubber Purge System
+            document.getElementById('screen-alarm').textContent = "PURGING PRESSURE VESSEL";
+            document.getElementById('screen-alarm').style.color = "#17a2b8";
+            document.getElementById('vent1').classList.add('active-vent');
+            document.getElementById('vent2').classList.add('active-vent');
+            document.getElementById('val-dosage').textContent = "0";
+            document.getElementById('gasCloud').style.opacity = "0.15"; // Residual gas lingering
+            
+            activePhase = 3;
+            updateDashboardCard(3);
+        }
+        else if (activePhase === 3) {
+            // Trigger Critical Workspace Violation Scenario
+            clearInterval(timingLoop);
+            document.getElementById('screen-alarm').textContent = "🚨 CRITICAL AIR TOXICITY FAULT";
+            document.getElementById('screen-alarm').style.color = "#ffffff";
+            document.getElementById('screen-alarm').style.backgroundColor = "#dc3545";
+            document.getElementById('screen-alarm').style.boxShadow = "0 0 15px var(--danger-glow)";
+            
+            document.getElementById('val-ambient').textContent = "45.80"; // Severe OSHA violation threshold > 1ppm
+            document.getElementById('val-badge').textContent = "⚠️ DANGER LEVEL";
+            document.getElementById('val-badge').style.color = "#dc3545";
+            document.getElementById('loadSet').textContent = "OUTGASSING TO ROOM";
+            document.getElementById('loadSet').style.backgroundColor = "#f8d7da";
+            
+            document.getElementById('cardTitle').textContent = "Protocol Failure Audit";
+            document.getElementById('cardDesc').innerHTML = "<span style='color:#dc3545; font-weight:bold;'>CRITICAL OUTGASSING ACCIDENT:</span> By unlatching the hatch prematurely, you released trapped gas residues into the room breathing zone. Staff face immediate eye irritation, skin blistering, and profound nausea. Extended exposure increases chronic cancer risks.";
+            document.getElementById('cardBadge').innerHTML = "<strong>Correct Protocol Action:</strong> Move directly into Phase 4 via the 12-hour continuous mechanical block without cracking the seal.";
+            
+            updateControls([]);
+            activePhase = 4;
+            // Unlock next stage option after warning display delay
+            setTimeout(() => {
+                updateControls(['btn-aerate']);
+            }, 3500);
+        }
+        else if (activePhase === 4) {
+            // Run Safe Automated 12HR Aeration Sequence
+            document.getElementById('screen-alarm').style.backgroundColor = "#222";
+            document.getElementById('screen-alarm').style.boxShadow = "none";
+            document.getElementById('screen-alarm').style.color = "#00ff66";
+            document.getElementById('screen-alarm').textContent = "AERATION AIRFLOW ACTIVE";
+            
+            document.getElementById('val-ambient').textContent = "0.02";
+            document.getElementById('val-badge').textContent = "SAFE CLEAR";
+            document.getElementById('val-badge').style.color = "#00ff66";
+            
+            let hoursRemaining = 12;
+            document.getElementById('screen-timer').textContent = `AERATE: ${hoursRemaining} HR`;
+            
+            updateControls([]);
+            
+            timingLoop = setInterval(() => {
+                hoursRemaining--;
+                document.getElementById('screen-timer').textContent = `AERATE: ${hoursRemaining} HR`;
+                
+                if (hoursRemaining === 6) {
+                    document.getElementById('gasCloud').style.opacity = "0.05";
+                    document.getElementById('loadSet').textContent = "HALF CLEAR PROFILE";
+                }
+                else if (hoursRemaining <= 0) {
+                    clearInterval(timingLoop);
+                    document.getElementById('gasCloud').style.opacity = "0";
+                    document.getElementById('vent1').classList.remove('active-vent');
+                    document.getElementById('vent2').classList.remove('active-vent');
+                    document.getElementById('loadSet').style.backgroundColor = "#d4edda";
+                    document.getElementById('loadSet').textContent = "STERILE &amp; DESORBED SETS";
+                    document.getElementById('screen-alarm').textContent = "LOAD RELEASE AUTHORIZED";
+                    
+                    document.getElementById('cardTitle').textContent = "Sterility Assurance Achieved!";
+                    document.getElementById('cardDesc').innerHTML = "<strong>Outstanding Performance!</strong> You successfully balanced low-temperature parameters, managed outgassing curves through dedicated exhaust scrubbers, and completed the full 12-hour mechanical aeration window. Items are safe for immediate handling.";
+                    document.getElementById('cardBadge').style.backgroundColor = "#d4edda";
+                    document.getElementById('cardBadge').style.borderColor = "#c3e6cb";
+                    document.getElementById('cardBadge').style.color = "#155724";
+                    document.getElementById('cardBadge').innerHTML = "<strong>Mandatory Monitoring Metric:</strong> Verify that the <em>Bacillus atrophaeus</em> biological indicator returns a negative growth result before official inventory release.";
+                }
+            }, 500);
+        }
+    }
+
+    function resetSim() {
+        if(timingLoop) clearInterval(timingLoop);
+        activePhase = 1;
+        document.getElementById('screen-alarm').textContent = "SYSTEM INITIALIZED";
+        document.getElementById('screen-alarm').style.color = "#00ff66";
+        document.getElementById('screen-alarm').style.backgroundColor = "#222";
+        document.getElementById('screen-alarm').style.boxShadow = "none";
+        document.getElementById('screen-timer').textContent = "COUNTDOWN: --:--";
+        document.getElementById('val-dosage').textContent = "0";
+        document.getElementById('val-ambient').textContent = "0.00";
+        document.getElementById('val-temp').textContent = "22";
+        document.getElementById('val-badge').textContent = "SAFE";
+        document.getElementById('val-badge').style.color = "#00ff66";
+        document.getElementById('gasCloud').style.opacity = "0";
+        document.getElementById('loadSet').style.backgroundColor = "#adb5bd";
+        document.getElementById('loadSet').textContent = "HEAT-SENSITIVE RESINS";
+        document.getElementById('vent1').classList.remove('active-vent');
+        document.getElementById('vent2').classList.remove('active-vent');
+        updateDashboardCard(1);
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: BI Incubator &amp; Quality Control Logging Station</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-amber: #ffc107;
+            --bg-dark: #121212;
+            --bg-light: #f8f9fa;
+            --panel-border: #495057;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Workspace Core Layout Grid */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1.3fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--bg-light);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Visual Rapid Incubator Block Component */
+        .incubator-block {
+            background-color: #ced4da;
+            border: 4px solid var(--panel-border);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .incubator-screen {
+            background-color: var(--bg-dark);
+            border: 2px solid #343a40;
+            border-radius: 4px;
+            padding: 10px;
+            color: #ffb703;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.85rem;
+            min-height: 55px;
+            box-shadow: inset 0 0 8px rgba(255,183,3,0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .well-wells-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .incubator-well {
+            background-color: #212529;
+            border: 3px solid #6c757d;
+            border-radius: 6px;
+            height: 100px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        /* Spore Vial Graphic Overlays */
+        .vial-capsule {
+            width: 32px;
+            height: 65px;
+            border-radius: 16px 16px 4px 4px;
+            border: 2px solid #fff;
+            position: relative;
+            margin-bottom: 4px;
+            transition: background-color 0.4s ease;
+        }
+        
+        .vial-cap-brown {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 16px;
+            background-color: #795548;
+            border-radius: 14px 14px 0 0;
+        }
+
+        .vial-fluid-glow {
+            position: absolute;
+            bottom: 2px; left: 2px; right: 2px; height: 30px;
+            border-radius: 0 0 2px 2px;
+            background-color: #673ab7; /* Initial Purple color */
+            transition: background-color 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        /* Dynamic LED indicator dots */
+        .well-led-dot {
+            position: absolute;
+            top: 6px; right: 6px;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background-color: #444;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* Department Alphanumeric QA Log Table Sheet */
+        .qa-log-sheet {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            font-size: 0.82rem;
+            border: 1px solid #ced4da;
+        }
+
+        .qa-log-sheet th {
+            background-color: #495057;
+            color: #ffffff;
+            padding: 8px;
+            font-weight: bold;
+            text-align: left;
+            border: 1px solid #ced4da;
+        }
+
+        .qa-log-sheet td {
+            padding: 8px;
+            border: 1px solid #ced4da;
+            vertical-align: middle;
+        }
+
+        .log-selector-input {
+            width: 100%;
+            padding: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            background-color: #fff;
+        }
+
+        .action-btn {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            border: none;
+            padding: 12px 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            text-align: center;
+        }
+        .action-btn:hover { background-color: #004085; }
+
+        .feedback-panel {
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive QA Desk: Biological Indicator Analysis &amp; Loop Validation</h3>
+    </header>
+    
+    <div class="instructions">
+        MDRTs must manage both the processing test vial and an unprocessed control vial to validate a biological monitoring loop. Click **ACTIVATE RETENTION INCUBATOR** to simulate the incubation phase, monitor the vial changes, and log the results into the tracking database sheet.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title">1. Rapid Auto-Reader Incubator</h4>
+            
+            <div class="incubator-block">
+                <div class="incubator-screen">
+                    <div style="display:flex; justify-content:space-between;"><span>BLOCK TEMP: 57.0°C</span><span id="inc-timer">TIMER: STANDBY</span></div>
+                    <div style="font-weight:bold; margin-top:4px;" id="inc-status">VIALS DETECTED - AWAITING TRIGGER</div>
+                </div>
+
+                <div class="well-wells-grid">
+                    <div class="incubator-well">
+                        <div class="well-led-dot" id="led-test"></div>
+                        <div class="vial-capsule">
+                            <div class="vial-cap-brown"></div>
+                            <div class="vial-fluid-glow" id="fluid-test"></div>
+                        </div>
+                        WELL 01: TEST VIAL
+                    </div>
+
+                    <div class="incubator-well">
+                        <div class="well-led-dot" id="led-control"></div>
+                        <div class="vial-capsule">
+                            <div class="vial-cap-brown"></div>
+                            <div class="vial-fluid-glow" id="fluid-control"></div>
+                        </div>
+                        WELL 02: CONTROL VIAL
+                    </div>
+                </div>
+
+                <button class="action-btn" id="btn-run-inc" onclick="runIncubatorSimulationLoop()">ACTIVATE RETENTION INCUBATOR</button>
+            </div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">2. Alphanumeric Quality Assurance Log</h4>
+            <div style="font-size: 0.85rem; color: #555; margin-bottom: 5px;">
+                Complete the permanent department tracking log form by selecting the correct incubation results derived from your validation run:
+            </div>
+
+            <table class="qa-log-sheet">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Vial Metric</th>
+                        <th style="width: 35%;">Biological Status</th>
+                        <th style="width: 35%;">Interpretation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight:bold; color:var(--primary-blue);">WELL 01: TEST VIAL<br><span style="font-size:0.7rem; color:#666; font-weight:normal;">(From Load #04)</span></td>
+                        <td>
+                            <select class="log-selector-input" id="log-test-status">
+                                <option value="">SELECT STATUS</option>
+                                <option value="purple">RETAINED PURPLE (NO GROWTH)</option>
+                                <option value="yellow">CONVERTED YELLOW (GROWTH)</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="log-selector-input" id="log-test-result">
+                                <option value="">SELECT RESULT</option>
+                                <option value="negative">NEGATIVE (-) STERILE CLEAR</option>
+                                <option value="positive">POSITIVE (+) FAILURE CODE</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:bold; color:#795548;">WELL 02: CONTROL VIAL<br><span style="font-size:0.7rem; color:#666; font-weight:normal;">(From Lot Stock)</span></td>
+                        <td>
+                            <select class="log-selector-input" id="log-control-status">
+                                <option value="">SELECT STATUS</option>
+                                <option value="purple">RETAINED PURPLE (NO GROWTH)</option>
+                                <option value="yellow">CONVERTED YELLOW (GROWTH)</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="log-selector-input" id="log-control-result">
+                                <option value="">SELECT RESULT</option>
+                                <option value="negative">NEGATIVE (-) STERILE CLEAR</option>
+                                <option value="positive">POSITIVE (+) FAILURE CODE</option>
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="action-btn" style="background-color:#6c757d;" onclick="verifyDepartmentQALog()">VERIFY LOG &amp; AUTHORIZE LOAD RELEASE</button>
+            <div class="feedback-panel" id="qaFeedbackBox"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let simulationExecuted = false;
+
+    function runIncubatorSimulationLoop() {
+        if (simulationExecuted) return;
+        
+        const btn = document.getElementById('btn-run-inc');
+        btn.disabled = true;
+        btn.style.cursor = 'not-allowed';
+        btn.style.backgroundColor = '#ced4da';
+
+        let progressCountdown = 3;
+        document.getElementById('inc-status').textContent = "PHASE: ACTIVE FLUO-READ SCAN PROCESSING";
+        document.getElementById('inc-status').style.color = "#00e5ff";
+        document.getElementById('inc-timer').textContent = `TIMER: 00:0${progressCountdown}`;
+
+        const incubationInterval = setInterval(() => {
+            progressCountdown--;
+            document.getElementById('inc-timer').textContent = `TIMER: 00:0${progressCountdown}`;
+
+            if (progressCountdown === 0) {
+                clearInterval(incubationInterval);
+                document.getElementById('inc-timer').textContent = "INCUBATION COMPLETE";
+                document.getElementById('inc-status').textContent = "ANALYSIS READY - EVALUATE SAMPLES";
+                document.getElementById('inc-status').style.color = "#28a745";
+
+                // Update visual parameters for WELL 01 (Test Vial = Successful Kill = Stays Purple)
+                document.getElementById('led-test').style.backgroundColor = varColor('--success-green');
+                document.getElementById('led-test').style.boxShadow = '0 0 8px ' + varColor('--success-green');
+                
+                // Update visual parameters for WELL 02 (Control Vial = Spores Alive = Converts Yellow)
+                document.getElementById('fluid-control').style.backgroundColor = '#eab308'; // Yellow growth shift
+                document.getElementById('fluid-control').style.boxShadow = '0 0 10px rgba(234,179,8,0.5)';
+                document.getElementById('led-control').style.backgroundColor = varColor('--success-green'); // Red dots mean growth in some rigs, let's keep green as reader finalized successfully
+                document.getElementById('led-control').style.boxShadow = '0 0 8px ' + varColor('--success-green');
+
+                simulationExecuted = true;
+            }
+        }, 1000);
+    }
+
+    function varColor(varName) {
+        return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    }
+
+    function verifyDepartmentQALog() {
+        const fb = document.getElementById('qaFeedbackBox');
+        fb.style.display = 'block';
+
+        if (!simulationExecuted) {
+            fb.style.backgroundColor = '#fff3cd';
+            fb.style.color = '#856404';
+            fb.innerHTML = '<strong>Prerequisite Block Missing:</strong> You must activate the rapid incubator station and await the incubation timer results before updating the traceability log.';
+            return;
+        }
+
+        const tStatus = document.getElementById('log-test-status').value;
+        const tResult = document.getElementById('log-test-result').value;
+        const cStatus = document.getElementById('log-control-status').value;
+        const cResult = document.getElementById('log-control-result').value;
+
+        if (!tStatus || !tResult || !cStatus || !cResult) {
+            fb.style.backgroundColor = '#fff3cd';
+            fb.style.color = '#856404';
+            fb.innerHTML = '<strong>Data Incomplete:</strong> Every cell within the alphanumeric QA log table sheet must be explicitly selected to run verification routines.';
+            return;
+        }
+
+        // Validate exact combinations matching compliant medical operations benchmarks
+        if (tStatus === 'purple' && tResult === 'negative' && cStatus === 'yellow' && cResult === 'positive') {
+            fb.style.backgroundColor = '#d4edda';
+            fb.style.color = '#155724';
+            fb.innerHTML = '<strong>QA Log Verified - Load Release Authorized!</strong> Outstanding performance. You perfectly documented a textbook valid monitoring loop. Because the <strong>Chamber Test Vial stayed purple (Negative)</strong>, you proved the autoclave successfully denatured the highly resistant *Geobacillus stearothermophilus* spores. Because the <strong>Control Vial turned yellow (Positive)</strong>, you successfully proved that the lot spores were alive, highly viable, and that the incubator reader functions perfectly. This load is 100% sterile and safe to release to surgical inventory!';
+        } else {
+            fb.style.backgroundColor = '#f8d7da';
+            fb.style.color = '#721c24';
+            fb.innerHTML = '<strong>Traceability Verification Failure:</strong> Your selections do not match the physical behavior displayed on the incubator reader console. Remember: a successful cycle should completely kill chamber test spores (<strong>No Growth/Negative</strong>), while the raw lot control vial must hatch active bacteria to prove lot viability (<strong>Growth/Positive</strong>). Re-evaluate the samples and correct your tracking entries.';
+        }
+    }
+</script>
+
+</body>
+</html>

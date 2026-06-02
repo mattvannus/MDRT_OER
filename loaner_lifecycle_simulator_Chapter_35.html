@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: End-to-End Loaner Tray Lifecycle Simulator</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-amber: #ffc107;
+            --bg-light: #f8f9fa;
+            --dark-panel: #212529;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Timeline Progress Track */
+        .timeline-container {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--dark-panel);
+            padding: 15px;
+            margin: 0 20px 15px 20px;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+            gap: 10px;
+        }
+
+        .timeline-step {
+            flex: 1;
+            min-width: 85px;
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: bold;
+            color: #6c757d;
+            padding: 6px;
+            border-radius: 4px;
+            background-color: #2c3034;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-step.active {
+            color: #ffffff;
+            background-color: var(--primary-blue);
+            box-shadow: 0 0 8px rgba(0,86,179,0.6);
+        }
+
+        .timeline-step.completed {
+            color: #ffffff;
+            background-color: var(--success-green);
+        }
+
+        /* Workspace Grid */
+        .simulator-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            padding: 0 20px 20px 20px;
+        }
+
+        @media (max-width: 900px) {
+            .simulator-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--bg-light);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Graphic Interface Monitor */
+        .telemetry-screen {
+            background-color: var(--dark-panel);
+            border: 3px solid #495057;
+            border-radius: 4px;
+            padding: 15px;
+            color: #00e5ff;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.88rem;
+            min-height: 140px;
+            box-shadow: inset 0 0 15px rgba(0,229,255,0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.4;
+        }
+
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .choices-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .choice-btn {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 5px solid var(--primary-blue);
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #212529;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s ease;
+        }
+
+        .choice-btn:hover {
+            background-color: #e9ecef;
+            transform: translateX(3px);
+        }
+
+        /* Log Terminal Output */
+        .log-terminal {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.82rem;
+            line-height: 1.4;
+            height: 250px;
+            overflow-y: auto;
+            color: #2b2b2b;
+        }
+
+        .log-line {
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px dotted #e9ecef;
+        }
+
+        .text-success { color: var(--success-green); font-weight: bold; }
+        .text-danger { color: var(--danger-red); font-weight: bold; }
+        .text-warning { color: #d39e00; font-weight: bold; }
+
+        .btn-reset {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            font-size: 0.82rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            align-self: flex-start;
+        }
+        .btn-reset:hover { background-color: #5a6268; }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Master Class Laboratory: End-to-End Loaner Instrumentation Loop</h3>
+    </header>
+    
+    <div class="instructions">
+        Managing vendor-owned loaner hardware requires coordinating strict logistics across a multidisciplinary workflow. Navigate this real-time simulator to guide an orthopedic trauma tray through the complete lifecycle from pre-operative notice to post-operative return.
+    </div>
+
+    <!-- VISUAL TIMELINE COMPONENT TRACK -->
+    <div class="timeline-container" id="timelineTrack">
+        <div class="timeline-step active" id="step-node-1">1. NOTICE</div>
+        <div class="timeline-step" id="step-node-2">2. RECEIVING</div>
+        <div class="timeline-step" id="step-node-3">3. CHECK-IN</div>
+        <div class="timeline-step" id="step-node-4">4. WASHING</div>
+        <div class="timeline-step" id="step-node-5">5. VALIDATION</div>
+        <div class="timeline-step" id="step-node-6">6. AUTOCLAVE</div>
+        <div class="timeline-step" id="step-node-7">7. CASE USE</div>
+        <div class="timeline-step" id="step-node-8">8. RE-CLEAN</div>
+        <div class="timeline-step" id="step-node-9">9. DISPATCH</div>
+    </div>
+
+    <div class="simulator-grid">
+        
+        <!-- LEFT PANEL: TELEMETRY AND WORKFLOW INPUTS -->
+        <div class="workspace-card">
+            <h4 class="card-title">Active Station Dashboard</h4>
+            
+            <div class="telemetry-screen" id="telemetryScreen">
+                <!-- Injected dynamically by script layout module below -->
+            </div>
+
+            <div style="font-size:0.85rem; font-weight:bold; color:var(--primary-blue);">
+                Execute Mandatory Operational Action:
+            </div>
+            
+            <div class="choices-box" id="choicesContainer">
+                <!-- Option buttons managed via script core -->
+            </div>
+
+            <button class="btn-reset" onclick="resetLifecycleWorkspace()">Reset Lifecycle Loop</button>
+        </div>
+
+        <!-- RIGHT PANEL: PERMANENT QA LOG AUDIT MANIFEST -->
+        <div class="workspace-card">
+            <h4 class="card-title">Permanent Quality Assurance Tracking Log</h4>
+            <div class="log-terminal" id="terminalLog">
+                <div class="log-line">[LOG INITIALIZED] Awaiting pre-operative vendor notification parameters.</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let currentPhase = 1;
+
+    const lifecycleData = {
+        1: {
+            nodeId: "step-node-1",
+            screen: `<div class="telemetry-row"><span>STATION:</span><span>PRE-OP LOGISTICS</span></div>
+                     <div class="telemetry-row"><span>SURGERY TYPE:</span><span>TOTAL KNEE RECONSTRUCTION</span></div>
+                     <div class="telemetry-row"><span>HARDWARE:</span><span>NEW SPECIALTY IMPLANT MATRIX</span></div>
+                     <div style="text-align:center; color:var(--warning-amber); font-weight:bold; margin-top:10px;">AWAITING ADVANCE NOTICE TIME BOUNDARY</div>`,
+            choices: [
+                { text: "Accept delivery 4 hours before surgery since the case-cart isn't built yet.", next: "FAIL_TIME_LATE" },
+                { text: "Enforce a strict 72-hour pre-op delivery window because this specialty set is new to staff.", next: 2 }
+            ]
+        },
+        2: {
+            nodeId: "step-node-2",
+            log: "<span class='text-success'>[PASSED]</span> Advance notice window satisfied at 72 hours. Vendor representative docks transport vehicle at the SPD loading bay.",
+            screen: `<div class="telemetry-row"><span>STATION:</span><span>RECEIVING DOCK GATEWAY</span></div>
+                     <div class="telemetry-row"><span>SHIPMENT LOGS:</span><span>3 ORTHOPEDIC SYSTEM TRAYS</span></div>
+                     <div class="telemetry-row"><span>ENVIRONMENT:</span><span>UNCONTROLLED VEHICULAR TRANSPORT</span></div>
+                     <div style="text-align:center; color:#00e5ff; font-weight:bold; margin-top:10px;">VERIFYING INITIAL ENTRY DISPATCH PROTOCOL</div>`,
+            choices: [
+                { text: "Route trays directly to OR clean core storage since they were processed at an outside facility.", next: "FAIL_BYPASS_DOCK" },
+                { text: "Treat all trays as completely non-sterile/dirty upon arrival and receive them directly into the SPD.", next: 3 }
+            ]
+        },
+        3: {
+            nodeId: "step-node-3",
+            log: "<span class='text-success'>[PASSED]</span> Direct entry restricted to the SPD dirty receiving side. Commencing piece-by-piece inventory check-in and documentation check.",
+            screen: `<div class="telemetry-row"><span>STATION:</span><span>CHECK-IN &amp; VERIFICATION DECK</span></div>
+                     <div class="telemetry-row"><span>TRAY 01 WEIGHT:</span><span>28.4 LBS (12.9 KG)</span></div>
+                     <div class="telemetry-row"><span>MANUFACTURER DOCUMENTS:</span><span>IFU AND COUNT SHEETS PRESENT</span></div>
+                     <div style="text-align:center; color:var(--warning-amber); font-weight:bold; margin-top:10px;">⚠️ TRANS-CANADA WEIGHT EXCEEDED LIMIT</div>`,
+            choices: [
+                { text: "Process the 28.4 lb tray as-is to avoid splitting up calibrated orthopedic tool groupings.", next: "FAIL_OVERWEIGHT" },
+                { text: "Reject the weight configuration and physically redistribute the tools across multiple mesh baskets under 25 lbs.", next: 4 }
+            ]
+        },
+        4: {
+            nodeId: "step-node-4",
+            log: "<span class='text-success'>[PASSED]</span> Overweight tray split below the 25 lb ceiling to prevent wet packs. Transporting sets to the decontamination sinks.",
+            screen: `<div class="telemetry-row"><span>STATION:</span><span>DECONTAMINATION &amp; WASHING ZONE</span></div>
+                     <div class="telemetry-row"><span>INSTRUMENT TYPE:</span><span>MULTI-PART CANNULATED REAMERS</span></div>
+                     <div class="telemetry-row"><span>BIOLOGICAL HAZARD:</span><span>BIOFILM PREVENTION REGIMEN</span></div>
+                     <div style="text-align:center; color:#00e5ff; font-weight:bold; margin-top:10px;">SELECTING CLEANING METHODOLOGY</div>`,
+            choices: [
+                { text: "Wipe down external surfaces with isopropyl alcohol wipes and skip internal manual lumen brushing.", next: "FAIL_WASH_BYPASS" },
+                { text: "Fully disassemble all mechanisms and execute thorough internal lumen brushing and flushing according to the IFU.", next: 5 }
+            ]
+        },
+        5: {
+            nodeId: "step-node-5",
+            log: "<span class='text-success'>[PASSED]</span> Complete mechanical breakdown, brushing, flushing, and multi-stage washer-disinfector run completed successfully.",
+            screen: `<div class="telemetry-row"><span>STATION:</span><span>CLEAN ASSEMBLY WORKSTATION</span></div>
+                     <div class="telemetry-row"><span>INSPECTION TECH:</span><span>MAGNIFICATION &amp; BORESCOPE STAGE</span></div>
+                     <div class="telemetry-row"><span>PACKAGING PROFILE:</span><span>SYNTHETIC polypropylene WRAPPING</span></div>
+                     <div style="text-align:center; color:#00e5ff; font-weight:bold; margin-top:10px;">VALIDATING INTERNAL TESTING ARCHITECTURE</div>`,
+            choices: [
+                { text: "Place a Type 1 chemical tape line outside the pack and omit internal quality challenges.", next: "FAIL_NO_INTERNAL" },
+                { text: "Embed internal Type 5 chemical integrators and biological indicators inside a Process Challenge Device (PCD).", next: 6 }
+            ]
+        },
+        6: {
+            nodeId: "step-node-6",
+            log: "<span class='text-success'>[PASSED]</span> Quality architecture embedded inside a PCD over the lower chamber drain. Initializing the pre-vacuum autoclave cycle.",
+            screen: `<div class="telemetry-row"><span>STATION:</span><span>TERMINAL STERILIZATION RUN</span></div>
+                     <div class="telemetry-row"><span>AUTOCLAVE PARAMETER:</span><span>132°C PRE-VACUUM STEAM</span></div>
+                     <div class="telemetry-row"><span>LOAD MATRIX:</span><span>CONTAINS CRITICAL IMPLANTS</span></div>
+                     <div style="text-align:center; color:var(--warning-amber); font-weight:bold; margin-top:10px;">CYCLE ENDED // VERIFYING RELEASE DECREE</div>`,
+            choices: [
+                { text: "Deliver trays to the OR immediately while the biological indicator vial continues processing in the incubator.", next: "FAIL_IMPLANT_RELEASE" },
+                { text: "Quarantine the load and withhold release until the biological indicator results confirm negative growth.", next: 7 }
+            ]
+        },
+        7: {
+            nodeId: "step-node-7",
+            log: "<span class='text-success'>[PASSED]</span> Biological indicator incubation completed and confirmed negative. Load cleared and transferred to the surgical core.",
+            screen: `<div class="telemetry-row"><span>STATION:</span><span>OPERATING ROOM RECONSTRUCTION</span></div>
+                     <div class="telemetry-row"><span>CASE CARTS:</span><span>UNPACKED AND ASSEMBLED IN ROOM</span></div>
+                     <div class="telemetry-row"><span>CLINICAL STATUS:</span><span>SURGERY CONCLUDED WITH ZERO FAULTS</span></div>
+                     <div style="text-align:center; color:#00e5ff; font-weight:bold; margin-top:10px;">POST-OPERATIVE TEARDOWN INITIALIZED</div>`,
+            choices: [
+                { text: "Pack the dry dirty instruments directly back into the vendor boxes and route them straight to the shipping bay.", next: "FAIL_RETURN_DIRTY" },
+                { text: "Remove gross soil with sterile water, apply enzymatic spray, and transport back to the SPD decontamination sinks.", next: 8 }
+            ]
+        },
+        8: {
+            nodeId: "step-node-8",
+            log: "<span class='text-success'>[PASSED]</span> Post-operative point-of-use care completed safely. Trays routed back to the dirty side of the department.",
+            screen: `<div class="telemetry-row"><span>STATION:</span><span>POST-OP FULL REPROCESSING LOOP</span></div>
+                     <div class="telemetry-row"><span>PROCEDURE STATUS:</span><span>WASHING, RE-INSPECTION, &amp; TERMINAL RUN</span></div>
+                     <div class="telemetry-row"><span>LEGAL MATRICES:</span><span>CONFIRMING POST-USE REPROCESSING RECORDS</span></div>
+                     <div style="text-align:center; color:var(--warning-amber); font-weight:bold; margin-top:10px;">SELECTING VENDOR CONSIGNMENT PIPELINE</div>`,
+            choices: [
+                { text: "Skip post-use terminal cleaning and return the used sets directly to the courier's hands.", next: "FAIL_POST_CLEAN_BYPASS" },
+                { text: "Execute a full post-use manual and mechanical washing loop before staging the trays for vendor retrieval.", next: 9 }
+            ]
+        },
+        9: {
+            nodeId: "step-node-9",
+            log: "<span class='text-success'>[PASSED]</span> Full post-use reprocessing loop verified, items inventoried, and logged cleanly into the department's database.",
+            screen: `<div class="telemetry-row"><span>STATION:</span><span>VENDOR RETURN DISPATCH DOCK</span></div>
+                     <div class="telemetry-row"><span>COURIER MANIFEST:</span><span>TRACING SIGNATURE FILES REGISTERED</span></div>
+                     <div class="telemetry-row"><span>TIMELINE DELAY:</span><span>RETRIEVED WITHIN 2 BUSINESS DAYS</span></div>
+                     <div style="text-align:center; color:var(--success-green); font-weight:bold; margin-top:10px;">🎉 LIFECYCLE LOOP COMPLETE COMPLETE</div>`,
+            choices: [
+                { text: "Archive all records for 5 to 7 years and finalize the transaction.", next: "LOOP_SUCCESS" }
+            ]
+        }
+    };
+
+    const failureMessages = {
+        "FAIL_TIME_LATE": "<strong>LOGISTICAL COMPLIANCE FAILURE:</strong> Accepting a newly introduced specialty instrument tray only 4 hours before surgery violates safe processing windows. This shortcuts essential reprocessing phases, skips mandatory staff in-service training, and directly threatens patient safety[cite: 2, 4].",
+        "FAIL_BYPASS_DOCK": "<strong>STERILITY CONTAMINATION BREACH:</strong> Vendor trays travel in uncontrolled transport environments and are considered contaminated upon arrival. Routing unwashed vendor sets directly to the operating room core introduces external pathogens and directly threatens patient safety[cite: 2, 4].",
+        "FAIL_OVERWEIGHT": "<strong>THERMODYNAMIC PROCESSING FAULT:</strong> Allowing an individual tray to exceed 25 pounds creates a severe thermal heat sink inside steam autoclaves. This traps condensation, blocks effective drying, and creates a failed wet pack[cite: 2, 4].",
+        "FAIL_WASH_BYPASS": "<strong>DECONTAMINATION COMPLIANCE BREACH:</strong> Wiping down complex, multi-part orthopedic reamers with alcohol wipes cannot clear trapped bioburden. Residual organic matter will cook under steam heat, shield microorganisms, and create a severe infection hazard[cite: 2, 4, 5].",
+        "FAIL_NO_INTERNAL": "<strong>STERILITY ASSURANCE FAILURE:</strong> Using only an external tape line cannot verify that steam successfully penetrated into the center of a dense instrument set. Internal indicators are mandatory to confirm that sterilant reached the most difficult geometric areas of the load[cite: 2, 5].",
+        "FAIL_IMPLANT_RELEASE": "<strong>CRITICAL PATIENT RECALL FAULT:</strong> Implantable medical hardware cannot be released from quarantine until the biological indicator results are confirmed negative. Releasing an implant early without a documented medical emergency violates Canadian standard operating safety controls[cite: 2, 4].",
+        "FAIL_RETURN_DIRTY": "<strong>BIOHAZARD SPREAD FAULT:</strong> Transporting blood-stained, un-rinsed orthopedic instruments out of the operative suite violates basic infection control principles. This allows organic soils to dry, creating a stubborn layer of biofilm[cite: 2, 4].",
+        "FAIL_POST_CLEAN_BYPASS": "<strong>REGULATORY INFRACTION:</strong> Handing used, biohazard-contaminated surgical sets back to a vendor courier before performing a complete decontamination loop violates medical waste handling guidelines and facility policies[cite: 2, 4]."
+    };
+
+    function renderActivePhaseConfiguration(phaseIdx) {
+        const data = lifecycleData[phaseIdx];
+        if (!data) return;
+
+        // Synchronize visual timeline step components
+        document.querySelectorAll('.timeline-step').forEach(node => {
+            node.classList.remove('active');
+        });
+        
+        for (let i = 1; i <= phaseIdx; i++) {
+            const pastNode = document.getElementById(`step-node-${i}`);
+            if (pastNode) {
+                if (i < phaseIdx) pastNode.className = "timeline-step completed";
+                else pastNode.className = "timeline-step active";
+            }
+        }
+
+        // Update the display screen and available choices
+        document.getElementById('telemetryScreen').innerHTML = data.screen;
+        
+        const choicesContainer = document.getElementById('choicesContainer');
+        choicesContainer.innerHTML = "";
+
+        data.choices.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = "choice-btn";
+            btn.innerHTML = c.text;
+            btn.onclick = () => processUserDecision(c.next);
+            choicesContainer.appendChild(btn);
+        });
+    }
+
+    function processUserDecision(targetDestination) {
+        const logWindow = document.getElementById('terminalLog');
+        
+        if (typeof targetDestination === 'string' && targetDestination.startsWith("FAIL_")) {
+            // Process an incorrect sorting action or choice
+            document.getElementById('choicesContainer').innerHTML = "";
+            document.getElementById('telemetryScreen').innerHTML = `<div style="text-align:center; color:var(--danger-red); font-weight:bold; margin-top:20px;">⚠️ LIFECYCLE FAULT OVERRIDE EXECUTED</div>`;
+            
+            const errorMsg = failureMessages[targetDestination];
+            appendLogLine(`[CRITICAL AUDIT ERROR] ${errorMsg}`);
+            return;
+        }
+
+        if (targetDestination === "LOOP_SUCCESS") {
+            // Complete the full workflow cycle successfully
+            document.getElementById('choicesContainer').innerHTML = "";
+            document.getElementById('telemetryScreen').innerHTML = `<div style="text-align:center; color:var(--success-green); font-weight:bold; margin-top:20px;">✓ COMPLIANCE LOOP VERIFIED STABLE</div>`;
+            appendLogLine("<span class='text-success'>[COMPLETE]</span> All traceability data, biological incubation results, and vendor manifests archived for 7 years. Safe workflow loop completed successfully[cite: 2, 4].");
+            return;
+        }
+
+        // Advance to the next sequential phase of the loop
+        currentPhase = targetDestination;
+        const config = lifecycleData[currentPhase];
+        
+        appendLogLine(config.log);
+        renderActivePhaseConfiguration(currentPhase);
+    }
+
+    function appendLogLine(textString) {
+        const terminal = document.getElementById('terminalLog');
+        const element = document.createElement('div');
+        element.className = "log-line";
+        element.innerHTML = textString;
+        terminal.appendChild(element);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function resetLifecycleWorkspace() {
+        currentPhase = 1;
+        document.getElementById('terminalLog').innerHTML = `<div class="log-line">[LOG INITIALIZED] Awaiting pre-operative vendor notification parameters.</div>`;
+        
+        // Reset all timeline nodes back to baseline configurations
+        document.querySelectorAll('.timeline-step').forEach((node, idx) => {
+            node.className = "timeline-step" + (idx === 0 ? " active" : "");
+        });
+
+        renderActivePhaseConfiguration(1);
+    }
+
+    // Initialize the module workspace on window launch
+    renderActivePhaseConfiguration(1);
+</script>
+
+</body>
+</html>

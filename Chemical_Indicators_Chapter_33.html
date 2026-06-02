@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Chemical Indicator Classification Workshop</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --light-bg: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Sorting Desk Layout */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--light-bg);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Targets Column Array Slots */
+        .scenario-slot {
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 5px solid #6c757d;
+            border-radius: 4px;
+            padding: 12px;
+            min-height: 80px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            transition: all 0.2s ease;
+        }
+
+        .scenario-slot.drag-over {
+            background-color: #e9ecef;
+            border-color: var(--primary-blue);
+        }
+
+        .scenario-slot.correct-match {
+            border-left-color: var(--success-green);
+            background-color: #f6fff6;
+            border-style: solid;
+        }
+
+        /* Draggable Badges Staging Pile */
+        .indicators-pile {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 500px) {
+            .indicators-pile { grid-template-columns: 1fr; }
+        }
+
+        .draggable-ci-badge {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: grab;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            user-select: none;
+            transition: background-color 0.2s, opacity 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .draggable-ci-badge:active { cursor: grabbing; }
+        
+        .draggable-ci-badge.placed-clear {
+            opacity: 0.3;
+            pointer-events: none;
+            cursor: default;
+            background-color: #e9ecef;
+        }
+
+        .badge-sub {
+            font-size: 0.72rem;
+            color: #6c757d;
+            font-weight: normal;
+            margin-top: 4px;
+        }
+
+        .score-banner {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.05rem;
+            background-color: #e9ecef;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .status-pane {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            font-weight: normal;
+            display: none;
+            padding: 10px;
+            border-radius: 4px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Board: Chemical Indicator Operational Deployment Challenge</h3>
+    </header>
+    
+    <div class="instructions">
+        ISO standards group chemical indicators into distinct classes based on how many physical parameters they track. Drag the specific Chemical Indicator type card on the right and drop it into the correct operational setup description slot on the left.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <div class="workspace-card" id="slotsContainer">
+            <h4 class="card-title">1. Departmental Configuration Setups</h4>
+            
+            <div class="scenario-slot" data-expected="type1">
+                <strong>Setup Scenario A:</strong> Secured on the absolute exterior wrapper fold of a container set or strip tape line. Converts color strictly to confirm the pack went into a sterilizer carriage vs. sitting raw on a clean-side table.
+                <div class="match-output" style="margin-top:6px; font-size:0.85rem;"></div>
+            </div>
+
+            <div class="scenario-slot" data-expected="type2">
+                <strong>Setup Scenario B:</strong> Embedded inside a standardized generic challenge pack and run on an empty first cycle of the morning shift to validate air purge lines and screen for plumbing vacuum leak boundaries.
+                <div class="match-output" style="margin-top:6px; font-size:0.85rem;"></div>
+            </div>
+
+            <div class="scenario-slot" data-expected="type4">
+                <strong>Setup Scenario C:</strong> Inserted inside multi-lumen multi-tiered surgical sets. Designed to change colors only when exposed to at least two critical cycle conditions (e.g., specific combinations of time and temperature).
+                <div class="match-output" style="margin-top:6px; font-size:0.85rem;"></div>
+            </div>
+
+            <div class="scenario-slot" data-expected="type5">
+                <strong>Setup Scenario D:</strong> Tucked inside the center basket layout of every critical implant payload. Tracks all parameters and is engineered to match or exceed the biological kill boundaries of resistant endospores.
+                <div class="match-output" style="margin-top:6px; font-size:0.85rem;"></div>
+            </div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">2. Chemical Indicator Card Deck</h4>
+            
+            <div class="indicators-pile" id="ciDeck">
+                <div class="draggable-ci-badge" draggable="true" data-id="type1">
+                    Type 1: Process Indicator
+                    <div class="badge-sub">Example: Autoclave Indicator Tape</div>
+                </div>
+                
+                <div class="draggable-ci-badge" draggable="true" data-id="type2">
+                    Type 2: Specific Test Indicator
+                    <div class="badge-sub">Example: Bowie-Dick Sheet</div>
+                </div>
+
+                <div class="draggable-ci-badge" draggable="true" data-id="type4">
+                    Type 4: Multi-Variable Indicator
+                    <div class="badge-sub">Tracks 2+ Critical Cycle Variables</div>
+                </div>
+
+                <div class="draggable-ci-badge" draggable="true" data-id="type5">
+                    Type 5: Integrating Indicator
+                    <div class="badge-sub">Correlates with Biological Indicators</div>
+                </div>
+            </div>
+
+            <div class="score-banner">
+                Indicators Correctly Deployed: <span id="ciScore">0</span> / 4
+                <div class="status-pane" id="ciStatusBox"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let scoreCounter = 0;
+    const badges = document.querySelectorAll('.draggable-ci-badge');
+    const targetSlots = document.querySelectorAll('.scenario-slot');
+    const statusBox = document.getElementById('ciStatusBox');
+    const scoreText = document.getElementById('ciScore');
+
+    // Drag Core Infrastructure Hooks
+    badges.forEach(badge => {
+        badge.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', badge.getAttribute('data-id'));
+        });
+    });
+
+    // Drop Targets Matrix Management
+    targetSlots.forEach(slot => {
+        slot.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if(!slot.classList.contains('correct-match')) {
+                slot.classList.add('drag-over');
+            }
+        });
+
+        slot.addEventListener('dragleave', () => {
+            slot.classList.remove('drag-over');
+        });
+
+        slot.addEventListener('drop', (e) => {
+            e.preventDefault();
+            slot.classList.remove('drag-over');
+
+            const transferId = e.dataTransfer.getData('text/plain');
+            const dragBadge = document.querySelector(`[data-id="${transferId}"]`);
+            
+            if(!dragBadge || slot.classList.contains('correct-match')) return;
+
+            const expectedKey = slot.getAttribute('data-expected');
+
+            if(transferId === expectedKey) {
+                // Handle validated match alignment conditions
+                slot.classList.add('correct-match');
+                const outputField = slot.querySelector('.match-output');
+                
+                // Style and update internal element parameters text
+                if (expectedKey === 'type1') {
+                    outputField.innerHTML = '<strong>DEPLOYED: Type 1 Process Tape.</strong> Proves pack exposure to heat lines but does not independently validate core sterility parameters.';
+                } else if (expectedKey === 'type2') {
+                    outputField.innerHTML = '<strong>DEPLOYED: Type 2 Bowie-Dick Sheet.</strong> Specifically checks mechanical air removal performance inside pre-vacuum autoclave models.';
+                } else if (expectedKey === 'type4') {
+                    outputField.innerHTML = '<strong>DEPLOYED: Type 4 Multi-Variable Strip.</strong> Evaluates combinations of internal metrics across narrow tray spaces.';
+                } else if (expectedKey === 'type5') {
+                    outputField.innerHTML = '<strong>DEPLOYED: Type 5 Integrating Integrator.</strong> High-tier monitoring element mandatory inside every processed implant payload tray framework.';
+                }
+
+                dragBadge.classList.add('placed-clear');
+                dragBadge.setAttribute('draggable', 'false');
+                
+                scoreCounter++;
+                scoreText.textContent = scoreCounter;
+                triggerFeedbackPane("Validation Match Confirmed!", "#d4edda", "#155724");
+
+                if(scoreCounter === 4) {
+                    document.getElementById('ciDeck').style.opacity = '0.5';
+                    triggerFeedbackPane("Outstanding Execution! You have successfully mastered the operational deployment of Chemical Indicator classes in compliance with Canadian Quality Management Systems (QMS). You can reliably place monitoring tools across all case cart loops.", "#d4edda", "#155724");
+                    statusBox.style.fontWeight = 'bold';
+                }
+            } else {
+                // Handle unmatched indicator errors
+                triggerFeedbackPane("Deployment Fault: That type or class of chemical indicator does not track the specific parameter parameters required for this scenario setup.", "#f8d7da", "#721c24");
+            }
+        });
+    });
+
+    function triggerFeedbackPane(msgText, bgColor, textColor) {
+        statusBox.innerHTML = msgText;
+        statusBox.style.backgroundColor = bgColor;
+        statusBox.style.color = textColor;
+        statusBox.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>

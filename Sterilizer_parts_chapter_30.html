@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Anatomy of a Steam Sterilizer</title>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --accent-color: #17a2b8;
+            --dark-bg: #2b2b2b;
+            --light-bg: #f8f9fa;
+            --text-color: #333333;
+            --shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: transparent;
+            color: var(--text-color);
+        }
+
+        /* Container Wrapper */
+        .activity-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Header Style matching your guide */
+        .activity-header {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+        
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Interactive Diagram Workspace */
+        .diagram-workspace {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #eaeaea;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        /* SVG Placeholder Diagram */
+        .vector-diagram {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        }
+
+        /* Hotspot Core Layout */
+        .hotspot {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 0 rgba(23, 162, 184, 0.7);
+            transform: translate(-50%, -50%);
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            animation: pulse-glow 2s infinite;
+        }
+
+        .hotspot:hover, .hotspot.active {
+            background-color: var(--primary-color);
+            transform: translate(-50%, -50%) scale(1.2);
+            animation: none;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(23, 162, 184, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(23, 162, 184, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(23, 162, 184, 0); }
+        }
+
+        /* Informational Side/Bottom Output Box */
+        .info-panel {
+            margin: 20px;
+            padding: 20px;
+            background-color: var(--light-bg);
+            border-left: 5px solid var(--accent-color);
+            border-radius: 0 4px 4px 0;
+            min-height: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .info-panel h4 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+            font-size: 1.15rem;
+        }
+
+        .info-panel p {
+            margin: 0 0 12px 0;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .quality-catch {
+            font-size: 0.9rem;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .quality-catch strong {
+            color: #533f03;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-container">
+    <header class="activity-header">
+        <h3>Interactive Exercise: Anatomy of a Steam Sterilizer</h3>
+    </header>
+    
+    <div class="instructions">
+        Operating an autoclave safely and effectively requires an advanced engineering understanding of its layout. Click on each numbered hotspot over the technical diagram to review component utilities and localized quality checks.
+    </div>
+
+    <div class="diagram-workspace">
+        <svg class="vector-diagram" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+            <rect x="50" y="30" width="700" height="390" rx="8" fill="#ced4da" stroke="#adb5bd" stroke-width="3"/>
+            <rect x="180" y="70" width="440" height="290" rx="4" fill="#ffffff" stroke="#495057" stroke-width="4"/>
+            <rect x="160" y="55" width="480" height="320" fill="none" stroke="#6c757d" stroke-width="4" stroke-dasharray="6,4"/>
+            <path d="M 120 120 L 180 120" stroke="#dc3545" stroke-width="6" fill="none" />
+            <path d="M 400 360 L 400 410 L 120 410" stroke="#007bff" stroke-width="6" fill="none" />
+            <line x1="180" y1="70" x2="180" y2="360" stroke="#343a40" stroke-width="8"/>
+            <rect x="370" y="355" width="60" height="10" fill="#6c757d"/>
+            <rect x="650" y="60" width="80" height="130" rx="4" fill="#343a40"/>
+            <rect x="660" y="75" width="60" height="40" fill="#17a2b8"/>
+            <circle cx="675" cy="140" r="8" fill="#dc3545"/>
+            <circle cx="705" cy="140" r="6" fill="#28a745"/>
+            <text x="400" y="210" fill="#adb5bd" font-size="24" font-weight="bold" text-anchor="middle">PRESSURIZED VESSEL CHAMBER</text>
+            <text x="70" y="115" fill="#495057" font-size="12" font-weight="bold">STEAM INLET</text>
+            <text x="70" y="405" fill="#495057" font-size="12" font-weight="bold">EXHAUST DRAIN</text>
+        </svg>
+
+        <div class="hotspot active" style="top: 45%; left: 45%;" data-id="1">1</div>
+        <div class="hotspot" style="top: 48%; left: 20%;" data-id="2">2</div>
+        <div class="hotspot" style="top: 27%; left: 18%;" data-id="3">3</div>
+        <div class="hotspot" style="top: 91%; left: 17%;" data-id="4">4</div>
+        <div class="hotspot" style="top: 81%; left: 50%;" data-id="5">5</div>
+        <div class="hotspot" style="top: 22%; left: 77%;" data-id="6">6</div>
+    </div>
+
+    <div class="info-panel" id="infoPanel">
+        <h4 id="infoTitle">1. The Chamber</h4>
+        <p id="infoText">The central, hermetically sealed pressure vessel where device payloads are placed for sterilization exposure. It is constructed exclusively of heavy-gauge, corrosion-resistant stainless steel to prevent long-term fatigue or cracking from deep stress cycles.</p>
+        <div class="quality-catch" id="infoCatch">
+            <strong>MDRT Quality Catch:</strong> Overloading sets or nesting items incorrectly chokes steam circulation boundaries, leading to cold spots and micro-condensation trapping.
+        </div>
+    </div>
+</div>
+
+<script>
+    // Component Data Repository matching textbook definitions
+    const hotspotData = {
+        1: {
+            title: "1. The Chamber",
+            text: "The central pressurized vessel where item loads are staged for sterilization exposure. Constructed of durable high-gauge stainless steel, it is engineered to easily handle extreme shifts in internal thermal mass, humidity, and intense atmospheric pressures. Geometry dictates a uniform distribution layout.",
+            catch: "<strong>MDRT Quality Catch:</strong> Overloading or cramming trays directly blocks steam pathways, trapping cold ambient air pockets within device matrixes."
+        },
+        2: {
+            title: "2. The Sealing Door & Mechanical Interlocks",
+            text: "Establishes a completely airtight structural barrier lock to preserve localized chamber boundaries and hold internal pressure constraints. Features highly critical electronic safety interlocks that physically prevent the hatch from latching or opening until structural pressure lines are safely vented.",
+            catch: "<strong>MDRT Quality Catch:</strong> Double-door pass-through designs establish an absolute physical validation line separating the Assembly 'clean zone' from Sterile Storage grids, minimizing cross-contamination risks."
+        },
+        3: {
+            title: "3. Steam Generation & Delivery Piping",
+            text: "Brings clean, dry, saturated steam into the inner space, typically calibrated to 121°C or 132°C-135°C thresholds. Depending on local facility infrastructure, this is fed via a central hospital utility boiler system or standalone local clean-steam generators.",
+            catch: "<strong>MDRT Quality Catch:</strong> Saturated steam quality targets a precise parameter balance (97% to 100% dry gas). Excess water droplets drop out as failed wet packs, while over-dried superheated gas causes sterilization failure."
+        },
+        4: {
+            title: "4. Dynamic Air Removal System",
+            text: "Ambient air behaves as an insulating barrier gas and must be thoroughly evacuated from all lumened areas and dense wraps for steam contact to occur. Pre-vacuum models activate mechanical pumps to extract air using active suction pulls, while SFPP units alternate positive flushes to purge oxygen matrices.",
+            catch: "<strong>MDRT Quality Catch:</strong> Because dynamic air removal relies entirely on structural pump valves and vacuum pathways, technicians must run a daily <strong>Bowie-Dick test pack</strong> to verify plumbing integrity."
+        },
+        5: {
+            title: "5. Chamber Bottom Drain Strainer",
+            text: "Positioned at the absolute lowest point of the chamber floor where heavy cold air mass and pooling condensation naturally migrate to exit the system. This geometric point is universally recognized as the most difficult area for structural steam to reach.",
+            catch: "<strong>MDRT Quality Catch:</strong> Daily routine <strong>Biological Indicator (BI) PCDs</strong> and Bowie-Dick packs must always be placed on the bottom shelf directly above this drain location. Technicians must check and manually clear this strainer screen daily to prevent lint dams."
+        },
+        6: {
+            title: "6. Computerized Control Panel & Probes",
+            text: "Acts as the operational central processor or 'brain' of the machinery, regulating cycle tracking loops, balancing system valves, and displaying automated metrics. This unit outputs mandatory physical or encrypted digital logs of cycle curves.",
+            catch: "<strong>MDRT Quality Catch:</strong> MDRTs must physically check, verify, and sign this mechanical printout trace at cycle termination to validate that time and temperature parameters were perfectly satisfied."
+        }
+    };
+
+    const hotspots = document.querySelectorAll('.hotspot');
+    const infoPanel = document.getElementById('infoPanel');
+    const infoTitle = document.getElementById('infoTitle');
+    const infoText = document.getElementById('infoText');
+    const infoCatch = document.getElementById('infoCatch');
+
+    hotspots.forEach(hotspot => {
+        hotspot.addEventListener('click', function() {
+            // Toggle active styling states
+            hotspots.forEach(h => h.classList.remove('active'));
+            this.classList.add('active');
+
+            // Extraction of local data elements
+            const id = this.getAttribute('data-id');
+            const data = hotspotData[id];
+
+            // Smooth content update transitions
+            infoPanel.style.opacity = '0.3';
+            setTimeout(() => {
+                infoTitle.textContent = data.title;
+                infoText.textContent = data.text; // Cleaned text string directly injected
+                infoCatch.innerHTML = data.catch;
+                infoPanel.style.opacity = '1';
+                borderUpdate(id);
+            }, 150);
+        });
+    });
+
+    function borderUpdate(id) {
+        if(id == 1 || id == 5) {
+            infoPanel.style.borderLeftColor = '#0056b3';
+        } else if(id == 4 || id == 6) {
+            infoPanel.style.borderLeftColor = '#17a2b8';
+        } else {
+            infoPanel.style.borderLeftColor = '#28a745';
+        }
+    }
+</script>
+
+</body>
+</html>

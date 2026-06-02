@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Ozone Sterilization Lifecycle Simulator</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --oxygen-blue: #00d5ff;
+            --ozone-purple: #a855f7;
+            --corona-yellow: #eab308;
+            --danger-red: #dc3545;
+            --screen-bg: #1a1a1a;
+            --light-bg: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .simulator-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .simulator-grid { grid-template-columns: 1fr; }
+        }
+
+        .graphic-rig {
+            background-color: #ced4da;
+            border: 4px solid #adb5bd;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .molecular-stage {
+            background-color: var(--screen-bg);
+            border: 3px solid #343a40;
+            height: 240px;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .molecule-canvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            pointer-events: none;
+        }
+
+        .corona-discharge-flash {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(234, 179, 8, 0), rgba(234, 179, 8, 0.25), rgba(234, 179, 8, 0));
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            z-index: 2;
+        }
+
+        .uv-catalyst-glow {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, rgba(0,0,0,0) 80%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 2;
+        }
+
+        .controls-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .panel-trigger-btn {
+            background-color: #495057;
+            color: #ffffff;
+            border: 2px solid #343a40;
+            border-radius: 4px;
+            padding: 12px 2px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: not-allowed;
+            text-align: center;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+
+        .panel-trigger-btn.ready-btn {
+            background-color: #6c757d;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #212529;
+        }
+
+        .panel-trigger-btn.ready-btn:hover { background-color: var(--primary-blue); color: #fff; }
+        .panel-trigger-btn.ready-btn:active { transform: translateY(3px); box-shadow: none; }
+        .panel-trigger-btn.current-step-active { background-color: #0d6efd !important; color: #fff !important; pointer-events: none; box-shadow: none !important; }
+
+        .educational-status-card {
+            background-color: var(--light-bg);
+            border-left: 5px solid var(--primary-blue);
+            padding: 20px;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-heading-text {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.15rem;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 8px;
+        }
+
+        .card-description-body {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 15px 0;
+            min-height: 120px;
+        }
+
+        .card-compliance-pills {
+            background-color: #e8f4fd;
+            border: 1px solid #d2e4f9;
+            color: #1c4976;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Lab: Gaseous Ozone Sterilization Lifecycle Loop</h3>
+    </header>
+    
+    <div class="instructions">
+        Ozone (O₃) targets pathogen cell walls via aggressive oxidation before safely reverting to pure oxygen (O₂). Run the machine loop below to analyze the four distinct molecular phases of the cycle.
+    </div>
+
+    <div class="simulator-grid">
+        <div class="graphic-rig">
+            <div class="molecular-stage" id="stageFrame">
+                <div class="corona-discharge-flash" id="coronaFlash"></div>
+                <div class="uv-catalyst-glow" id="uvGlow"></div>
+
+                <svg class="molecule-canvas" viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg">
+                    <g id="microbe-group" transform="translate(360, 60)">
+                        <rect id="cell-wall" x="0" y="0" width="90" height="120" rx="45" fill="#1e3a1e" stroke="#28a745" stroke-width="4"/>
+                        <circle id="bacterial-dna" cx="45" cy="60" r="20" fill="none" stroke="#85ea2d" stroke-width="2" stroke-dasharray="4,2"/>
+                        <text id="microbe-text" x="45" y="138" fill="#a8e6cf" font-size="10" font-weight="bold" text-anchor="middle">LIVING MICROBE</text>
+                    </g>
+
+                    <g id="o2-molecule-1" transform="translate(60, 70)">
+                        <circle cx="20" cy="20" r="18" fill="#0056b3" stroke="var(--oxygen-blue)" stroke-width="2"/>
+                        <circle cx="48" cy="20" r="18" fill="#0056b3" stroke="var(--oxygen-blue)" stroke-width="2"/>
+                        <text x="34" y="24" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">O₂</text>
+                    </g>
+                    <g id="o2-molecule-2" transform="translate(80, 140)">
+                        <circle cx="20" cy="20" r="18" fill="#0056b3" stroke="var(--oxygen-blue)" stroke-width="2"/>
+                        <circle cx="48" cy="20" r="18" fill="#0056b3" stroke="var(--oxygen-blue)" stroke-width="2"/>
+                        <text x="34" y="24" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">O₂</text>
+                    </g>
+
+                    <g id="free-radical-atom" transform="translate(180, 40)" style="display: none;">
+                        <circle cx="20" cy="20" r="18" fill="#d97706" stroke="var(--corona-yellow)" stroke-width="2"/>
+                        <text x="20" y="24" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">O</text>
+                    </g>
+
+                    <g id="o3-molecule-assembly" transform="translate(190, 100)" style="display: none;">
+                        <circle cx="20" cy="25" r="16" fill="#6b21a8" stroke="var(--ozone-purple)" stroke-width="2"/>
+                        <circle cx="46" cy="25" r="16" fill="#6b21a8" stroke="var(--ozone-purple)" stroke-width="2"/>
+                        <circle cx="33" cy="50" r="16" fill="#6b21a8" stroke="var(--ozone-purple)" stroke-width="2"/>
+                        <text x="33" y="36" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">O₃</text>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="controls-row">
+                <div class="panel-trigger-btn ready-btn" id="step-1-btn" onclick="cycleEngine(1)">1. INGRESS (O₂)</div>
+                <div class="panel-trigger-btn" id="step-2-btn" onclick="cycleEngine(2)">2. CORONA SPLIT</div>
+                <div class="panel-trigger-btn" id="step-3-btn" onclick="cycleEngine(3)">3. O₃ ATTACK</div>
+                <div class="panel-trigger-btn" id="step-4-btn" onclick="cycleEngine(4)">4. UV INVERSION</div>
+            </div>
+        </div>
+
+        <div class="educational-status-card" id="eduCard">
+            <div>
+                <h4 class="card-heading-text" id="cardTitle">System Standby: Awaiting Initial Ingress</h4>
+                <div class="card-description-body" id="cardDesc">
+                    The autoclave chamber has successfully pulled a deep vacuum to purge environmental air blocks. Click **1. INGRESS (O₂)** to load pure medical-grade oxygen gas and begin the molecular initialization cycle.
+                </div>
+                <div class="card-compliance-pills" id="cardBadge">
+                    <strong>MDRT Structural Guideline:</strong> Because ozone creates its active sterilant natively from oxygen supplies, facilities avoid the complex delivery logistics and hazardous inventory footprints of traditional chemical cylinders.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cyclePhaseTracker = 1;
+
+    const pipelineContent = {
+        1: {
+            title: "Phase 1: Pure Medical-Grade Oxygen Ingress",
+            desc: "The autoclave draws a deep initial vacuum within the chamber to clear out ambient atmospheric air locks. Once cleared, pure medical-grade **Diatomic Oxygen (O₂) gas** is fed into the pressure vessel enclosure. At this point, the molecules look like paired oxygen couples stable in space.",
+            badge: "<strong>MDRT Structural Guideline:</strong> Because ozone creates its active sterilant natively from oxygen supplies, facilities avoid the complex delivery logistics and hazardous inventory footprints of traditional chemical cylinders."
+        },
+        2: {
+            title: "Phase 2: High-Voltage Corona Discharge Split",
+            desc: "The machine passes the stable oxygen stream across an active high-voltage **corona discharge grid network**. The intense electrical field fractures the molecular bonds of the O₂ pairs, throwing off highly unstable **single atomic oxygen radicals (O)**. These single radicals immediately latch onto surrounding O₂ sets to form **Ozone (O₃) molecules**.",
+            badge: "<strong>Thermodynamic Variable:</strong> This generation workflow runs smoothly at ultra-low temperatures, keeping internal thresholds comfortably below $40^{\\circ}\\text{C}$ to protect delicate optical resins."
+        },
+        3: {
+            title: "Phase 3: Broad-Spectrum Oxidative Attack Phase",
+            desc: "The dense field of concentrated Ozone (O₃) vapor spreads throughout the chamber wraps and narrow cannulated paths. The unstable O₃ structures release an atomic radical to aggressively attack pathogen cell walls. This reaction inflicts immediate **oxidative damage**, ripping through cell membranes and destroying internal DNA/RNA chains to achieve total microbial destruction.",
+            badge: "<strong>Substrate Preservation Advantage:</strong> Unlike peracetic acid leading to a wet load, ozone-processed items are packaged dry before the cycle and can be safely transferred to sterile storage shelves for future cases."
+        },
+        4: {
+            title: "Phase 4: UV Catalytic Inversion Loop",
+            desc: "Sterilization duration targets are satisfied! To protect personnel from toxic risks, the system passes the remaining gas matrix through an integrated internal **254 nm UV catalytic converter lamp**. The UV light breaks down the ozone clusters, instantly **reverting the gas back into pure, non-toxic oxygen (O₂)**. The load emerges residue-free and requires zero post-cycle aeration.",
+            badge: "<strong>Mandatory Quality QA Checkpoint:</strong> Ensure you audit the physical cycle printout curves and verify that the low-temperature biological indicator vial (*Geobacillus stearothermophilus*) returns a confirmed negative growth profile before releasing assets."
+        }
+    };
+
+    function updateControlRowButtons(stepIdx) {
+        // Clear old classes
+        document.querySelectorAll('.panel-trigger-btn').forEach(b => {
+            b.classList.remove('ready-btn', 'current-step-active');
+        });
+
+        // Lock in current step state
+        document.getElementById(`step-${stepIdx}-btn`).classList.add('current-step-active');
+        
+        // Setup next step trigger bounds safely
+        if (stepIdx < 4) {
+            document.getElementById(`step-${stepIdx + 1}-btn`).classList.add('ready-btn');
+        } else {
+            document.getElementById('step-1-btn').classList.add('ready-btn');
+        }
+    }
+
+    function syncCardContents(idx) {
+        const data = pipelineContent[idx];
+        document.getElementById('cardTitle').textContent = data.title;
+        document.getElementById('cardDesc').innerHTML = data.desc;
+        document.getElementById('cardBadge').innerHTML = data.badge;
+    }
+
+    function cycleEngine(triggeredPhase) {
+        // Validation gatekeeper check
+        if (triggeredPhase !== cyclePhaseTracker) return;
+
+        if (triggeredPhase === 1) {
+            // Reveal initial oxygen ingress layout configuration
+            document.getElementById('o2-molecule-1').style.display = "block";
+            document.getElementById('o2-molecule-2').style.display = "block";
+            document.getElementById('o2-molecule-1').style.opacity = "1";
+            document.getElementById('o2-molecule-2').style.opacity = "1";
+            
+            cyclePhaseTracker = 2;
+            updateControlRowButtons(1);
+            syncCardContents(1);
+        }
+        else if (triggeredPhase === 2) {
+            const flash = document.getElementById('coronaFlash');
+            flash.style.opacity = "1";
+            
+            setTimeout(() => {
+                flash.style.opacity = "0";
+                document.getElementById('free-radical-atom').style.display = "block";
+                document.getElementById('o3-molecule-assembly').style.display = "block";
+                document.getElementById('o2-molecule-1').style.opacity = "0.4";
+            }, 400);
+
+            cyclePhaseTracker = 3;
+            updateControlRowButtons(2);
+            syncCardContents(2);
+        }
+        else if (triggeredPhase === 3) {
+            document.getElementById('free-radical-atom').style.display = "none";
+            
+            const o3Matrix = document.getElementById('o3-molecule-assembly');
+            o3Matrix.style.transition = "transform 0.6s ease-in-out";
+            o3Matrix.style.transform = "translate(180px, -40px)";
+
+            setTimeout(() => {
+                const cellWall = document.getElementById('cell-wall');
+                cellWall.setAttribute('fill', '#3a1e1e');
+                cellWall.setAttribute('stroke', '#dc3545');
+                cellWall.style.strokeDasharray = "4,4";
+                
+                document.getElementById('microbe-text').textContent = "CELL WALL DESTROYED";
+                document.getElementById('microbe-text').setAttribute('fill', '#ff8b94');
+                o3Matrix.style.transform = "translate(0px, 0px)"; 
+            }, 650);
+
+            cyclePhaseTracker = 4;
+            updateControlRowButtons(3);
+            syncCardContents(3);
+        }
+        else if (triggeredPhase === 4) {
+            document.getElementById('uvGlow').style.opacity = "1";
+            
+            setTimeout(() => {
+                document.getElementById('o3-molecule-assembly').style.display = "none";
+                document.getElementById('o2-molecule-1').style.opacity = "1";
+                document.getElementById('microbe-text').textContent = "STERILE ASSET RESIDUE-FREE";
+                document.getElementById('microbe-text').setAttribute('fill', '#a8e6cf');
+            }, 800);
+
+            cyclePhaseTracker = 1; // Unlatch bounds to recycle back smoothly
+            updateControlRowButtons(4);
+            syncCardContents(4);
+        }
+    }
+</script>
+
+</body>
+</html>
