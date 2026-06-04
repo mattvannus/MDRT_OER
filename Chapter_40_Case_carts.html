@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Individual Item Picking &amp; Scanning Sequence</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --bg-light: #f8f9fa;
+            --screen-bg: #1a1a1a;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--bg-light);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Handheld Scanner Screen UI */
+        .mhc-screen {
+            background-color: var(--screen-bg);
+            border: 3px solid #444;
+            border-radius: 6px;
+            padding: 12px;
+            color: #00ff66;
+            font-family: monospace;
+            font-size: 0.85rem;
+            min-height: 90px;
+            box-shadow: inset 0 0 10px rgba(0,255,0,0.2);
+        }
+
+        /* Shelf Rack Items Group */
+        .shelf-items-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .shelf-item-button {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 5px solid var(--primary-blue);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .shelf-item-button:hover {
+            background-color: #e9ecef;
+            transform: translateX(2px);
+        }
+
+        .shelf-item-button.picked {
+            border-left-color: var(--success-green);
+            background-color: #f4fff4;
+            color: #2e7d32;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* Cart Visual Display */
+        .cart-loading-bay {
+            background: #ffffff;
+            border: 2px solid #6c757d;
+            border-radius: 6px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column-reverse; /* Heavy stack goes on bottom */
+            gap: 8px;
+            min-height: 180px;
+        }
+
+        .cart-loaded-layer {
+            background-color: #e8f4fd;
+            border: 1px solid #b3d7ff;
+            color: #0056b3;
+            font-weight: bold;
+            font-size: 0.8rem;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .feedback-banner {
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Picking Core: Individual Asset Scanning Sequence</h3>
+    </header>
+    
+    <div class="instructions">
+        Case cart assembly requires strict attention to detail and weight distribution rules. Look at the active <strong>Handheld Computer Screen</strong> to see what item is requested next, find it on the storage shelves below, and scan it into the cart payload.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <!-- LEFT PANEL: STORAGE SHELVES & SCANNER -->
+        <div class="workspace-card">
+            <h4 class="card-title">MDRD Sterile Storage Core Shelves</h4>
+            
+            <div class="mhc-screen" id="scannerScreen">
+                <strong>MOBILE TERMINAL ONLINE</strong><br>
+                NEXT REQ: [Scan Barcode to Begin Case Pick Loop]
+            </div>
+
+            <div class="shelf-items-grid">
+                <button class="shelf-item-button" id="btn-soft-1" onclick="scanIndividualAsset('soft-1')">
+                    BARCODE [BAR-901]: Disposable Laparoscopic Abdominal Gown &amp; Drape Pack
+                </button>
+                <button class="shelf-item-button" id="btn-heavy-1" onclick="scanIndividualAsset('heavy-1')">
+                    BARCODE [BAR-304]: Heavy Rigid Container: Major Laparotomy Instrument Set
+                </button>
+                <button class="shelf-item-button" id="btn-soft-2" onclick="scanIndividualAsset('soft-2')">
+                    BARCODE [BAR-441]: Consumable Box: 3-0 Absorbable Polyglactin Sutures
+                </button>
+                <button class="shelf-item-button" id="btn-heavy-2" onclick="scanIndividualAsset('heavy-2')">
+                    BARCODE [BAR-102]: Heavy Rigid Container: Supplementary Retractor Set
+                </button>
+            </div>
+            
+            <div class="feedback-banner" id="pickingFeedback"></div>
+        </div>
+
+        <!-- RIGHT PANEL: THE GROWING CART PAYLOAD -->
+        <div class="workspace-card">
+            <h4 class="card-title">Active Case Cart Loading Profile (Physical Stack)</h4>
+            
+            <div class="cart-loading-bay" id="cartLoadingBay">
+                <!-- Stack layers are added here programmatically from bottom to top -->
+            </div>
+            
+            <div style="font-weight:bold; font-size:0.85rem; text-align:center; background:#eee; padding:8px; border-radius:4px;">
+                Items Verified &amp; Loaded: <span id="itemsCountText">0</span> / 4
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // The strict loading order based on weight physics (Heavy sets first, soft consumables last)
+    const pickingTargetSequence = ["heavy-1", "heavy-2", "soft-1", "soft-2"];
+    let sequentialPointer = 0;
+
+    const assetDataMap = {
+        "heavy-1": { title: "Major Laparotomy Instrument Set (Rigid Container)", code: "BAR-304", type: "heavy" },
+        "heavy-2": { title: "Supplementary Retractor Set (Rigid Container)", code: "BAR-102", type: "heavy" },
+        "soft-1":  { title: "Disposable Abdominal Gown &amp; Drape Pack", code: "BAR-901", type: "soft" },
+        "soft-2":  { title: "Box of 3-0 Absorbable Polyglactin Sutures", code: "BAR-441", type: "soft" }
+    };
+
+    function updateScannerDisplay() {
+        const screen = document.getElementById('scannerScreen');
+        if (sequentialPointer >= pickingTargetSequence.length) {
+            screen.innerHTML = `<strong>✓ ALL PICK ITEMS VERIFIED</strong><br>STATUS: CASE PAYLOAD ASSEMBLED COMPLIANT`;
+            return;
+        }
+
+        const nextTargetKey = pickingTargetSequence[sequentialPointer];
+        const targetItem = assetDataMap[nextTargetKey];
+        screen.innerHTML = `
+            <strong>SCANNING MANIFEST - ITEM ${sequentialPointer + 1}/4</strong><br>
+            REQ: ${targetItem.title}<br>
+            EXPECTED CODE: ${targetItem.code}
+        `;
+    }
+
+    function scanIndividualAsset(scannedKey) {
+        if (sequentialPointer >= pickingTargetSequence.length) return;
+
+        const expectedKey = pickingTargetSequence[sequentialPointer];
+        const feedback = document.getElementById('pickingFeedback');
+        feedback.style.display = "block";
+
+        if (scannedKey === expectedKey) {
+            // Correct individual scan verified
+            const currentItem = assetDataMap[scannedKey];
+            
+            feedback.style.backgroundColor = "#d4edda";
+            feedback.style.color = "#155724";
+            feedback.textContent = `Barcode Verified: ${currentItem.code} successfully added.`;
+
+            // Mark button as picked
+            document.getElementById(`btn-${scannedKey}`).classList.add('picked');
+
+            // Append item into physical cart loading bay graphic layers
+            const bay = document.getElementById('cartLoadingBay');
+            const layer = document.createElement('div');
+            layer.className = "cart-loaded-layer";
+            layer.innerHTML = `${currentItem.type.toUpperCase()} DECK: ${currentItem.title}`;
+            bay.appendChild(layer);
+
+            sequentialPointer++;
+            document.getElementById('itemsCountText').textContent = sequentialPointer;
+
+            if (sequentialPointer === 4) {
+                feedback.innerHTML = "<strong>🎉 PAYLOAD VERIFIED!</strong> Perfect picking sequence. By scanning and loading the heavy rigid containers first, they sit safely at the bottom of the cart, protecting the delicate soft wraps from damage.";
+            } else {
+                updateScannerDisplay();
+            }
+        } else {
+            // Out of sequence or incorrect item handled
+            feedback.style.backgroundColor = "#f8d7da";
+            feedback.style.color = "#721c24";
+            
+            const attemptedItem = assetDataMap[scannedKey];
+            if (attemptedItem.type === "soft" && assetDataMap[expectedKey].type === "heavy") {
+                feedback.textContent = "Loading Error: Stacking lighter soft goods or pouches on the bottom shelf creates a tearing hazard if heavy metal containers are loaded over them. Select heavy trays first.";
+            } else {
+                feedback.textContent = "Scanner Error: Scanned item barcode does not match the active prompt on your handheld computer screen.";
+            }
+        }
+    }
+
+    // Run terminal configuration on initial startup
+    updateScannerDisplay();
+</script>
+</body>
+</html>

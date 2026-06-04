@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Microscopic Sterile Barrier Defect Auditor</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-amber: #ffc107;
+            --bg-light: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Workspace Core Layout Grid */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--bg-light);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Visual Inspection Window Canvas Box */
+        .magnifier-lens-canvas {
+            background-color: #ffffff;
+            border: 3px solid #495057;
+            border-radius: 6px;
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Simulated Microscopic Details using SVG Vectors */
+        .micro-svg-view {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Controls Panel Stack */
+        .decision-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-choice-btn {
+            padding: 12px;
+            font-size: 0.88rem;
+            font-weight: bold;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            text-align: center;
+        }
+        .btn-pass { background-color: var(--success-green); }
+        .btn-pass:hover { background-color: #218838; }
+        .btn-fail { background-color: var(--danger-red); }
+        .btn-fail:hover { background-color: #c82333; }
+
+        .feedback-pane {
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            display: none;
+            min-height: 50px;
+        }
+
+        .score-banner {
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.88rem;
+            background-color: #e9ecef;
+            padding: 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Desk: Microscopic Sterile Barrier Defect Auditor</h3>
+    </header>
+    
+    <div class="instructions">
+        Every microscopic breakdown along a packaging boundary layer creates a pathway for microbial ingress. Analyze the high-magnification technical readouts in the viewfinder below, evaluate seal paths, and declare your official compliance clearance.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title" id="viewfinderTitle">Active Viewfinder: Package Sample 1/3</h4>
+            
+            <div class="magnifier-lens-canvas" id="lensCanvasBox">
+                </div>
+
+            <div style="font-size:0.85rem; line-height:1.4; color:#444;" id="packageContextText">
+                </div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">Parametric Integrity Clearance Protocol</h4>
+            <div style="font-size: 0.88rem; color: #555; margin-bottom: 5px;">
+                Perform your professional assessment review. Under strict CSA Z314 rules, determine if this asset configuration is completely safe or contaminated:
+            </div>
+
+            <div class="decision-stack">
+                <button class="action-choice-btn btn-pass" onclick="evaluateAuditorDecision('pass')">APPROVE PERIMETER SEALS &amp; RELEASE TO OR INVENTORY</button>
+                <button class="action-choice-btn btn-fail" onclick="evaluateAuditorDecision('fail')">REJECT BARRIER STATE &amp; ROUTE TO DECONTAMINATION</button>
+            </div>
+
+            <div class="feedback-pane" id="auditorFeedbackPane"></div>
+
+            <div class="score-banner">
+                Packages Accurately Audited: <span id="auditorScoreText">0</span> / 3
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let activeItemKey = 1;
+    let successfulAudits = 0;
+
+    const auditDeck = {
+        1: {
+            title: "Viewfinder: Plastic-Paper Peel Pouch Heat-Seal Track",
+            context: "<strong>Asset Condition Profile:</strong> High-magnification tracking scan along the upper edge of a heat-sealed scissors pouch. Look closely at the inner continuous line matrix.",
+            expected: "fail",
+            feedbackCorrect: "<strong>Outstanding Integrity Auditing!</strong> You spotted the critical pathway failure. Look at the grid center: a series of miniature micro-wrinkles forms an unbonded channel loop. Under CSA Z314 guidelines, any gap or channel line across a plastic-paper seal track destroys the tortuous filter effect, initiating unvalidated atmospheric air leaks. This pouch is non-sterile and must be completely repackaged.",
+            feedbackWrong: "<strong>CRITICAL AUDIT EXCLUSION FAULT:</strong> You released a compromised device! Look closer at the center of the heat line layout: several micro-wrinkles intersect the perimeter cross-section, forming an open tunnel channel. Ambient dust vectors can easily travel inward along this gap.",
+            svg: `<svg class="micro-svg-view" viewBox="0 0 350 220" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="350" height="220" fill="#fcfcfc" />
+                    <rect x="0" y="80" width="350" height="60" fill="#ced4da" opacity="0.4" stroke="#adb5bd" stroke-width="2"/>
+                    <rect x="0" y="90" width="350" height="40" fill="#6c757d" opacity="0.6"/>
+                    <path d="M 160 80 Q 165 100 170 120 T 175 140" fill="none" stroke="var(--danger-red)" stroke-width="2" stroke-dasharray="2,2"/>
+                    <path d="M 180 80 Q 183 105 188 122 T 192 140" fill="none" stroke="var(--danger-red)" stroke-width="2" stroke-dasharray="2,2"/>
+                    <text x="175" y="65" fill="var(--danger-red)" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle">CHANNEL MATRIX DEFECT</text>
+                    <text x="15" y="30" fill="#666" font-size="10" font-weight="bold">MAGNIFICATION: 40X</text>
+                    <text x="15" y="45" fill="#666" font-size="10">COMPONENT: PLASTIC/PAPER INTERFACE</text>
+                  </svg>`
+        },
+        2: {
+            title: "Viewfinder: Synthetic SMS Polypropylene Wrapper Corner",
+            context: "<strong>Asset Condition Profile:</strong> Magnified lens view focused on the multi-layer corner point of a heavy orthopedic tray wrap bundle.",
+            expected: "pass",
+            feedbackCorrect: "<strong>Correct Precision Release Verification!</strong> Exceptional compliance insight. The Spunbond-Meltblown-Spunbond matrix is confirmed entirely intact; fibers are uniform, showing normal minor compression texturing from the autoclave plate weights but zero fiber tearing or micro-abrasions. This barrier wrap is completely safe for immediate OR case integration.",
+            feedbackWrong: "<strong>Inaccurate Process Quarantining:</strong> This wrapper layout is perfectly integrated and completely sterile. Minor surface dimpling is merely standard texturing from the synthetic press matrix grids; fibers have suffered zero delamination or tearing failure boundaries.",
+            svg: `<svg class="micro-svg-view" viewBox="0 0 350 220" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="350" height="220" fill="#e6f2ff" />
+                    <circle cx="50" cy="60" r="30" fill="none" stroke="#b3d7ff" stroke-width="1" opacity="0.7"/>
+                    <circle cx="200" cy="150" r="45" fill="none" stroke="#b3d7ff" stroke-width="1.5" opacity="0.7"/>
+                    <g fill="#99ccff" opacity="0.6">
+                        <circle cx="100" cy="100" r="3"/><circle cx="120" cy="100" r="3"/><circle cx="140" cy="100" r="3"/>
+                        <circle cx="110" cy="115" r="3"/><circle cx="130" cy="115" r="3"/><circle cx="150" cy="115" r="3"/>
+                        <circle cx="100" cy="130" r="3"/><circle cx="120" cy="130" r="3"/><circle cx="140" cy="130" r="3"/>
+                    </g>
+                    <text x="15" y="30" fill="var(--primary-blue)" font-size="10" font-weight="bold">MAGNIFICATION: 20X</text>
+                    <text x="15" y="45" fill="var(--primary-blue)" font-size="10">COMPONENT: DUAL SMS POLYPROPYLENE LAYERS</text>
+                    <text x="125" y="155" fill="var(--success-green)" font-size="9" font-weight="bold">UNIFORM STRUCTURE: COMPLIANT</text>
+                  </svg>`
+        },
+        3: {
+            title: "Viewfinder: Edge Core of a Wrapped Synthetic Tray Base",
+            context: "<strong>Asset Condition Profile:</strong> High-resolution optical audit along the outer baseline wrap layers of a surgical container system immediately following cart extraction.",
+            expected: "fail",
+            feedbackCorrect: "<strong>Outstanding Quality Interception!</strong> You captured a hidden, high-severity event-related failure loop. Squeezing, nesting, or sliding an instrument bundle across unlined metal wires has created a severe **Capillary Wicking Action** contamination ring. Any liquid condensate or water stain allows background micro-organisms to instantly migrate straight across the synthetic material web, completely destroying sterility variables.",
+            feedbackWrong: "<strong>CRITICAL PATIENT EXPOSURE SAFETY ACCIDENT:</strong> Saturated packaging wrap layers allow surface bacteria to slide past synthetic strands via capillary action. This is a failed wet pack vector that must undergo immediate quarantine and destruction loops.",
+            svg: `<svg class="micro-svg-view" viewBox="0 0 350 220" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="350" height="220" fill="#e6f2ff" />
+                    <ellipse cx="175" cy="110" rx="90" ry="40" fill="none" stroke="#94b8df" stroke-width="5" stroke-dasharray="10,5"/>
+                    <ellipse cx="175" cy="110" rx="80" ry="32" fill="#bacfe6" opacity="0.5"/>
+                    <ellipse cx="175" cy="110" rx="50" ry="18" fill="#a4c2e6" opacity="0.6"/>
+                    <text x="175" y="114" fill="#3a628c" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle">CAPILLARY WICKING MOISTURE RING</text>
+                    <text x="15" y="30" fill="var(--primary-blue)" font-size="10" font-weight="bold">MAGNIFICATION: 15X</text>
+                    <text x="15" y="45" fill="var(--primary-blue)" font-size="10">COMPONENT: POST-AUTOCLAVE WRAP SURFACES</text>
+                  </svg>`
+        }
+    };
+
+    function syncViewfinderUIMatrices(idx) {
+        if (idx > 3) {
+            document.getElementById('viewfinderTitle').textContent = "AUDIT SWEEP COMPLETELY SATISFIED";
+            document.getElementById('lensCanvasBox').innerHTML = `<div style="font-weight:bold; color:var(--success-green); text-align:center; font-size:1.1rem; padding:20px;">✓ TRIPLE-TIER BARRIER SWEEP PASSED COMPLIANT</div>`;
+            document.getElementById('packageContextText').innerHTML = "<strong>Quality Management Report Form finalized successfully.</strong> You have successfully audited alternative packaging arrays, interpreted micro-fissure channels, tracked wicking loops, and defended event-related parameters thresholds flawlessly.";
+            document.querySelector('.decision-stack').style.opacity = '0.4';
+            document.querySelector('.decision-stack').style.pointerEvents = 'none';
+            return;
+        }
+
+        const data = auditDeck[idx];
+        document.getElementById('viewfinderTitle').textContent = `Viewfinder: Package Sample ${idx}/3`;
+        document.getElementById('lensCanvasBox').innerHTML = data.svg;
+        document.getElementById('packageContextText').innerHTML = data.context;
+    }
+
+    function evaluateAuditorDecision(userCall) {
+        if (activeItemKey > 3) return;
+
+        const data = auditDeck[activeItemKey];
+        const fb = document.getElementById('auditorFeedbackPane');
+        fb.style.display = "block";
+
+        if (userCall === data.expected) {
+            fb.style.backgroundColor = "#d4edda";
+            fb.style.color = "#155724";
+            fb.innerHTML = data.feedbackCorrect;
+            
+            successfulAudits++;
+            document.getElementById('auditorScoreText').textContent = successfulAudits;
+        } else {
+            fb.style.backgroundColor = "#f8d7da";
+            fb.style.color = "#721c24";
+            fb.innerHTML = data.feedbackWrong;
+        }
+
+        activeItemKey++;
+        setTimeout(() => {
+            fb.style.display = "none";
+            syncViewfinderUIMatrices(activeItemKey);
+        }, 5000);
+    }
+
+    // Initialize layout graphic frames cleanly on startup
+    window.onload = function() {
+        syncViewfinderUIMatrices(1);
+    };
+</script>
+
+</body>
+</html>

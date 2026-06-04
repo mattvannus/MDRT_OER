@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Event-Related vs. Time-Dated Sorting Desk</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-amber: #ffc107;
+            --light-bg: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Sorting Interface Layout Grid */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--light-bg);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Staged Supply Items Pile */
+        .items-pile {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .draggable-stock-card {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 5px solid var(--primary-blue);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 0.88rem;
+            font-weight: bold;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            user-select: none;
+            transition: background-color 0.2s, opacity 0.2s;
+        }
+
+        .draggable-stock-card:active { cursor: grabbing; }
+        
+        .draggable-stock-card.placed {
+            opacity: 0.25;
+            pointer-events: none;
+            background-color: #e9ecef;
+            border-left-color: #6c757d;
+        }
+
+        .stock-details {
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-weight: normal;
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+
+        /* Sorting Target Drop Buckets */
+        .target-bucket {
+            background: #ffffff;
+            border: 2px dashed #ced4da;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            min-height: 110px;
+            transition: all 0.2s ease;
+        }
+
+        .target-bucket.drag-over {
+            background-color: #e9ecef;
+            border-color: var(--primary-blue);
+        }
+
+        .bucket-header {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #6c757d;
+        }
+
+        .bucket-contents {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.82rem;
+        }
+
+        .placed-item-log {
+            background-color: #f1f3f5;
+            padding: 6px;
+            border-radius: 4px;
+            border-left: 3px solid var(--success-green);
+            line-height: 1.3;
+        }
+
+        .feedback-banner {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.05rem;
+            background-color: #e9ecef;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            min-height: 24px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Desk: Lifecycle Allocation &amp; Sterility Protocol Sorter</h3>
+    </header>
+    
+    <div class="instructions">
+        Under Canadian standards (CSA Z314), hospital reprocessed items do not expire due to time alone, whereas commercial pre-sterilized supplies have legally binding shelf-life deadlines. Drag each asset card from the left staging bay and drop it into its legally compliant tracking bucket on the right.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title">1. Staged Inventory Core</h4>
+            <div class="items-pile" id="itemsPile">
+                
+                <div class="draggable-stock-card" draggable="true" data-id="asset-ortho" data-bucket="event">
+                    Reprocessed Major Orthopedic Hip Set
+                    <div class="stock-details">Wrapped in blue synthetic SMS polypropylene. Autoclaved in-house. It has been stored on a lined wire rack under continuous positive pressure for 8 months. Wrapper is completely clean, dry, and uncompromised.</div>
+                </div>
+
+                <div class="draggable-stock-card" draggable="true" data-id="asset-suture" data-bucket="time">
+                    Commercially Prepared 2-0 Vicryl Suture Box
+                    <div class="stock-details">Manufactured off-site. The outer box is in pristine physical condition, but the printed lot label stamp reads an expiration target from 3 months ago.</div>
+                </div>
+
+                <div class="draggable-stock-card" draggable="true" data-id="asset-container" data-bucket="event">
+                    Rigid Sterilization Container (Lap Chole Tray)
+                    <div class="stock-details">Aluminum container system with intact plastic tamper arrows and single-use internal filters. Sterilized in-house 14 months ago. Maintained undisturbed in clean storage core racks.</div>
+                </div>
+
+                <div class="draggable-stock-card" draggable="true" data-id="asset-scope" data-bucket="time">
+                    Disposable Single-Use Bronchoscopy Catheter
+                    <div class="stock-details">Pre-packaged in a transparent commercial peel pouch. Features a fixed manufacturer stamp set to expire next month. Synthetic materials and polymers are subject to natural shelf degradation.</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">2. Certified Quality Management Tracks</h4>
+            
+            <div class="target-bucket" data-accept="event">
+                <div class="bucket-header" style="border-color: var(--success-green); color: var(--success-green);">
+                    ➔ Event-Related Sterility Track (CSA Z314 indefinite)
+                </div>
+                <div class="bucket-contents" id="bucket-event"></div>
+            </div>
+
+            <div class="target-bucket" data-accept="time">
+                <div class="bucket-header" style="border-color: var(--danger-red); color: var(--danger-red);">
+                    ➔ Strict Calendar Expiration Track (Time-Limited Check)
+                </div>
+                <div class="bucket-contents" id="bucket-time"></div>
+            </div>
+
+            <div class="feedback-banner" id="sortingFeedbackBanner">
+                Assets Correctly Standardized: <span id="correctCounter">0</span> / 4
+                <div id="dynamicFeedbackBox" style="font-size: 0.88rem; font-weight: normal; margin-top: 8px; display: none; padding: 8px; border-radius: 4px;"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let correctSortCount = 0;
+    const cards = document.querySelectorAll('.draggable-stock-card');
+    const buckets = document.querySelectorAll('.target-bucket');
+    const feedbackBox = document.getElementById('dynamicFeedbackBox');
+    const countText = document.getElementById('correctCounter');
+
+    // Drag-and-Drop Event Registrations
+    cards.forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', card.getAttribute('data-id'));
+        });
+    });
+
+    buckets.forEach(bucket => {
+        bucket.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!bucket.querySelector(`[data-id]`)) {
+                bucket.classList.add('drag-over');
+            }
+        });
+
+        bucket.addEventListener('dragleave', () => {
+            bucket.classList.remove('drag-over');
+        });
+
+        bucket.addEventListener('drop', (e) => {
+            e.preventDefault();
+            bucket.classList.remove('drag-over');
+
+            const cardID = e.dataTransfer.getData('text/plain');
+            const sourceCard = document.getElementById(cardID) || document.querySelector(`[data-id="${cardID}"]`);
+            
+            if (!sourceCard || sourceCard.classList.contains('placed')) return;
+
+            const targetBucketType = bucket.getAttribute('data-accept');
+            const expectedBucketType = sourceCard.getAttribute('data-bucket');
+
+            if (targetBucketType === expectedBucketType) {
+                // Compliant Sorting Allocation Verified
+                sourceCard.classList.add('placed');
+                sourceCard.setAttribute('draggable', 'false');
+                
+                const displayArea = bucket.querySelector('.bucket-contents');
+                const logEntry = document.createElement('div');
+                logEntry.className = 'placed-item-log';
+                
+                // Formulate correct diagnostic review descriptions
+                if (targetBucketType === 'event') {
+                    if (cardID === 'asset-ortho') {
+                        logEntry.innerHTML = '<strong>Orthopedic Hip Tray:</strong> Maintained sterile indefinitely. Wrapper has suffered zero tearing, moisture wicking, or bellows compression events on clean racks.';
+                    } else {
+                        logEntry.innerHTML = '<strong>Rigid Container System:</strong> Intact arrows and internal filters validate barrier parameters. Time does not compromise sterility; safe for release.';
+                    }
+                } else if (targetBucketType === 'time') {
+                    if (cardID === 'asset-suture') {
+                        logEntry.innerHTML = '<strong>Vicryl Suture Box:</strong> CRITICAL EXPIRED INTERCEPTION. Commercial polymers and packaging bonds degrade on calendar schedules. Must be discarded.';
+                    } else {
+                        logEntry.innerHTML = '<strong>Bronchoscopy Catheter pouch:</strong> Commercial time-dated asset. Must be used before next month\'s expiration window to ensure baseline structural performance.';
+                    }
+                }
+
+                displayArea.appendChild(logEntry);
+                
+                correctSortCount++;
+                countText.textContent = correctSortCount;
+                triggerNotificationFeedback("Inventory Parameter Validated!", "#d4edda", "#155724");
+
+                if (correctSortCount === 4) {
+                    document.getElementById('itemsPile').style.opacity = '0.5';
+                    triggerNotificationFeedback("Outstanding Oer Quality Stewardship Clear! You have successfully mastered the operational distinction between hospital event-related lifecycles and commercial time-dated supply rules under CSA Z314. Your inventory rotation curves are completely compliant.", "#d4edda", "#155724");
+                    feedbackBox.style.fontWeight = 'bold';
+                }
+            } else {
+                // Error: Non-compliant allocation block attempted
+                triggerNotificationFeedback("Compliance Error: Material attributes do not match this quality track. In-house cycles follow event-related sterility, while manufactured stock requires strict time bounds auditing.", "#f8d7da", "#721c24");
+            }
+        });
+    });
+
+    function triggerNotificationFeedback(text, bgColor, textColor) {
+        feedbackBox.innerHTML = text;
+        feedbackBox.style.backgroundColor = bgColor;
+        feedbackBox.style.color = textColor;
+        feedbackBox.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>

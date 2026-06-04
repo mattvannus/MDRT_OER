@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Cart and Supply Picking Explorer</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --dirty-red: #d9534f;
+            --clean-green: #28a745;
+            --warning-amber: #ffc107;
+            --bg-light: #f8f9fa;
+            --blueprint-blue: #1e3a5f;
+            --text-dark: #333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            background-color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .controls {
+            background-color: var(--bg-light);
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #ddd;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--primary);
+            color: white;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #004494; }
+        button.active { background-color: var(--warning-amber); color: black; }
+        
+        .floorplan {
+            display: flex;
+            height: 400px;
+            position: relative;
+            background: #eee;
+        }
+        .room {
+            flex: 1;
+            position: relative;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 2px solid #999;
+        }
+        .racks-area { background-color: #e6f2ff; border-right: 4px solid #4a6572;}
+        .staging-area { background-color: #e6f4ea; }
+        
+        h3 { margin-top: 0; text-align: center; color: #444; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Layout Elements */
+        .exit-door {
+            position: absolute;
+            bottom: -4px;
+            right: 40px;
+            width: 70px;
+            height: 8px;
+            background: #555;
+            z-index: 10;
+        }
+        .exit-door::after {
+            content: "TO OR ELEVATOR";
+            position: absolute;
+            top: -15px;
+            left: -20px;
+            font-size: 9px;
+            font-weight: bold;
+            color: #666;
+            white-space: nowrap;
+        }
+        .equipment {
+            background: white;
+            border: 2px solid #999;
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            position: absolute;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        .rack-heavy { top: 20px; left: 20px; width: 140px; height: 70px; }
+        .rack-soft { top: 120px; left: 20px; width: 140px; height: 70px; }
+        .rack-hold { top: 220px; left: 20px; width: 140px; height: 70px; }
+        .its-station { bottom: 20px; left: 20px; width: 140px; height: 50px; background-color: #f1f3f5; }
+        
+        .cart-yard { top: 20px; right: 20px; width: 140px; height: 80px; background-color: #fff; }
+        
+        /* The Mobile Case Cart Element */
+        .case-cart-token {
+            width: 75px;
+            height: 50px;
+            background-color: #6c757d;
+            border: 3px solid #343a40;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 35px;
+            right: 52px;
+            transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 20;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .cart-manifest-window {
+            font-size: 7px;
+            background: rgba(0,0,0,0.5);
+            padding: 1px 3px;
+            border-radius: 2px;
+            margin-top: 2px;
+            color: #ffcc00;
+        }
+
+        /* Overlays - Hidden by default */
+        .overlay { display: none; }
+        .overlay.active { display: block; }
+
+        /* Environmental Fields */
+        .positive-pressure-box {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.92);
+            padding: 15px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            line-height: 1.4;
+        }
+        .arrow-out {
+            position: absolute;
+            font-size: 28px;
+            color: var(--primary);
+            animation: pushOut 2s infinite linear;
+        }
+        @keyframes pushOut {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1.2); opacity: 0; }
+        }
+
+        /* Scan Flashes */
+        .scan-beam {
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background-color: var(--danger-red);
+            top: 50%;
+            left: 0;
+            box-shadow: 0 0 8px 2px var(--danger-red);
+            display: none;
+            z-index: 25;
+        }
+
+        /* Workflow Highlight */
+        .highlight {
+            box-shadow: 0 0 15px 5px var(--clean-green);
+            border-color: var(--clean-green);
+            background-color: #d4edda;
+        }
+        .highlight-warn {
+            box-shadow: 0 0 15px 5px var(--warning-amber);
+            border-color: var(--warning-amber);
+            background-color: #fff3cd;
+        }
+
+        .info-panel {
+            padding: 20px;
+            background-color: white;
+            font-size: 15px;
+            line-height: 1.5;
+            min-height: 90px;
+            border-top: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <button id="btn-env" onclick="activateState('env', this)">1. Environmental Guard</button>
+        <button id="btn-picking" onclick="activateState('picking', this)">2. Live Picking Routine</button>
+    </div>
+
+    <div class="floorplan">
+        <!-- Left: Racks & Supplies Core -->
+        <div class="room racks-area">
+            <h3>Sterile Storage Core</h3>
+            <div class="equipment rack-heavy" id="loc-heavy">Tier 1: Heavy Racks<br>(Rigid Containers)</div>
+            <div class="equipment rack-soft" id="loc-soft">Tier 2: Soft Goods<br>(Wrapped Packs)</div>
+            <div class="equipment rack-hold" id="loc-hold">Tier 3: Backup Racks<br>("Hold" Items Only)</div>
+            <div class="equipment its-station" id="loc-its">ITS Terminal<br>(Manifest Sync)</div>
+
+            <!-- Environmental Air Flow Overlays -->
+            <div class="overlay env">
+                <div class="arrow-out" style="top: 20px; left: 20px;">➔</div>
+                <div class="arrow-out" style="top: 340px; left: 20px;">➔</div>
+                <div class="positive-pressure-box">
+                    🛡️ CSA Z314 Climate Area<br>
+                    🌡️ Temp: Under 24°C<br>
+                    💧 Humidity: 30% - 70%<br>
+                    💨 Field: Positive Pressure
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Staging & Dispatch -->
+        <div class="room staging-area">
+            <div class="exit-door"></div>
+            <h3>Case Cart Staging Yard</h3>
+            <div class="equipment cart-yard" id="loc-yard">Empty Cart Staging</div>
+            
+            <!-- Mobile Cart Token -->
+            <div class="case-cart-token" id="live-cart">
+                CASE CART
+                <div class="cart-manifest-window" id="cart-manifest">EMPTY</div>
+                <div class="scan-beam" id="laser"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="info-text">
+        <strong>Welcome to the Interactive Case Cart Picking Explorer.</strong><br> Click the control keys above to see how items are scanned, verified, and routed from storage core shelves onto a mobile case cart in an authentic departmental workflow.
+    </div>
+</div>
+
+<script>
+    const explanations = {
+        'env': {
+            title: "Environmental Barrier Security",
+            text: "The sterile storage room is kept under strict **positive air pressure** relative to surrounding corridors. When doors unlatch, clean air forces *outward*, preventing loose corridor dust from floating into the sterile field. Temperature must remain strictly below 24°C and relative humidity between 30% and 70% to protect wrappers from moisture wicking or drying out."
+        },
+        'picking': {
+            title: "Live Picking Sequence Initialized",
+            text: "A clean empty cart is pulled from staging. Let's execute the scan routine according to strict weight distribution and accuracy principles."
+        }
+    };
+
+    let animationTimeline;
+    let pickingStep = 0;
+
+    function activateState(stateId, buttonEl) {
+        // Reset layout elements cleanly
+        document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.overlay').forEach(ol => ol.classList.remove('active'));
+        document.querySelectorAll('.equipment').forEach(eq => eq.classList.remove('highlight', 'highlight-warn'));
+        clearTimeout(animationTimeline);
+        resetCartPosition();
+
+        buttonEl.classList.add('active');
+        const infoPanel = document.getElementById('info-text');
+        infoPanel.innerHTML = `<strong>${explanations[stateId].title}</strong>: ${explanations[stateId].text}`;
+
+        if (stateId === 'env') {
+            document.querySelectorAll('.env').forEach(el => el.classList.add('active'));
+        } else if (stateId === 'picking') {
+            pickingStep = 0;
+            runPickingAnimationLoop();
+        }
+    }
+
+    function resetCartPosition() {
+        const cart = document.getElementById('live-cart');
+        cart.style.top = "35px";
+        cart.style.right = "52px";
+        document.getElementById('cart-manifest').textContent = "EMPTY";
+        document.getElementById('cart-manifest').style.color = "#ffcc00";
+    }
+
+    function flashScannerLaser(callback) {
+        const laser = document.getElementById('laser');
+        laser.style.display = "block";
+        setTimeout(() => {
+            laser.style.display = "none";
+            if (callback) callback();
+        }, 350);
+    }
+
+    function runPickingAnimationLoop() {
+        const cart = document.getElementById('live-cart');
+        const info = document.getElementById('info-text');
+
+        // STEP 1: INITIALIZE AT ITS TERMINAL
+        if (pickingStep === 0) {
+            document.getElementById('loc-yard').classList.add('highlight');
+            info.innerHTML = "<strong>Step 1: Staging &amp; ITS Synchronization</strong><br>An empty cart is checked out. The technician logs into the Instrument Tracking System (ITS) terminal to pull Dr. McKenzie's electronic preference card for a Total Knee Reconstruction procedure.";
+            
+            animationTimeline = setTimeout(() => {
+                document.getElementById('loc-yard').classList.remove('highlight');
+                document.getElementById('loc-its').classList.add('highlight');
+                // Move cart to ITS
+                cart.style.top = "330px";
+                cart.style.right = "470px";
+                
+                animationTimeline = setTimeout(() => {
+                    flashScannerLaser(() => {
+                        document.getElementById('cart-manifest').textContent = "LOGGED IN";
+                        pickingStep = 1;
+                        runPickingAnimationLoop();
+                    });
+                }, 1200);
+            }, 3000);
+        }
+        
+        // STEP 2: PICK HEAVY TRAYS FIRST (BOTTOM OF THE CART)
+        else if (pickingStep === 1) {
+            document.getElementById('loc-its').classList.remove('highlight');
+            document.getElementById('loc-heavy').classList.add('highlight');
+            info.innerHTML = "<strong>Step 2: Heavy Trays First (Weight Distribution Rule)</strong><br>The computer prompts the first item: the primary Ortho Hardware Tray. Technicians always retrieve and scan **heavy rigid containers first**, positioning them at the absolute bottom of the cart to create a stable base.";
+            
+            // Move cart to heavy racks
+            cart.style.top = "30px";
+            cart.style.right = "470px";
+            
+            animationTimeline = setTimeout(() => {
+                flashScannerLaser(() => {
+                    document.getElementById('cart-manifest').textContent = "+ HEAVY TRYS";
+                    document.getElementById('cart-manifest').style.color = "#00ff66";
+                    pickingStep = 2;
+                    runPickingAnimationLoop();
+                });
+            }, 1500);
+        }
+
+        // STEP 3: PICK LIGHT SOFT GOODS ON TOP
+        else if (pickingStep === 2) {
+            document.getElementById('loc-heavy').classList.remove('highlight');
+            document.getElementById('loc-soft').classList.add('highlight');
+            info.innerHTML = "<strong>Step 3: Soft Goods Integration</strong><br>Next up on the preference card: disposable gowns and sterile drape packs. These lighter, wrapped consumable soft goods are scanned via handheld computer and placed on top of the rigid trays to prevent wrap punctures.";
+            
+            // Move cart to soft goods racks
+            cart.style.top = "130px";
+            cart.style.right = "470px";
+            
+            animationTimeline = setTimeout(() => {
+                flashScannerLaser(() => {
+                    document.getElementById('cart-manifest').textContent = "+ CONSUMABLES";
+                    pickingStep = 3;
+                    runPickingAnimationLoop();
+                });
+            }, 1500);
+        }
+
+        // STEP 4: AUDIT "HOLD" SECTOR LOGIC
+        else if (pickingStep === 3) {
+            document.getElementById('loc-soft').classList.remove('highlight');
+            document.getElementById('loc-hold').classList.add('highlight-warn');
+            info.innerHTML = "<strong>Step 4: Managing 'Hold' Items Accuracy Check</strong><br>The preference card lists a high-cost Condylar Implant Sizing Tray as a **'HOLD'** item. Instead of loading it to be unpacked immediately, the technician checks it out on a dedicated backup rack line. This ensures it stays protected and sealed, avoiding extreme financial waste if the surgeon alters sizing intraoperatively.";
+            
+            // Move cart to hold area
+            cart.style.top = "230px";
+            cart.style.right = "470px";
+            
+            animationTimeline = setTimeout(() => {
+                flashScannerLaser(() => {
+                    document.getElementById('cart-manifest').textContent = "MANIFEST OK";
+                    pickingStep = 4;
+                    runPickingAnimationLoop();
+                });
+            }, 2500);
+        }
+
+        // STEP 5: DISPATCH OUT THE CORE DOOR
+        else if (pickingStep === 4) {
+            document.getElementById('loc-hold').classList.remove('highlight-warn');
+            info.innerHTML = "<strong>Step 5: Dispatch and Route Verification</strong><br>The picking list is fully satisfied and saved in the ITS database. The technician rolls the assembled payload out through the clean core doors straight toward the dedicated OR logistics clean elevators. A perfect case pick loop complete!";
+            
+            // Roll cart out the bottom door exit corridor
+            cart.style.top = "340px";
+            cart.style.right = "60px";
+            
+            animationTimeline = setTimeout(() => {
+                document.getElementById('cart-manifest').textContent = "DISPATCHED";
+                document.getElementById('cart-manifest').style.color = "#fff";
+                cart.style.backgroundColor = "var(--clean-green)";
+            }, 1200);
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Case-Cart Delivery &amp; Routing Challenge</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --light-bg: #f8f9fa;
+            --dark-panel: #212529;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .simulator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .simulator-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--light-bg);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        .incident-monitor {
+            background-color: var(--dark-panel);
+            border: 3px solid #495057;
+            border-radius: 4px;
+            padding: 15px;
+            color: #ffcc00;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.9rem;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.4;
+        }
+
+        .choices-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .choice-btn {
+            background-color: #ffffff;
+            border: 2px solid #ced4da;
+            border-left: 5px solid var(--primary-blue);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 0.88rem;
+            font-weight: bold;
+            color: #212529;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s ease;
+        }
+
+        .choice-btn:hover {
+            background-color: #e9ecef;
+            transform: translateX(3px);
+        }
+
+        .incident-log-terminal {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            height: 180px;
+            overflow-y: auto;
+            color: #2b2b2b;
+        }
+
+        .log-entry-text {
+            margin-bottom: 4px;
+            padding-bottom: 2px;
+            border-bottom: 1px dotted #eee;
+        }
+
+        .btn-reset {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            align-self: flex-start;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Case-Cart Delivery Routing Challenge</h3>
+    </header>
+    
+    <div class="instructions">
+        Select the most containment-secure equipment and path vector configurations to safely move reprocessed medical assets across the hospital facility.
+    </div>
+
+    <div class="simulator-grid">
+        <div class="workspace-card">
+            <h4 class="card-title">1. Logistics Control Panel</h4>
+            
+            <div class="incident-monitor">
+                <div><strong>ACTIVE DISPATCH TASK:</strong></div>
+                <div id="manifest-desc">Transporting post-op contaminated instruments from OR Suite 4 back to the main MDRD decontamination receiving docks.</div>
+            </div>
+
+            <div style="font-size:0.88rem; font-weight:bold; color:var(--primary-blue);">
+                Select Logistical Equipment &amp; Vector Route:
+            </div>
+            
+            <div class="choices-stack" id="choicesBox"></div>
+            <button class="btn-reset" onclick="resetRoutingTree()">RESET SIMULATOR</button>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">2. Distribution Chain Audit Log</h4>
+            <div class="incident-log-terminal" id="terminalLog">
+                <div class="log-entry-text">[12:45 PM] Case breakdown initialized in OR Suite 4. Dispatched task queue loaded.</div>
+            </div>
+            <div id="simulationFeedback" style="padding:12px; border-radius:4px; font-size:0.9rem; line-height:1.4; font-weight:500; display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStepKey = "START";
+
+    const routingTree = {
+        "START": {
+            choices: [
+                { text: "Route A: Pack instruments wet in open mesh trays; roll them on an open wire utility cart down public elevators.", next: "FAIL_OPEN_DIRTY" },
+                { text: "Route B: Spray with enzymatic gel, pack into a puncture-resistant closed case cart with biohazard labeling, and use the dirty service elevator.", next: "STEP_CLEAN_DELIVERY" }
+            ]
+        },
+        "STEP_CLEAN_DELIVERY": {
+            manifest: "Transporting a terminally sterile, wrapped open-heart surgery tray from the storage core to OR Suite 2 via public visitor corridors.",
+            log: "<span style='color:var(--success-green); font-weight:bold;'>[CONTAINED]</span> Soiled payload safely received at decontamination docks via restricted dirty elevator shaft. Zero corridor exposure.",
+            choices: [
+                { text: "Route A: Cradle-carry the sterile tray by hand directly through public hallways to get it there faster.", next: "FAIL_UNIFORM_CONTACT" },
+                { text: "Route B: Enclose the tray inside a gasket-sealed clean case cart with tamper-evident locks and use public service corridor options.", next: "STEP_OFFSITE_TRAVEL" }
+            ]
+        },
+        "STEP_OFFSITE_TRAVEL": {
+            manifest: "Dispatching bulk commercial single-use sutures and reprocessed scopes to an off-site community health clinic 15 km away.",
+            log: "<span style='color:var(--success-green); font-weight:bold;'>[SECURED]</span> Sterile wrapped set safely reached OR Suite 2. Enclosed gasket walls blocked all ambient building drafts and accidental manual contacts.",
+            choices: [
+                { text: "Route A: Secure items inside rigid, fluid-proof plastic breakout totes with airtight seals and tamper locks, loading into a clean environment courier van.", next: "STEP_COMPLETE" },
+                { text: "Route B: Stack the wrapped items loosely in cardboard shipping boxes on the open bed of a facility logistics pickup truck.", next: "FAIL_OFFSITE_WEATHER" }
+            ]
+        },
+        "STEP_COMPLETE": {
+            log: "<span style='color:var(--success-green); font-weight:bold;'>[CERTIFIED]</span> Off-site delivery complete. Airtight totes protected structural polyfilms from vehicular exhaust and weather fluctuations.",
+            choices: []
+        }
+    };
+
+    const failureLogs = {
+        "FAIL_OPEN_DIRTY": "<strong>CROSS-CONTAMINATION CRITICAL FAULT:</strong> Moving raw, exposed biohazard components through public corridors and visitor elevators is a severe risk violation. Drops can leak fluids, spreading unconditioned pathogens.",
+        "FAIL_UNIFORM_CONTACT": "<strong>STERILE BARRIER INTEGRITY FAILURE:</strong> Carrying a sterile tray against your personal scrub uniform allows hair, skin scales, and clothing micro-particles to wick through wrap pores, causing immediate contamination.",
+        "FAIL_OFFSITE_WEATHER": "<strong>LOGISTICAL BARRIER COLLAPSE:</strong> Shipping sterile assets in loose boxes on an open truck bed exposes packages to vehicle exhaust soot, road vibration abrasions, and humidity variances. The whole load must be rejected."
+    };
+
+    function renderActiveChoices(stepKey) {
+        const box = document.getElementById('choicesBox');
+        box.innerHTML = "";
+        const node = routingTree[stepKey];
+        if (!node || !node.choices) return;
+
+        node.choices.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = "choice-btn";
+            btn.innerHTML = c.text;
+            btn.onclick = () => advanceTreeSimulation(c.next);
+            box.appendChild(btn);
+        });
+    }
+
+    function advanceTreeSimulation(nextKey) {
+        const fb = document.getElementById('simulationFeedback');
+        fb.style.display = "none";
+
+        if (nextKey.startsWith("FAIL_")) {
+            fb.style.display = "block";
+            fb.style.backgroundColor = "#f8d7da";
+            fb.style.color = "#721c24";
+            fb.innerHTML = failureLogs[nextKey];
+            document.getElementById('choicesBox').innerHTML = "";
+            appendLogLine("[CRITICAL FAULT] Logistical workflow halted due to compliance violation.");
+            return;
+        }
+
+        currentStepKey = nextKey;
+        const config = routingTree[nextKey];
+        appendLogLine(config.log);
+
+        if (nextKey === "STEP_COMPLETE") {
+            fb.style.display = "block";
+            fb.style.backgroundColor = "#d4edda";
+            fb.style.color = "#155724";
+            fb.innerHTML = "<strong>LOGISTICAL COMPLIANCE SWEEP COMPLETE!</strong> You have successfully navigated the entire healthcare distribution loop in perfect compliance with CSA Z314 standards, successfully protecting both the community environment and the surgical patient.";
+            document.getElementById('choicesBox').innerHTML = "";
+            document.getElementById('manifest-desc').innerHTML = "<strong>TRANSACTION CYCLE REGISTERED &bull; COMPLIANT ARCHIVE TERMINAL CLOSED</strong>";
+        } else {
+            document.getElementById('manifest-desc').innerHTML = config.manifest;
+            renderActiveChoices(nextKey);
+        }
+    }
+
+    function appendLogLine(htmlText) {
+        const terminal = document.getElementById('terminalLog');
+        const line = document.createElement('div');
+        line.className = "log-entry-text";
+        line.innerHTML = htmlText;
+        terminal.appendChild(line);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function resetRoutingTree() {
+        currentStepKey = "START";
+        document.getElementById('terminalLog').innerHTML = '<div class="log-entry-text">[12:45 PM] Case breakdown initialized in OR Suite 4. Dispatched task queue loaded.</div>';
+        document.getElementById('simulationFeedback').style.display = "none";
+        document.getElementById('manifest-desc').innerHTML = "Transporting post-op contaminated instruments from OR Suite 4 back to the main MDRD decontamination receiving docks.";
+        renderActiveChoices("START");
+    }
+
+    renderActiveChoices("START");
+</script>
+</body>
+</html>

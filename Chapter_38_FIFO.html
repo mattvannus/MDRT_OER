@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: FIFO Inventory Stock Rotation Game</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-amber: #ffc107;
+            --bg-light: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Game Panel Core Layout Grid */
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .game-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--bg-light);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Active Conveyor Belt / Staging Area */
+        .conveyor-belt {
+            background-color: #ced4da;
+            border: 3px solid #6c757d;
+            border-radius: 6px;
+            padding: 15px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .inventory-item-package {
+            background-color: #ffffff;
+            border: 2px solid #0056b3;
+            border-radius: 4px;
+            padding: 10px;
+            width: 90%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            font-weight: bold;
+            font-size: 0.88rem;
+            text-align: center;
+        }
+
+        .item-lot-stamp {
+            background-color: #fffdf0;
+            border: 1px dashed #b5a469;
+            font-family: monospace;
+            font-size: 0.78rem;
+            color: #000;
+            padding: 4px;
+            margin-top: 6px;
+            border-radius: 2px;
+        }
+
+        /* Storage Wire Rack Grid Simulation */
+        .wire-rack-enclosure {
+            background: #ffffff;
+            border: 3px solid #495057;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .wire-shelf-tier {
+            border-bottom: 6px double #6c757d; /* Represents the wire shelf grid edge */
+            padding-bottom: 8px;
+            min-height: 65px;
+            position: relative;
+        }
+
+        .tier-label {
+            font-size: 0.72rem;
+            color: #6c757d;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .shelf-slots-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Left = Front of Shelf, Right = Back of Shelf */
+            gap: 10px;
+        }
+
+        .shelf-slot {
+            background-color: #f1f3f5;
+            border: 1px dashed #adb5bd;
+            border-radius: 4px;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78rem;
+            color: #6c757d;
+            text-align: center;
+            font-weight: 500;
+            padding: 4px;
+        }
+
+        .shelf-slot.occupied {
+            background-color: #e8f4fd;
+            border-style: solid;
+            border-color: #0056b3;
+            color: #0056b3;
+            font-weight: bold;
+        }
+
+        /* Controls Panel */
+        .controls-stack {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .routing-btn {
+            background-color: #495057;
+            color: #ffffff;
+            border: none;
+            padding: 10px 4px;
+            font-size: 0.78rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            text-align: center;
+        }
+        .routing-btn:hover { background-color: var(--primary-blue); }
+        .btn-scrap { background-color: var(--danger-red); }
+        .btn-scrap:hover { background-color: #bd2130; }
+
+        .feedback-pane {
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            display: none;
+            min-height: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Sorter: First-In, First-Out (FIFO) Stock Rotation Desk</h3>
+    </header>
+    
+    <div class="instructions">
+        Canadian quality management guidelines require rigorous stock rotation to prevent packaging degradation. Newly reprocessed items must be loaded onto the **BACK** of the shelf, shifting older items to the **FRONT** to be used first. Commercially expired stock must be immediately intercepted and removed.
+    </div>
+
+    <div class="game-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title">1. Incoming Asset Delivery Conveyor</h4>
+            
+            <div class="conveyor-belt" id="conveyorBeltZone">
+                </div>
+
+            <div style="font-size: 0.85rem; font-weight: bold; color: var(--primary-blue);">
+                Select Correct Inventory Routing Destination Gateway:
+            </div>
+
+            <div class="controls-stack">
+                <button class="routing-btn" onclick="routeCurrentAsset('front')">SLOT FRONT<br>(OLD STOCK)</button>
+                <button class="routing-btn" onclick="routeCurrentAsset('back')">SLOT BACK<br>(NEW STOCK)</button>
+                <button class="routing-btn btn-scrap" onclick="routeCurrentAsset('scrap')">INTERCEPT &amp;<br>DISPOSAL</button>
+            </div>
+
+            <div class="feedback-pane" id="gameFeedbackBox"></div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">2. Certified Alphanumeric Wire Storage Rack</h4>
+            
+            <div class="wire-rack-enclosure">
+                <div class="wire-shelf-tier">
+                    <div class="tier-label">Tier A: Reprocessed Laparoscopic Trays (Existing Stock: MAY 15 2026)</div>
+                    <div class="shelf-slots-row">
+                        <div class="shelf-slot" id="shelf-A-front">FRONT: Empty</div>
+                        <div class="shelf-slot" id="shelf-A-back">BACK: Empty</div>
+                    </div>
+                </div>
+
+                <div class="wire-shelf-tier">
+                    <div class="tier-label">Tier B: Reprocessed Orthopedic Packs (Existing Stock: MAY 28 2026)</div>
+                    <div class="shelf-slots-row">
+                        <div class="shelf-slot" id="shelf-B-front">FRONT: Empty</div>
+                        <div class="shelf-slot" id="shelf-B-back">BACK: Empty</div>
+                    </div>
+                </div>
+
+                <div class="wire-shelf-tier">
+                    <div class="tier-label">Tier C: Commercial Pre-Sterilized Suture Packs</div>
+                    <div class="shelf-slots-row">
+                        <div class="shelf-slot" id="shelf-C-front">FRONT: Empty</div>
+                        <div class="shelf-slot" id="shelf-C-back">BACK: Empty</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="font-size:0.85rem; font-weight:bold; text-align:center; background:#eee; padding:8px; border-radius:4px;">
+                Assets Correctly Rotated: <span id="gameScoreText">0</span> / 4
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let activeItemIndex = 0;
+    let successfulSorts = 0;
+
+    const pipelineDeck = [
+        {
+            title: "Major Laparoscopic Video Scope Set",
+            type: "reprocessed",
+            tier: "A",
+            dateCode: "JUN 02 2026",
+            isNewer: true, // Reprocessed today vs May 15 existing stock
+            desc: "Fresh out of terminal sterilization cooling zone. Needs to go onto Tier A."
+        },
+        {
+            title: "Minor Laparoscopic Cholecystectomy Tray",
+            type: "reprocessed",
+            tier: "A",
+            dateCode: "MAY 01 2026",
+            isNewer: false, // Older than existing May 15 stock, should go to the front
+            desc: "Discovered sitting on a secondary transfer carriage; tracking logs match an earlier cycle."
+        },
+        {
+            title: "Commercially Prepared 3-0 Silk Suture Box",
+            type: "commercial",
+            tier: "C",
+            dateCode: "EXP: APR 12 2025",
+            isExpired: true,
+            desc: "Pulled from bulk deliveries for restocking on Tier C. Audit its label configuration."
+        },
+        {
+            title: "Major Orthopedic Trauma Revision Tray",
+            type: "reprocessed",
+            tier: "B",
+            dateCode: "JUN 03 2026",
+            isNewer: true, // Brand new vs May 28 existing stock
+            desc: "Terminal run completed successfully. Needs slot placement configuration on Tier B."
+        }
+    ];
+
+    function renderCurrentBeltAsset() {
+        const zone = document.getElementById('conveyorBeltZone');
+        if (activeItemIndex >= pipelineDeck.length) {
+            zone.innerHTML = `<div style="font-weight:bold; color:var(--success-green); text-align:center;">🎉 CONVEYOR CLEAR! ALL STOCK COMPLIANTLY ROTATED</div>`;
+            return;
+        }
+
+        const item = pipelineDeck[activeItemIndex];
+        zone.innerHTML = `
+            <div class="inventory-item-package">
+                <div>${item.title}</div>
+                <div style="font-size:0.75rem; color:#555; font-weight:normal; margin-top:4px;">${item.desc}</div>
+                <div class="item-lot-stamp">TRACKING MATRIX: ${item.dateCode}</div>
+            </div>
+        `;
+    }
+
+    function routeCurrentAsset(selectedGateway) {
+        if (activeItemIndex >= pipelineDeck.length) return;
+
+        const item = pipelineDeck[activeItemIndex];
+        const fb = document.getElementById('gameFeedbackBox');
+        fb.style.display = "block";
+
+        let decisionCorrect = false;
+
+        // FIFO verification matrix engine logic
+        if (item.type === "reprocessed") {
+            if (item.isNewer && selectedGateway === "back") {
+                decisionCorrect = true;
+                const slot = document.getElementById(`shelf-${item.tier}-back`);
+                slot.className = "shelf-slot occupied";
+                slot.textContent = `BACK: ${item.dateCode}`;
+            } else if (!item.isNewer && selectedGateway === "front") {
+                decisionCorrect = true;
+                const slot = document.getElementById(`shelf-${item.tier}-front`);
+                slot.className = "shelf-slot occupied";
+                slot.textContent = `FRONT: ${item.dateCode}`;
+            }
+        } else if (item.type === "commercial") {
+            if (item.isExpired && selectedGateway === "scrap") {
+                decisionCorrect = true;
+            }
+        }
+
+        // Apply feedback behaviors based on diagnostic correctness boundaries
+        if (decisionCorrect) {
+            fb.style.backgroundColor = "#d4edda";
+            fb.style.color = "#155724";
+            
+            if (selectedGateway === "scrap") {
+                fb.innerHTML = `<strong>Excellent Interception!</strong> You successfully caught an expired commercial asset ($2025$ date bounds). Placing an expired single-use item on active shelves introduces structural packaging liabilities.`;
+            } else {
+                fb.innerHTML = `<strong>Flawless Rotation!</strong> Correct storage geometry. By ensuring items are loaded according to their chronological logs, you prevent older packages from degrading at the back of the rack.`;
+            }
+            
+            successfulSorts++;
+            document.getElementById('gameScoreText').textContent = successfulSorts;
+        } else {
+            fb.style.backgroundColor = "#f8d7da";
+            fb.style.color = "#721c24";
+            
+            if (item.isExpired) {
+                fb.innerHTML = `<strong>Stock Control Violation!</strong> This commercial box is explicitly expired. It must never be slotted onto wire shelves; it requires immediate removal and disposal.`;
+            } else if (item.isNewer) {
+                fb.innerHTML = `<strong>FIFO Sequencing Error:</strong> Freshly reprocessed new loads must enter the <strong>BACK</strong> of the shelf layout. This pushes existing, older stock forward to be cleared first.`;
+            } else {
+                fb.innerHTML = `<strong>FIFO Sequencing Error:</strong> Older back-logged items must be routed to the <strong>FRONT</strong> of the wire grid to ensure surgical teams consume them before newer stock.`;
+            }
+        }
+
+        // Progress conveyor rows safely forward
+        activeItemIndex++;
+        setTimeout(() => {
+            renderCurrentBeltAsset();
+        }, 3000);
+    }
+
+    // Initialize desk elements on window creation
+    renderCurrentBeltAsset();
+</script>
+
+</body>
+</html>

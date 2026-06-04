@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Interactive ITS Traceability Cockpit</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-amber: #ffc107;
+            --screen-bg: #151515;
+            --light-bg: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Twin Panel Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--light-bg);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Simulated ITS Software UI Terminal Screen */
+        .its-monitor-panel {
+            background-color: var(--screen-bg);
+            border: 4px solid #343a40;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            color: #00ff66;
+            font-family: "Courier New", Courier, monospace;
+            min-height: 160px;
+            box-shadow: inset 0 0 15px rgba(0,255,102,0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .monitor-header-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid stroke;
+            padding-bottom: 4px;
+            font-size: 0.82rem;
+            color: #88ffaa;
+            opacity: 0.8;
+        }
+
+        .monitor-data-body {
+            font-size: 0.88rem;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+
+        .monitor-status-badge {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            background-color: #222;
+            padding: 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        /* Scanner Action Buttons Group */
+        .scan-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .scan-trigger-btn {
+            background-color: #ffffff;
+            border: 2px solid #ced4da;
+            border-left: 5px solid #6c757d;
+            border-radius: 4px;
+            padding: 12px 10px;
+            font-size: 0.82rem;
+            font-weight: bold;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .scan-trigger-btn:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+            transform: translateY(-1px);
+        }
+
+        .scan-trigger-btn.current-target {
+            border-left-color: var(--warning-amber);
+            background-color: #fffdf0;
+            box-shadow: 0 0 8px rgba(255,193,7,0.3);
+        }
+
+        .scan-trigger-btn.passed-node {
+            border-left-color: var(--success-green);
+            background-color: #f6fff6;
+            opacity: 0.8;
+        }
+
+        /* History Registry Log Window */
+        .history-terminal-box {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.82rem;
+            line-height: 1.4;
+            height: 220px;
+            overflow-y: auto;
+            color: #2b2b2b;
+        }
+
+        .history-entry-line {
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px dotted #e9ecef;
+        }
+
+        .pill-node { font-weight: bold; color: var(--primary-blue); }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Dashboard: Real-Time ITS Asset Lifecycle Control</h3>
+    </header>
+    
+    <div class="instructions">
+        An Instrument Tracking System (ITS) provides a continuous electronic audit trail across the hospital. Click each **Scan Station Gateway** sequentially from Step 1 to Step 5 to follow a high-turnover orthopedic tray, updating its parameters and tracking coordinates in real time.
+    </div>
+
+    <div class="dashboard-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title">1. Automated Tracking System Display Screen</h4>
+            
+            <div class="its-monitor-panel">
+                <div class="monitor-header-row">
+                    <span>DATABASE LINK: CONNECTED (QMS-ONLINE)</span>
+                    <span id="console-time">08:15 AM</span>
+                </div>
+                
+                <div class="monitor-data-body" id="consoleBody">
+                    <strong>ASSET BARCODE IDENTIFIER:</strong> ORTHO-TRAUMA-SET #04<br>
+                    <strong>HARDWARE PROFILE:</strong> COMPONENT ID ST-772<br>
+                    <strong>LOT DATA COEFFICIENT:</strong> UNASSIGNED (AWAITING SYSTEM SCAN)
+                </div>
+                
+                <div class="monitor-status-badge" id="consoleStatus" style="color: #6c757d;">
+                    SYSTEM ENGINE IDLE &bull; AWAITING INITIAL SCAN
+                </div>
+            </div>
+
+            <div style="font-size: 0.85rem; font-weight: bold; color: var(--primary-blue);">
+                Execute Localized Barcode Scan Stations:
+            </div>
+
+            <div class="scan-actions-grid">
+                <button class="scan-trigger-btn current-target" id="node-1" onclick="fireNetworkScanNode(1)">
+                    Step 1: Decontamination Ingress
+                    <div style="font-weight:normal; font-size:0.7rem; color:#6c757d; margin-top:2px;">Dirty Return Receiving Bay</div>
+                </button>
+                <button class="scan-trigger-btn" id="node-2" onclick="fireNetworkScanNode(2)">
+                    Step 2: Clean Preparation Desk
+                    <div style="font-weight:normal; font-size:0.7rem; color:#6c757d; margin-top:2px;">Assembly Checklist &amp; IFU Core</div>
+                </button>
+                <button class="scan-trigger-btn" id="node-3" onclick="fireNetworkScanNode(3)">
+                    Step 3: Sterilizer Carriage Load
+                    <div style="font-weight:normal; font-size:0.7rem; color:#6c757d; margin-top:2px;">Autoclave Cycle Linkage</div>
+                </button>
+                <button class="scan-trigger-btn" id="node-4" onclick="fireNetworkScanNode(4)">
+                    Step 4: Sterile Storage Rack
+                    <div style="font-weight:normal; font-size:0.7rem; color:#6c757d; margin-top:2px;">FIFO Location Registry</div>
+                </button>
+                <button class="scan-trigger-btn" id="node-5" onclick="fireNetworkScanNode(5)">
+                    Step 5: Patient Case-Cart Tie-In
+                    <div style="font-weight:normal; font-size:0.7rem; color:#6c757d; margin-top:2px;">OR Point-of-Use Association</div>
+                </button>
+            </div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">2. Permanent Traceability Database Log</h4>
+            <div style="font-size: 0.85rem; color: #555; margin-bottom: 5px;">
+                Real-time electronic audit records linked directly to the facility's Central Reprocessing registry:
+            </div>
+
+            <div class="history-terminal-box" id="historyTerminalLog">
+                <div class="history-entry-line">[06:45 AM] <span class="pill-node">OR BRIEF</span> Case cart flagged closed following Ortho procedure completion. Tray enclosed for dirty transport.</div>
+            </div>
+            
+            <button class="scan-trigger-btn" style="text-align:center; background:#6c757d; color:white; border:none;" onclick="resetTrackingCockpit()">RESET COCKPIT NETWORK</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let expectedNextNode = 1;
+
+    const trackingNodePayloads = {
+        1: {
+            time: "07:12 AM",
+            status: "LOC: DECONTAMINATION // SOILED",
+            statusColor: "#dc3545",
+            consoleHtml: `<strong>ASSET BARCODE IDENTIFIER:</strong> ORTHO-TRAUMA-SET #04<br>
+                          <strong>DIRTY INGRESS TIMESTAMP:</strong> 07:12 AM<br>
+                          <strong>BIOMASS METRIC AUDIT:</strong> PRE-CLEAN COMPLETE // WASHER RUN #2<br>
+                          <strong>OPERATOR SIGNATURE:</strong> MDRT #118 (J. ROUX)`,
+            logText: "[07:12 AM] <span class='pill-node'>DECON INGRESS</span> Barcode scanned. Soiled pre-cleaning window tracked. Set routed into automated multi-stage washer-disinfector carriage #4."
+        },
+        2: {
+            time: "07:45 AM",
+            status: "LOC: ASSEMBLY ZONE // INSPECTION",
+            statusColor: "#ffc107",
+            consoleHtml: `<strong>ASSET BARCODE IDENTIFIER:</strong> ORTHO-TRAUMA-SET #04<br>
+                          <strong>IFU CATALOG STATUS:</strong> MATCH CONFIRMED (VER. 4.2)<br>
+                          <strong>COUNT SHEET MATRIX:</strong> 62/62 TOOLS PRESENT (PASS)<br>
+                          <strong>FUNCTION VALIDATION:</strong> MAGNIFICATION OK // INSULATION PASS`,
+            logText: "[07:45 AM] <span class='pill-node'>CLEAN PACK</span> Clean side verification scan. Automated IFU count sheet populated. 100% structural component integrity validated by technician."
+        },
+        3: {
+            time: "08:15 AM",
+            status: "LOC: STEAM VAPOR VESSEL // IN-CYCLE",
+            statusColor: "#007bff",
+            consoleHtml: `<strong>ASSET BARCODE IDENTIFIER:</strong> ORTHO-TRAUMA-SET #04<br>
+                          <strong>STERILIZER LINKAGE:</strong> AUTOCLAVE #3 (CYCLE #104)<br>
+                          <strong>PARAMETRIC CURVE:</strong> 132°C PRE-VACUUM // 4 MIN EXPOSURE<br>
+                          <strong>INTEGRATOR ASSIGNMENT:</strong> LOT #992-B INSIDE LOAD PCD`,
+            logText: "[08:15 AM] <span class='pill-node'>STERILIZER TRACK</span> Scan registered to Autoclave #3. Terminal validation parameters hard-linked to tray history. Biological PCD packet included."
+        },
+        4: {
+            time: "09:20 AM",
+            status: "LOC: STERILE CORE // REAR RACK 4A",
+            statusColor: "#28a745",
+            consoleHtml: `<strong>ASSET BARCODE IDENTIFIER:</strong> ORTHO-TRAUMA-SET #04<br>
+                          <strong>COOLING THRESHOLD:</strong> 65 MIN BUFFER METRIC (PASS)<br>
+                          <strong>SHELVING ASSIGNMENT:</strong> BACK-ROW TIERS (FIFO STAGED)<br>
+                          <strong>MICRO-CLIMATE FIELD:</strong> 21°C // 42% RH // POSITIVE PRESSURE`,
+            logText: "[09:20 AM] <span class='pill-node'>STORAGE INGRESS</span> Cart extraction complete. Gasket test verified. Tray slotted onto Tier 4A rear shelf according to FIFO stock rotation protocols."
+        },
+        5: {
+            time: "11:04 AM",
+            status: "LOC: OPERATING ROOM 03 // RELEASED",
+            statusColor: "#28a745",
+            consoleHtml: `<strong>ASSET BARCODE IDENTIFIER:</strong> ORTHO-TRAUMA-SET #04<br>
+                          <strong>CASE DISPATCH CART:</strong> CORE SLATE INVENTORY L-08<br>
+                          <strong>EHR RECORD LINK:</strong> PATIENT ACCT #772-104-92A<br>
+                          <strong>STERILITY CLEARANCE:</strong> BI NEGATIVE // RELEASE AUTHORIZED`,
+            logText: "[11:04 AM] <span class='pill-node'>OR USE CLEARANCE</span> Scan confirmation at OR Room 3 entrance. Sterility assurance verified negative growth. Trace loop permanently closed inside Electronic Patient Record."
+        }
+    };
+
+    function fireNetworkScanNode(nodeId) {
+        // Enforce structural sequence continuity
+        if (nodeId !== expectedNextNode) return;
+
+        const data = trackingNodePayloads[nodeId];
+        const btn = document.getElementById(`node-${nodeId}`);
+        
+        // Update Terminal Screen Indicators
+        document.getElementById('console-time').textContent = data.time;
+        document.getElementById('consoleBody').innerHTML = data.consoleHtml;
+        
+        const statusBox = document.getElementById('consoleStatus');
+        statusBox.textContent = data.status;
+        statusBox.style.color = data.statusColor;
+
+        // Log entry to Permanent Database
+        appendDatabaseEntry(data.logText);
+
+        // Update button visual classes
+        btn.classList.remove('current-target');
+        btn.classList.add('passed-node');
+
+        // Advance to the next sequential node gateway
+        expectedNextNode++;
+        const nextBtn = document.getElementById(`node-${expectedNextNode}`);
+        if (nextBtn) {
+            nextBtn.classList.add('current-target');
+        }
+    }
+
+    function appendDatabaseEntry(textString) {
+        const terminal = document.getElementById('historyTerminalLog');
+        const entry = document.createElement('div');
+        entry.className = "history-entry-line";
+        entry.innerHTML = textString;
+        terminal.appendChild(entry);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function resetTrackingCockpit() {
+        expectedNextNode = 1;
+        document.getElementById('historyTerminalLog').innerHTML = `<div class="history-entry-line">[06:45 AM] <span class="pill-node">OR BRIEF</span> Case cart flagged closed following Ortho procedure completion. Tray enclosed for dirty transport.</div>`;
+        
+        document.getElementById('console-time').textContent = "08:15 AM";
+        document.getElementById('consoleBody').innerHTML = `<strong>ASSET BARCODE IDENTIFIER:</strong> ORTHO-TRAUMA-SET #04<br>
+                      <strong>HARDWARE PROFILE:</strong> COMPONENT ID ST-772<br>
+                      <strong>LOT DATA COEFFICIENT:</strong> UNASSIGNED (AWAITING SYSTEM SCAN)`;
+        
+        const statusBox = document.getElementById('consoleStatus');
+        statusBox.textContent = "SYSTEM ENGINE IDLE • AWAITING INITIAL SCAN";
+        statusBox.style.color = "#6c757d";
+
+        const nodeIds = ["node-1", "node-2", "node-3", "node-4", "node-5"];
+        nodeIds.forEach((id, idx) => {
+            const btn = document.getElementById(id);
+            btn.className = "scan-trigger-btn" + (idx === 0 ? " current-target" : "");
+        });
+    }
+</script>
+
+</body>
+</html>

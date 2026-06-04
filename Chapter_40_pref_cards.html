@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Interactive Preference Card Audit Desktop</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --warning-amber: #ffc107;
+            --danger-red: #dc3545;
+            --bg-light: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .desktop-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1.3fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .desktop-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--bg-light);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Preference Card UI Styling */
+        .pref-card-ui {
+            background-color: #ffffff;
+            border: 2px solid #495057;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .pref-header {
+            background: #e9ecef;
+            padding: 6px;
+            font-weight: bold;
+            border-bottom: 1px solid #adb5bd;
+            margin-bottom: 8px;
+        }
+
+        .pref-row-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed #dee2e6;
+        }
+
+        .badge-open { color: #fff; background-color: var(--success-green); padding: 2px 4px; border-radius: 3px; font-weight: bold; }
+        .badge-hold { color: #212529; background-color: var(--warning-amber); padding: 2px 4px; border-radius: 3px; font-weight: bold; }
+
+        /* Supply Conveyor Item Block */
+        .conveyor-unit {
+            background: #ffffff;
+            border: 2px solid var(--primary-blue);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Routing Buttons Layout */
+        .routing-bin-stack {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .action-route-btn {
+            padding: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: opacity 0.15s;
+        }
+
+        .btn-bin-open { background-color: var(--success-green); }
+        .btn-bin-hold { background-color: var(--warning-amber); color: #212529; }
+        .action-route-btn:hover { opacity: 0.9; }
+
+        .feedback-display {
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            min-height: 45px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Electronic Desktop Interface: Preference Card Picking Audit</h3>
+    </header>
+    
+    <div class="instructions">
+        Surgeon preference cards dictate exactly how individual items must be handled. Items tagged <strong>OPEN</strong> must be supplied directly onto the cart decks for immediate unpacking. High-cost items labeled <strong>HOLD</strong> are kept sealed as backup stock on dedicated shelves to prevent expensive contamination waste if they aren't used.
+    </div>
+
+    <div class="desktop-grid">
+        
+        <!-- LEFT PANEL: SUPPLY SELECTION CONVEYOR -->
+        <div class="workspace-card">
+            <h4 class="card-title">1. Supply Picking Feed</h4>
+            
+            <div class="conveyor-unit" id="conveyorWindow">
+                <!-- Swapped programmatically -->
+            </div>
+
+            <div class="routing-bin-stack">
+                <button class="action-route-btn btn-bin-open" onclick="processPreferenceRouting('OPEN')">ROUTE AS "OPEN"<br>(LOAD FOR TRUSH UNPACKING)</button>
+                <button class="action-route-btn btn-bin-hold" onclick="processPreferenceRouting('HOLD')">ROUTE AS "HOLD"<br>(STAGE ON BACKUP TRACK)</button>
+            </div>
+
+            <div class="feedback-display" id="auditFeedbackPanel"></div>
+        </div>
+
+        <!-- RIGHT PANEL: THE DR. MCKENZIE PREFERENCE CARD -->
+        <div class="workspace-card">
+            <h4 class="card-title">2. Case Preference Profile Database</h4>
+            
+            <div class="pref-card-ui">
+                <div class="pref-header">PROCEDURE: TOTAL KNEE RECONSTRUCTION // SURGEON: DR. MCKENZIE</div>
+                <div class="pref-row-item" id="row-tray">
+                    <span>PRIMARY ASSET: MAJOR ORTHO HARDWARE TRAY</span>
+                    <span class="badge-open">OPEN</span>
+                </div>
+                <div class="pref-row-item" id="row-suture">
+                    <span>CONSUMABLE: 2-0 ETHIBOND EXCEL SUTURE</span>
+                    <span class="badge-open">OPEN</span>
+                </div>
+                <div class="pref-row-item" id="row-cement">
+                    <span>SPECIALTY: ANTIMICROBIAL BONE CEMENT PACK</span>
+                    <span class="badge-hold">HOLD</span>
+                </div>
+                <div class="pref-row-item" id="row-implants">
+                    <span>HIGH-COST: COMPONENT CONDYLAR IMPLANT ARRAYS</span>
+                    <span class="badge-hold">HOLD</span>
+                </div>
+            </div>
+
+            <div style="font-weight:bold; font-size:0.85rem; text-align:center; background:#e9ecef; padding:8px; border-radius:4px;">
+                Preference Matches Audited: <span id="auditScore">0</span> / 4
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let activeIndex = 0;
+    let validatedMatches = 0;
+
+    const conveyorPipeline = [
+        { id: "tray", title: "Major Ortho Hardware Tray", expected: "OPEN", details: "Primary instrument container. Required for core surgical access; always opened immediately during room setup." },
+        { id: "cement", title: "Antimicrobial Bone Cement Pack", expected: "HOLD", details: "Specialty variable chemistry components. Maintained sealed in a separate backup location until structural bone cuts dictate direct mix requirements." },
+        { id: "suture", title: "2-0 Ethibond Excel Suture Box", expected: "OPEN", details: "Core closure soft good item. Opened routinely during soft tissue re-approximation loops." },
+        { id: "implants", title: "Component Condylar Implant Arrays", expected: "HOLD", details: "Extremely high-cost sizing elements. Kept protected on a holding carriage shelf; only opened once the surgeon explicitly verifies the precise matching sizing trial." }
+    ];
+
+    function renderActivePipelineItem() {
+        const box = document.getElementById('conveyorWindow');
+        if (activeIndex >= conveyorPipeline.length) {
+            box.innerHTML = `<div style="font-weight:bold; color:var(--success-green);">✓ PICK COMPLETION CONFIRMED: INDIVIDUAL CARGO MATCHES CASE MANIFEST</div>`;
+            return;
+        }
+
+        const currentItem = conveyorPipeline[activeIndex];
+        box.innerHTML = `
+            <div style="font-weight:bold; color:var(--primary-blue); font-size:1.05rem;">${currentItem.title}</div>
+            <div style="font-size:0.78rem; color:#555; margin-top:5px; font-weight:normal; line-height:1.3;">${currentItem.details}</div>
+        `;
+    }
+
+    function processPreferenceRouting(userActionSelection) {
+        if (activeIndex >= conveyorPipeline.length) return;
+
+        const currentItem = conveyorPipeline[activeIndex];
+        const fb = document.getElementById('auditFeedbackPanel');
+        fb.style.display = "block";
+
+        if (userActionSelection === currentItem.expected) {
+            fb.style.backgroundColor = "#d4edda";
+            fb.style.color = "#155724";
+            fb.innerHTML = `<strong>Audit Verification Passed!</strong> Correct item allocation corresponds with the preference card criteria.`;
+            
+            document.getElementById(`row-${currentItem.id}`).style.backgroundColor = "#e8f5e9";
+            document.getElementById(`row-${currentItem.id}`).style.color = "#2e7d32";
+            
+            validatedMatches++;
+            document.getElementById('auditScore').textContent = validatedMatches;
+        } else {
+            fb.style.backgroundColor = "#f8d7da";
+            fb.style.color = "#721c24";
+            if (currentItem.expected === "HOLD") {
+                fb.innerHTML = `<strong>MDRD Cost Containment Alert!</strong> This item is restricted to <strong>HOLD</strong> status. Routing it as open means it will be unwrapped prematurely, forcing the department to wash and restock a completely pristine item if the case changes.`;
+            } else {
+                fb.innerHTML = `<strong>Surgical Delay Alert!</strong> This item is labeled <strong>OPEN</strong>. Placing it on a backup track creates intraoperative delays because circulating nurses must pause to ask for it once the incision path begins.`;
+            }
+        }
+
+        activeIndex++;
+        setTimeout(() => {
+            fb.style.display = "none";
+            renderActivePipelineItem();
+        }, 5000);
+    }
+
+    renderActivePipelineItem();
+</script>
+</body>
+</html>

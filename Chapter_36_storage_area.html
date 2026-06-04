@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Sterile Storage Core Architectural Blueprint Auditor (Metric)</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-amber: #ffc107;
+            --blueprint-bg: #1e3a5f;
+            --light-bg: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+            color: var(--text-dark);
+        }
+
+        .activity-wrapper {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        /* Twin Panel Architecture */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--light-bg);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Overhead Schematic Vector Blueprint Grid Box */
+        .blueprint-canvas {
+            background-color: var(--blueprint-bg);
+            border: 4px solid #0f2540;
+            border-radius: 6px;
+            position: relative;
+            height: 300px;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        /* Blueprint Grid Lines Pattern Overlay */
+        .blueprint-canvas::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: 20px 20px;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+            pointer-events: none;
+        }
+
+        /* Overhead Layout Elements */
+        .blueprint-element {
+            position: absolute;
+            border: 2px solid #00d5ff;
+            background-color: rgba(0, 213, 255, 0.15);
+            color: #ffffff;
+            font-family: monospace;
+            font-size: 0.72rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 3px;
+            user-select: none;
+            transition: all 0.15s ease;
+            box-sizing: border-box;
+        }
+
+        .blueprint-element:hover {
+            background-color: rgba(0, 213, 255, 0.4);
+            box-shadow: 0 0 10px #00d5ff;
+            transform: scale(1.02);
+        }
+
+        .blueprint-element.audited-pass {
+            border-color: #00ff66;
+            background-color: rgba(0, 255, 102, 0.2);
+        }
+
+        /* Red Line Boundaries (Banned Entry Paths / Clean Corridor Marks) */
+        .restricted-perimeter-line {
+            position: absolute;
+            top: 0; left: 80px; bottom: 0; width: 4px;
+            background-color: var(--danger-red);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .restricted-label {
+            position: absolute;
+            top: 10px; left: 10px;
+            color: #ff8b94;
+            font-size: 0.65rem;
+            font-weight: bold;
+            font-family: monospace;
+            background: rgba(0,0,0,0.5);
+            padding: 2px 4px;
+            border-radius: 2px;
+            border: 1px solid #ff8b94;
+        }
+
+        /* Reporting Details Pane styling */
+        .report-display {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 5px solid var(--primary-blue);
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 160px;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .score-counter-pill {
+            background-color: #495057;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Architectural Drafting Desk: Restricted Sterile Core Overhead Mapping Challenge</h3>
+    </header>
+    
+    <div class="instructions">
+        The sterile core storage room is a heavily restricted zone governed by strict Canadian quality management metrics. Click directly on each architectural component within the overhead blueprint layout below to execute your mandatory CSA Z314 compliance audit.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title">1. Sterile Core Architectural Layout (Metric View)</h4>
+            
+            <div class="blueprint-canvas" id="mapFrame">
+                <div class="restricted-perimeter-line"></div>
+                <div class="restricted-label">⛔ AUTHORIZED PERSONNEL ONLY // RESTRICTED ACCESS SUITE (CSA Z314)</div>
+                
+                <div class="blueprint-element" style="top: 30px; left: 100px; width: 150px; height: 40px;" id="ele-shelving" onclick="triggerAuditInspection('shelving')">WIRE ROLLING SHELVING RACKS</div>
+                <div class="blueprint-element" style="top: 90px; left: 100px; width: 150px; height: 40px;" id="ele-mobile" onclick="triggerAuditInspection('mobile')">HEAVY COMPACT MOBILE STORAGE</div>
+                
+                <div class="blueprint-element" style="top: 160px; left: 100px; width: 110px; height: 50px;" id="ele-casecarts" onclick="triggerAuditInspection('casecarts')">CLOSED CASE-CART STAGING YARD</div>
+                
+                <div class="blueprint-element" style="top: 230px; left: 100px; width: 75px; height: 35px;" id="ele-its" onclick="triggerAuditInspection('its')">ITS TRACKING STATION</div>
+                <div class="blueprint-element" style="top: 230px; left: 190px; width: 50px; height: 35px;" id="ele-phone" onclick="triggerAuditInspection('phone')">HOTLINE PHONE</div>
+                
+                <div class="blueprint-element" style="top: 100px; left: 290px; width: 50px; height: 110px; border-color: #ffcc00; background-color: rgba(255,204,0,0.1);" id="ele-elevator" onclick="triggerAuditInspection('elevator')">CLEAN ELEVATOR CORE</div>
+            </div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">2. CSA Z314 Quality Control Audit Specifications</h4>
+            
+            <div class="report-display" id="auditReportOutput">
+                <span style="color:#6c757d; font-style:italic;">Awaiting component sweep. Click any highlighted structural element within the blue floor schematic layout diagram to populate the technical data review curves.</span>
+            </div>
+
+            <div class="score-counter-pill">
+                Core Assets Audited: <span id="auditCount">0</span> / 6
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const auditSpecifications = {
+        "shelving": {
+            id: "ele-shelving",
+            text: "<strong>Wire Rolling Shelving Racks Audit:</strong> Verified composed of medical-grade stainless steel with open air grids. Clear loops confirm packages sit a minimum of <strong>45 cm below the ceiling fire-line</strong>, a minimum of <strong>5 cm clear from external perimeter walls</strong> to prevent condensation sweating, and the bottom deck features a solid plastic barrier liner located exactly <strong>20 to 25 cm above the floor</strong> to shield items from wheel wash spray.",
+            pass: true
+        },
+        "mobile": {
+            id: "ele-mobile",
+            text: "<strong>Heavy Compact Mobile Storage Rails:</strong> Tracks high-density inventory loops. Technicians must handle mobile carriages smoothly to prevent sudden physical impacts or vibration jars from cracking rigid container seals or scraping delicate pouch polyfilms.",
+            pass: true
+        },
+        "casecarts": {
+            id: "ele-casecarts",
+            text: "<strong>Closed Case-Cart Staging Yard:</strong> Asassembled surgical payload zone. CSA guidelines mandate that all individual containers and carts remain entirely closed, latched, and sealed with tamper-proof security locks to preserve event-related sterility during travel through corridors.",
+            pass: true
+        },
+        "its": {
+            id: "ele-its",
+            text: "<strong>Instrument Tracking System (ITS) Terminal:</strong> The electronic tracking node directly linked to the hospital EHR. Scans incoming lot labels to verify parameters histories and logs data signatures before releasing sets to operative cases./strong>.",
+            pass: true
+        },
+        "phone": {
+            id: "ele-phone",
+            text: "<strong>Emergency Hotline Communication Node:</strong> Direct voice loop line to the primary Operating Room coordinator deck. Used to manage immediate case-cart substitutions, communicate failed biological indicators overrides, and handle rapid tray updates.",
+            pass: true
+        },
+        "elevator": {
+            id: "ele-elevator",
+            text: "<strong>Clean Vertical Elevator Core:</strong> A fully dedicated logistics system shaft strictly restricted to traveling processed, sterile payloads upward. Under zero circumstances can contaminated return carts enter this enclosed vertical clean cabin space.",
+            pass: true
+        }
+    };
+
+    const auditedAssetTracker = new Set();
+
+    function triggerAuditInspection(componentKey) {
+        const spec = auditSpecifications[componentKey];
+        if (!spec) return;
+
+        // Populate report output text
+        const output = document.getElementById('auditReportOutput');
+        output.innerHTML = spec.text;
+        output.style.borderLeftColor = "var(--success-green)";
+
+        // Mark graphic button block as processed
+        const element = document.getElementById(spec.id);
+        if (element && !element.classList.contains('audited-pass')) {
+            element.classList.add('audited-pass');
+            auditedAssetTracker.add(componentKey);
+            
+            // Sync counter totals metric
+            document.getElementById('auditCount').textContent = auditedAssetTracker.size;
+        }
+
+        // Handle full suite satisfaction boundaries
+        if (auditedAssetTracker.size === 6) {
+            setTimeout(() => {
+                output.innerHTML = "<strong>🎉 RESTRICTED CORE AUDIT EXECUTED SUCCESSFULLY!</strong> Outstanding performance loop clear. You have evaluated every layout coordinate across Section 36.3. The HVAC reads positive pressure vectors, shelving air gaps correspond perfectly with Canadian metric building standards, inventory lines follow clean paths, and elevator flow constraints are fully satisfied. The sterile storage core zone is officially certified compliant under CSA Z314 criteria.";
+                output.style.backgroundColor = "#e8fdf0";
+                output.style.color = "#155724";
+                output.style.borderColor = "var(--success-green)";
+            }, 600);
+        }
+    }
+
+    function resetLifecycleWorkspace() {
+        auditedAssetTracker.clear();
+        document.getElementById('auditCount').textContent = "0";
+        
+        const output = document.getElementById('auditReportOutput');
+        output.innerHTML = '<span style="color:#6c757d; font-style:italic;">Awaiting component sweep. Click any highlighted structural element within the blue floor schematic layout diagram to populate the technical data review curves.</span>';
+        output.style.backgroundColor = "#ffffff";
+        output.style.color = "var(--text-dark)";
+        output.style.borderLeftColor = "var(--primary-blue)";
+
+        const items = ["ele-shelving", "ele-mobile", "ele-casecarts", "ele-its", "ele-phone", "ele-elevator"];
+        items.forEach(id => {
+            const e = document.getElementById(id);
+            if (e) e.classList.remove('audited-pass');
+        });
+    }
+</script>
+
+</body>
+</html>
