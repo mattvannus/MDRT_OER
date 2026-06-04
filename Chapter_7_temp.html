@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Reprocessing Temperature Range Explorer</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --warning-amber: #ffc107;
+            --danger-red: #dc3545;
+            --light-bg: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 25px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--light-bg);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Unit Selector Toggle Bar */
+        .toggle-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .toggle-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-btn.active {
+            background-color: var(--primary-blue);
+        }
+
+        /* Visual Thermometer Component */
+        .thermometer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .thermometer-track {
+            width: 30px;
+            height: 280px;
+            background: #e9ecef;
+            border: 3px solid #495057;
+            border-radius: 15px 15px 0 0;
+            position: relative;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .thermometer-fill {
+            width: 100%;
+            height: 0%; /* Adjusted dynamically based on selection */
+            background: linear-gradient(to top, #ff9900, #dc3545);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            border-radius: inherit;
+            transition: height 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .thermometer-bulb {
+            width: 54px;
+            height: 54px;
+            background: #dc3545;
+            border: 3px solid #495057;
+            border-radius: 50%;
+            margin-top: -5px;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.4), 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 2;
+        }
+
+        /* Interactive Zone Target Buttons */
+        .zone-selectors {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .zone-btn {
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 5px solid #6c757d;
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 0.88rem;
+            font-weight: bold;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .zone-btn:hover {
+            background-color: #e9ecef;
+            transform: translateX(2px);
+        }
+
+        .zone-btn.active {
+            border-left-color: var(--danger-red);
+            background-color: #fff1f2;
+        }
+
+        /* Readout Display Screen */
+        .readout-panel {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 5px solid var(--primary-blue);
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 180px;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Desk: Reprocessing Temperature &amp; Thermal Range Explorer</h3>
+    </header>
+    
+    <div class="instructions">
+        Temperature defines the boundary lines of physical destruction for clinical pathogens. Toggle your baseline unit system, select a reprocessing tier button below, and evaluate the specific equipment parameters mandatory for patient safety.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title">Thermal Measurement Calibration</h4>
+            
+            <div class="toggle-container">
+                <button class="toggle-btn active" id="unit-c" onclick="changeTemperatureUnit('C')">Celsius (°C)</button>
+                <button class="toggle-btn" id="unit-f" onclick="changeTemperatureUnit('F')">Fahrenheit (°F)</button>
+            </div>
+
+            <div class="thermometer-container">
+                <div class="thermometer-track">
+                    <div class="thermometer-fill" id="mercuryFill"></div>
+                </div>
+                <div class="thermometer-bulb"></div>
+            </div>
+
+            <div class="zone-selectors">
+                <button class="zone-btn" id="btn-low" onclick="inspectThermalZone('low')">
+                    Low-Temp Sterilization <span class="temp-label" data-c="45-60°C" data-f="113-140°F">(45-60°C)</span>
+                </button>
+                <button class="zone-btn" id="btn-pasteur" onclick="inspectThermalZone('pasteur')">
+                    Pasteurization HLD <span class="temp-label" data-c="60-77°C" data-f="140-170°F">(60-77°C)</span>
+                </button>
+                <button class="zone-btn" id="btn-high" onclick="inspectThermalZone('high')">
+                    High-Temp Steam (Autoclave) <span class="temp-label" data-c="132°C" data-f="270°F">(132°C)</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">Equipment Thermal Data Profile</h4>
+            
+            <div class="readout-panel" id="thermalProfileDisplay">
+                <span style="color:#6c757d; font-style:italic;">Awaiting parameter target selection. Click any of the thermal zone ranges on the left to map out device material constraints and safety margins.</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let activeUnit = "C";
+    let activeZone = "";
+
+    const thermalZonesData = {
+        "low": {
+            fillPercentage: "35%",
+            title: "Low-Temperature Gas Plasma / Ethylene Oxide (EtO) Zone",
+            metricTitle: "Parameters: 45°C - 60°C (113°F - 140°F)",
+            text: "<strong>Clinical Application:</strong> Specifically engineered for delicate, heat-sensitive micro-instruments, flexible video endoscopes, digital camera components, and complex fiber optics that would instantly warp, melt, or shatter inside a high-temperature steam autoclave.<br><br><strong>Safety Threshold:</strong> These cycles balance pathogen destruction with material safety by utilizing toxic or specialized chemical sterilants (like vaporized hydrogen peroxide plasma) at a lower thermal baseline. If temperature sensors drop below 45°C inside the chamber, the automated process safely aborts the run, alerting the technician to a parameter failure."
+        },
+        "pasteur": {
+            fillPercentage: "55%",
+            title: "Pasteurmatic Washer / High-Level Disinfection (HLD) Zone",
+            metricTitle: "Parameters: 60°C - 77°C (140°F - 170°F) for ≥ 30 Minutes",
+            text: "<strong>Clinical Application:</strong> Standard configuration for semi-critical reusable assets like respiratory therapy tubes, anesthesia breathing bags, and corrugate hoses. Typically targets <strong>71°C (160°F)</strong> as its core baseline running line.<br><br><strong>Safety Threshold:</strong> This tier utilizes high-temperature water submersion to execute rapid **thermal disinfection** without adding caustic industrial chemicals. If the liquid reservoir baseline slips below 60°C during the mandatory 30-minute block, vegetative micro-organisms and viruses can survive, making the items non-sterile and dangerous to return to anesthesia staging areas."
+        },
+        "high": {
+            fillPercentage: "95%",
+            title: "High-Temperature Pre-Vacuum Steam Autoclave Zone",
+            metricTitle: "Parameters: 132°C (270°F) for 4 Minutes (Exposure Window)",
+            text: "<strong>Clinical Application:</strong> The absolute industry standard workhorse for critical surgical instruments, stainless steel bone clamps, tungsten-carbide needle holders, and robust rigid layout container trays. Often called the <strong>'4-30-132' cycle</strong> (4 mins exposure, 30 mins dry time, at 132°C).<br><br><strong>Safety Threshold:</strong> High-pressure steam transfers heavy thermal energy directly into cells to cause instant protein coagulation and destruction. If the autoclave machine’s thermodynamic sensors read even a fractional variance down to 131°C or pressure parameters alter during the critical exposure step, the run fail-safes. The chemical indicators will reject, and the entire payload must undergo manual wrap stripping and re-processing."
+        }
+    };
+
+    function changeTemperatureUnit(unitCode) {
+        activeUnit = unitCode;
+        
+        // Update selection states on buttons
+        document.getElementById('unit-c').classList.toggle('active', unitCode === 'C');
+        document.getElementById('unit-f').classList.toggle('active', unitCode === 'F');
+
+        // Swap out labels inside the button triggers
+        document.querySelectorAll('.temp-label').forEach(label => {
+            const displayValue = unitCode === 'C' ? label.getAttribute('data-c') : label.getAttribute('data-f');
+            label.textContent = `(${displayValue})`;
+        });
+
+        // Re-render the readout pane text if a zone is actively highlighted
+        if (activeZone) {
+            inspectThermalZone(activeZone);
+        }
+    }
+
+    function inspectThermalZone(zoneKey) {
+        activeZone = zoneKey;
+        const data = thermalZonesData[zoneKey];
+        if (!data) return;
+
+        // Apply visual active selectors across buttons
+        document.querySelectorAll('.zone-btn').forEach(btn => btn.classList.remove('active'));
+        
+        let targetButtonId = 'btn-low';
+        if (zoneKey === 'pasteur') targetButtonId = 'btn-pasteur';
+        if (zoneKey === 'high') targetButtonId = 'btn-high';
+        document.getElementById(targetButtonId).classList.add('active');
+
+        // Adjust the thermometer animation height metric
+        document.getElementById('mercuryFill').style.height = data.fillPercentage;
+
+        // Populate Readout Details Panel Screen
+        const display = document.getElementById('thermalProfileDisplay');
+        display.innerHTML = `
+            <h4 style="margin-top:0; color:var(--primary-blue); font-size:1.05rem;">${data.title}</h4>
+            <div style="font-weight:bold; color:var(--danger-red); font-size:0.85rem; font-family:monospace; margin-bottom:8px;">${data.metricTitle}</div>
+            <p style="margin:0; font-size:0.88rem;">${data.text}</p>
+        `;
+        display.style.borderLeftColor = zoneKey === 'high' ? 'var(--danger-red)' : (zoneKey === 'pasteur' ? 'var(--warning-amber)' : 'var(--success-green)');
+    }
+</script>
+
+</body>
+</html>

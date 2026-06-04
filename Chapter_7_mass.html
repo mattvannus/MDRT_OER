@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Reprocessing Mass &amp; Weight Balancer</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --warning-amber: #ffc107;
+            --danger-red: #dc3545;
+            --light-bg: #f8f9fa;
+            --scale-display: #222222;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 25px;
+            padding: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--light-bg);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Object Selector Row */
+        .object-picker-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .object-btn {
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 5px solid #6c757d;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 0.88rem;
+            font-weight: bold;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .object-btn:hover {
+            background-color: #e9ecef;
+            transform: translateX(2px);
+        }
+
+        .object-btn.active {
+            border-left-color: var(--primary-blue);
+            background-color: #e8f4fd;
+        }
+
+        /* Digital Scale Screen Display */
+        .digital-scale-face {
+            background-color: var(--scale-display);
+            border: 4px solid #495057;
+            border-radius: 6px;
+            padding: 15px;
+            color: #00ff66;
+            font-family: monospace;
+            text-align: center;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .scale-number {
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin: 5px 0;
+        }
+
+        .scale-label {
+            font-size: 0.8rem;
+            color: #88ffaa;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+
+        /* Prefix Conversion Toggles */
+        .prefix-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .tab-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s;
+            text-align: center;
+        }
+
+        .tab-btn:hover { background-color: #495057; }
+        .tab-btn.active { background-color: var(--success-green); }
+
+        /* Description Readout Pane */
+        .analysis-panel {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 5px solid var(--primary-blue);
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 160px;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Desk: Metric Mass Conversion &amp; Instrument Weight Balancer</h3>
+    </header>
+    
+    <div class="instructions">
+        Mass parameters dictate physical safety boundaries in medical device reprocessing. Select a department inventory asset item below, shift between prefix conversion frames, and evaluate how shifting exponents protect packaging integrity.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title">1. Workstation Inventory Select</h4>
+            
+            <div class="object-picker-stack">
+                <button class="object-btn" id="obj-tray" onclick="selectScaleObject('tray')">
+                    📦 Heavy Metal Orthopedic Instrument Container
+                </button>
+                <button class="object-btn" id="obj-towel" onclick="selectScaleObject('towel')">
+                    🧻 Absorbent Moisture-Wicking Grid Towel
+                </button>
+                <button class="object-btn" id="obj-pill" onclick="selectScaleObject('pill')">
+                    🧪 Concentrated Enzymatic Test Washer Tablet
+                </button>
+            </div>
+
+            <div class="digital-scale-face">
+                <div class="scale-label" id="scaleTitle">MDRD Balance Core Terminal</div>
+                <div class="scale-number" id="scaleValueDisplay">--</div>
+                <div class="scale-label" id="scaleUnitDisplay">Awaiting Target Load</div>
+            </div>
+
+            <div class="prefix-tabs">
+                <button class="tab-btn" id="unit-kg" onclick="convertActivePrefix('kg')">Kilograms (kg)</button>
+                <button class="tab-btn" id="unit-g" onclick="convertActivePrefix('g')">Grams (g)</button>
+                <button class="tab-btn" id="unit-mg" onclick="convertActivePrefix('mg')">Milligrams (mg)</button>
+            </div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">2. Operational Mass Audit Readout</h4>
+            
+            <div class="analysis-panel" id="massAnalysisLog">
+                <span style="color:#6c757d; font-style:italic;">Awaiting target asset allocation. Select an instrument or supply item on the left, then toggle metric prefixes to analyze conversion logic and regulatory weight limits.</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let activeObjectKey = "";
+    let activePrefix = "g";
+
+    const massRegistryMatrix = {
+        "tray": {
+            baseGrams: 8500,
+            title: "Multi-Tiered Orthopedic Instrumentation Set",
+            desc: "<strong>Clinical Significance:</strong> Heavy structural hardware arrays represent the largest mass elements managed by technicians. Keeping track of weight distribution profiles ensures optimal handling parameters.<br><br><strong>Regulatory Context:</strong> In your chart layout table, this registers as <strong>8.5 kg</strong> or <strong>8,500 g</strong>. This complies cleanly with the strict Canadian standard limit of **11.3 kg maximum mass** per terminal container box. Exceeding 11.3 kg traps internal steam condensate, causing localized wet-pack lifecycle validation failure loops and creating injury hazards for logistics operators."
+        },
+        "towel": {
+            baseGrams: 42,
+            title: "Absorbent Moisture-Wicking Utility Towel Liner",
+            desc: "<strong>Clinical Significance:</strong> Lightweight fabric grids are positioned inside wrapped trays to serve as desiccant vectors, holding residual vapor particles safely back from structural corners during autoclave cycles.<br><br><strong>Regulatory Context:</strong> This maps to <strong>42 g</strong>, <strong>0.042 kg</strong>, or <strong>42,000 mg</strong>. While it represents a very low baseline mass profile, selecting precise absorbency values ensures that wrappers retain uniform thickness, guarding against capillary action leaks post-cycle."
+        },
+        "pill": {
+            baseGrams: 0.15,
+            title: "Concentrated Enzymatic Test Washer Validation Tablet",
+            desc: "<strong>Clinical Significance:</strong> High-potency chemical tablets, processing indicators, or biological parameters testing tools operate under microscopic structural tolerances.<br><br><strong>Regulatory Context:</strong> This corresponds to <strong>150 mg</strong>, <strong>0.15 g</strong>, or <strong>0.00015 kg</strong>. Medical diagnostics and enzyme formulas require calculations at the milligram level. Erring by even a few units can yield unvalidated mechanical parameters, leaving internal device channels unconditioned and unsafe for reuse."
+        }
+    };
+
+    function selectScaleObject(objectKey) {
+        activeObjectKey = objectKey;
+        
+        // Update button active focus styling states
+        document.querySelectorAll('.object-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`obj-${objectKey}`).classList.add('active');
+
+        // Lock in default baseline logical unit matching the scale parameters array
+        if (objectKey === "tray") activePrefix = "kg";
+        else if (objectKey === "towel") activePrefix = "g";
+        else if (objectKey === "pill") activePrefix = "mg";
+
+        renderScaleCalculationFace();
+    }
+
+    function convertActivePrefix(prefixCode) {
+        if (!activeObjectKey) return;
+        activePrefix = prefixCode;
+        renderScaleCalculationFace();
+    }
+
+    function renderScaleCalculationFace() {
+        const item = massRegistryMatrix[activeObjectKey];
+        if (!item) return;
+
+        // Apply visual toggle highlight class to target matrix tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`unit-${activePrefix}`).classList.add('active');
+
+        // Execute raw structural arithmetic loop tracking conversions
+        let calculatedOutput = item.baseGrams;
+        if (activePrefix === "kg") {
+            calculatedOutput = item.baseGrams / 1000;
+        } else if (activePrefix === "mg") {
+            calculatedOutput = item.baseGrams * 1000;
+        }
+
+        // Handle text decimal scaling output parameters for readability strings
+        let formattedString = calculatedOutput.toLocaleString(undefined, { maximumFractionDigits: 5 });
+
+        // Update Scale display values
+        document.getElementById('scaleValueDisplay').textContent = formattedString;
+        document.getElementById('scaleUnitDisplay').textContent = `ACTIVE PREFIX UNIT: [ ${activePrefix.toUpperCase()} ]`;
+        document.getElementById('scaleTitle').textContent = `SCANNING: ${item.title.toUpperCase()}`;
+
+        // Populate descriptive audit log documentation
+        const log = document.getElementById('massAnalysisLog');
+        log.innerHTML = `
+            <h4 style='margin-top:0; color:var(--primary-blue); font-size:1.05rem;'>Mass Evaluation: ${item.title}</h4>
+            <p style='margin:0; font-size:0.88rem;'>${item.desc}</p>
+        `;
+        log.style.borderLeftColor = activePrefix === "kg" ? "var(--danger-red)" : (activePrefix === "g" ? "var(--primary-blue)" : "var(--success-green)");
+    }
+</script>
+
+</body>
+</html>

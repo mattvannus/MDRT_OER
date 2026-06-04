@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity: Routes of Transmission Interception Desk</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --success-green: #28a745;
+            --warning-amber: #ffc107;
+            --danger-red: #dc3545;
+            --bg-light: #f8f9fa;
+            --dark-panel: #212529;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+        }
+
+        .activity-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            padding: 15px 20px;
+            margin: 0;
+        }
+
+        .activity-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .instructions {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1.3fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        .workspace-card {
+            background-color: var(--light-bg);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-title {
+            margin-top: 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+
+        /* Vector Route Target Nodes Matrix */
+        .route-matrix-box {
+            background: #ffffff;
+            border: 2px solid #ced4da;
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .matrix-node {
+            background-color: #f1f3f5;
+            border: 2px solid #ced4da;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 0.82rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .matrix-node.active-target {
+            border-color: var(--danger-red);
+            background-color: #fff1f2;
+            color: var(--danger-red);
+        }
+
+        .matrix-node.neutralized {
+            border-color: var(--success-green);
+            background-color: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .node-pill {
+            font-size: 0.72rem;
+            background-color: #6c757d;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .matrix-node.neutralized .node-pill { background-color: var(--success-green); }
+
+        /* Scenario Monitor Display Screen */
+        .scenario-monitor {
+            background-color: var(--dark-panel);
+            border-radius: 4px;
+            padding: 15px;
+            color: #ffcc00;
+            font-family: monospace;
+            font-size: 0.88rem;
+            line-height: 1.4;
+            min-height: 80px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Action Buttons */
+        .choices-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .intercept-btn {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-left: 5px solid var(--primary-blue);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .intercept-btn:hover {
+            background-color: #e9ecef;
+            transform: translateX(2px);
+        }
+
+        .feedback-display {
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            display: none;
+            min-height: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-wrapper">
+    <header class="activity-header">
+        <h3>Interactive Sorter: Transmission Vectors &amp; Barrier Precaution Auditor</h3>
+    </header>
+    
+    <div class="instructions">
+        Understanding the exact vector physics of how a pathogen migrates allows an MDRT to establish bulletproof barrier isolations. Analyze the clinical case file scenario on the right, map it to the corresponding transmission pathway on the left, and deploy the appropriate containment rule.
+    </div>
+
+    <div class="workspace-grid">
+        
+        <div class="workspace-card">
+            <h4 class="card-title">Transmission Vectors Status</h4>
+            <div class="route-matrix-box">
+                <div class="matrix-node" id="node-contact-direct">
+                    <span>Direct Contact Vector</span>
+                    <span class="node-pill" id="pill-contact-direct">ACTIVE POOL</span>
+                </div>
+                <div class="matrix-node" id="node-contact-indirect">
+                    <span>Indirect Contact Vector</span>
+                    <span class="node-pill" id="pill-contact-indirect">ACTIVE POOL</span>
+                </div>
+                <div class="matrix-node" id="node-droplet">
+                    <span>Droplet Dispersion Vector (&le; 2m)</span>
+                    <span class="node-pill" id="pill-droplet">ACTIVE POOL</span>
+                </div>
+                <div class="matrix-node" id="node-airborne">
+                    <span>Airborne Droplet Nuclei Vector</span>
+                    <span class="node-pill" id="pill-airborne">ACTIVE POOL</span>
+                </div>
+            </div>
+            <div style="font-weight:bold; font-size:0.85rem; text-align:center; background:#e9ecef; padding:6px; border-radius:4px;">
+                Pathways Successfully Neutralized: <span id="gameScore">0</span> / 4
+            </div>
+        </div>
+
+        <div class="workspace-card">
+            <h4 class="card-title">Epidemiological Case File Sorter</h4>
+            
+            <div class="scenario-monitor" id="scenarioWindow">
+                </div>
+
+            <div style="font-size:0.85rem; font-weight:bold; color:var(--primary-blue);">
+                Deploy Containment Precautions &amp; Reprocessing Rules:
+            </div>
+
+            <div class="choices-stack" id="buttonsStack">
+                </div>
+
+            <div class="feedback-display" id="challengeFeedback"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let activeLevel = 1;
+    let successfulInterceptions = 0;
+
+    const challengeDeck = {
+        1: {
+            targetNode: "contact-indirect",
+            monitorText: "CASE FILE VULNERABILITY TRACE:\nA non-disinfected stethoscope used on a patient with a confirmed multi-drug resistant VRE infection is placed directly on an assembly workstation table. If another staff member touches this inanimate surface or device, the VRE pathogen can hitchhike onto clean surgical sets.",
+            choices: [
+                { text: "Route A: Classify as Indirect Contact. Mandate intermediate-level disinfection of the device, isolate high-touch surfaces, and maintain distinct dirty-to-clean workflow paths.", correct: true },
+                { text: "Route B: Classify as Droplet Dispersion. Ensure that the patient room is fitted with shared equipment groupings and a droplet precaution sign is hung.", correct: false }
+            ],
+            correctFeedback: "<strong>Flawless Epidemiological Mapping!</strong> You neutralized the **Indirect Contact Vector**. Trapping organisms on inanimate objects or surfaces (fomites) like a stethoscope or a sorting desk is the classic textbook definition of indirect contact transmission. MDRTs halt this vector completely via disciplined tool cleaning and mechanical disinfection loops.",
+            wrongFeedback: "<strong>Biosecurity Classification Error:</strong> Droplet parameters monitor macro-droplets expelled directly into the air by coughing or sneezing within a 2-meter boundary zone. A contaminated medical device resting on a clean assembly desk is a structural surface vector, meaning it falls under Indirect Contact."
+        },
+        2: {
+            targetNode: "droplet",
+            monitorText: "CASE FILE VULNERABILITY TRACE:\nA patient staging for an emergency tracheostomy exhibits an active, violent cough from an unknown Group A Streptococcus or Influenza strain. Large, heavy respiratory droplets are forcefully expelled into the local clinical environment.",
+            choices: [
+                { text: "Route A: Classify as Airborne. Require an immediate airborne isolation field chamber with negative pressure air turnover channels.", correct: false },
+                { text: "Route B: Classify as Droplet Transmission. Mandate that all staff wear fluid-resistant surgical masks and full eye protection shields within a strict 2-meter physical boundary.", correct: true }
+            ],
+            correctFeedback: "<strong>Precision Barrier Isolation Clear!</strong> You neutralized the **Droplet Vector**. Heavy respiratory droplets do not stay suspended in the air for long; they travel up to **2 meters** before falling onto local equipment surfaces. Wearing a standard surgical mask and facial eye protection within this perimeter completely breaks the pathway.",
+            wrongFeedback: "<strong>Inaccurate Airflow Configuration:</strong> Airborne particles are tiny droplet nuclei that remain suspended in the air indefinitely, traveling long distances. Large coughing drops fall rapidly within a 2-meter radius, making them classic Droplet vectors requiring face shields and masks, not negative pressure fields."
+        },
+        3: {
+            targetNode: "contact-direct",
+            monitorText: "CASE FILE VULNERABILITY TRACE:\nA healthcare worker is assisting a patient with an active Scabies or C. difficile infection out of bed. The worker's unprotected skin surfaces make physical contact with the active lesion or bodily fluids of the infected individual.",
+            choices: [
+                { text: "Route A: Classify as Direct Contact. Mandate rigid Contact Precautions, including mandatory glove changes, long-sleeve impervious gowns, and instant hand-hygiene scrub protocols.", correct: true },
+                { text: "Route B: Classify as Indirect Contact. Place the patient's individual tools on a separate delivery cart and wipe the corridor door handles with alcohol.", correct: false }
+            ],
+            correctFeedback: "<strong>Infection Control Parameter Satisfied!</strong> You neutralized the **Direct Contact Vector**. Direct contact involves actual physical skin-to-skin contact between an infected individual and a susceptible host. Gowns, gloves, and strict hand hygiene form the absolute line of defense against this pathway.",
+            wrongFeedback: "<strong>Operational Barrier Misalignment:</strong> While wiping down surfaces protects against indirect routes, a situation where an unprotected worker physically handles or touches skin lesions or fluids directly is an explicit Direct Contact vector scenario."
+        },
+        4: {
+            targetNode: "airborne",
+            monitorText: "CASE FILE VULNERABILITY TRACE:\nA patient suspected of carrying active pulmonary Tuberculosis (TB) or Measles is admitted to an emergency staging suite. Microscopic droplet nuclei remain completely suspended in the air currents, drifting long distances through standard building duct lines.",
+            choices: [
+                { text: "Route A: Classify as Airborne Transmission. Require placement in a dedicated Airborne Infection Isolation Room (AIIR) with negative pressure fields and mandate that all entering staff wear sealed N95 respirators.", correct: true },
+                { text: "Route B: Classify as Vector Transmission. Spray the internal ceiling joints with pesticide and wipe the patient bed frame with quaternary ammonium solutions.", correct: false }
+            ],
+            correctFeedback: "<strong>Master-Level Biosecurity Validation!</strong> You neutralized the **Airborne Vector**. Tiny droplet nuclei contain particles that float in HVAC air drafts for hours. This demands negative pressure containment fields (so air cannot escape to adjacent hallways) and precise N95 respirator masks that filter out particles down to a sub-micron level.",
+            wrongFeedback: "<strong>Severe Biological Containment Breach!</strong> Tuberculosis and Measles are not carried by insects or animals (which would be Vector transmission). They travel on microscopic air currents, creating an extreme airborne hazard that can easily bypass standard surgical masks."
+        }
+    };
+
+    function syncSimulationUIMatrix() {
+        if (activeLevel > 4) {
+            document.getElementById('scenarioWindow').innerHTML = "<strong>🏆 ALL SYSTEM TRANSMISSION TRAYS ISOLATED &bull; BIO-BARRIER 100% COMPLIANT</strong>";
+            document.getElementById('buttonsStack').innerHTML = "";
+            document.getElementById('challengeFeedback').style.display = "block";
+            document.getElementById('challengeFeedback').style.backgroundColor = "#e8fdf0";
+            document.getElementById('challengeFeedback').style.color = "#155724";
+            document.getElementById('challengeFeedback').innerHTML = "<strong>🎉 EPIDEMIOLOGICAL CHALLENGE CONCLUDED SUCCESSFULLY!</strong> Outstanding clinical analysis loop clear. You have evaluated every vector row across Section 10.5. By successfully mapping direct touches, indirect fomites, 2-meter droplet boundaries, and floating airborne nuclei, you have built the ultimate psychological framework required of a certified Medical Device Reprocessing professional. The patient distribution ring is safe.";
+            return;
+        }
+
+        const data = challengeDeck[activeLevel];
+        
+        // Highlight active matrix element on left graphic
+        document.querySelectorAll('.matrix-node').forEach(n => n.classList.remove('active-target'));
+        document.getElementById(`node-${data.targetNode}`).classList.add('active-target');
+
+        // Populate monitor screen text
+        document.getElementById('scenarioWindow').textContent = data.monitorText;
+
+        // Build selection choices stack
+        const btnContainer = document.getElementById('buttonsStack');
+        btnContainer.innerHTML = "";
+        data.choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.className = "intercept-btn";
+            btn.textContent = choice.text;
+            btn.onclick = () => registerUserSelection(choice.correct);
+            btnContainer.appendChild(btn);
+        });
+    }
+
+    function registerUserSelection(isCorrect) {
+        const data = challengeDeck[activeLevel];
+        const fb = document.getElementById('challengeFeedback');
+        fb.style.display = "block";
+
+        if (isCorrect) {
+            fb.style.backgroundColor = "#d4edda";
+            fb.style.color = "#155724";
+            fb.innerHTML = data.correctFeedback;
+
+            // Log completion status onto left matrix block visually
+            const element = document.getElementById(`node-${data.targetNode}`);
+            element.classList.remove('active-target');
+            element.classList.add('neutralized');
+            document.getElementById(`pill-${data.targetNode}`).textContent = "✓ NEUTRALIZED";
+
+            successfulInterceptions++;
+            document.getElementById('gameScore').textContent = successfulInterceptions;
+        } else {
+            fb.style.backgroundColor = "#f8d7da";
+            fb.style.color = "#721c24";
+            fb.innerHTML = data.wrongFeedback;
+        }
+
+        activeLevel++;
+        setTimeout(() => {
+            fb.style.display = "none";
+            syncSimulationUIMatrix();
+        }, 6000);
+    }
+
+    // Run matrix initialization routines on application launch
+    syncSimulationUIMatrix();
+</script>
+
+</body>
+</html>

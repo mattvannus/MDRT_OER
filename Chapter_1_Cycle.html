@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Layout: The Instrument Reprocessing Lifecycle Loop</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --dirty-red: #d9534f;
+            --assembly-orange: #f0ad4e;
+            --sterilize-purple: #702fa8;
+            --storage-green: #28a745;
+            --bg-light: #f8f9fa;
+            --text-dark: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            background: #ffffff;
+        }
+
+        .controls {
+            background-color: var(--bg-light);
+            padding: 15px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid #ddd;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #6c757d;
+            color: white;
+            transition: all 0.2s ease;
+        }
+        button:hover { background-color: #495057; }
+        button.active { background-color: var(--primary-blue); color: white; }
+
+        /* The Multi-Zone Architectural Layout Floorplan */
+        .floorplan {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            height: 320px;
+            background: #eee;
+            position: relative;
+            border-bottom: 1px solid #ddd;
+        }
+
+        @media (max-width: 650px) {
+            .floorplan { height: 260px; }
+        }
+
+        .zone {
+            position: relative;
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        /* Physical Barrier Segregation Walls */
+        .decon-zone { 
+            background-color: #fff5f5; 
+            border-right: 4px solid var(--dirty-red);
+        }
+        .clean-assembly-zone { 
+            background-color: #fffdf5; 
+            border-right: 4px solid var(--storage-green);
+        }
+        .sterile-storage-zone { 
+            background-color: #f5fff6; 
+        }
+
+        .zone-title {
+            margin: 0 0 15px 0;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #555;
+            text-align: center;
+        }
+
+        /* Sector Station Blocks inside Zones */
+        .station-block {
+            background: #ffffff;
+            border: 2px solid #adb5bd;
+            border-radius: 4px;
+            padding: 8px;
+            width: 85%;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            position: absolute;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        /* Explicit Positions mapping out the circular flow paths */
+        #station-decon    { top: 50px;  left: 7.5%; border-color: var(--dirty-red); }
+        #station-washer   { bottom: 40px; left: 7.5%; border-color: var(--dirty-red); }
+        
+        #station-assembly { top: 50px;  left: 7.5%; border-color: var(--assembly-orange); }
+        #station-sterilize{ bottom: 40px; left: 7.5%; border-color: var(--sterilize-purple); }
+        
+        #station-storage  { top: 50px;  left: 7.5%; border-color: var(--storage-green); }
+        #station-shipping { bottom: 40px; left: 7.5%; border-color: var(--storage-green); }
+
+        /* Workflow Animation Highlighting */
+        .station-block.highlight-active {
+            transform: scale(1.04);
+            box-shadow: 0 0 12px rgba(0, 86, 179, 0.4);
+        }
+        .station-block.highlight-decon { border-color: var(--dirty-red); background-color: #f8d7da; color: #721c24; box-shadow: 0 0 10px var(--dirty-red); }
+        .station-block.highlight-assembly { border-color: var(--assembly-orange); background-color: #fff3cd; color: #856404; box-shadow: 0 0 10px var(--assembly-orange); }
+        .station-block.highlight-sterilize { border-color: var(--sterilize-purple); background-color: #f3e5f5; color: #4a148c; box-shadow: 0 0 10px var(--sterilize-purple); }
+        .station-block.highlight-storage { border-color: var(--storage-green); background-color: #d4edda; color: #155724; box-shadow: 0 0 10px var(--storage-green); }
+
+        /* Overlays Panel Viewports */
+        .overlay-layer { display: none; }
+        .overlay-layer.active { display: block; }
+
+        /* Strict Segregation Red Line Graphic */
+        .segregation-wall-marker {
+            position: absolute;
+            top: 0; bottom: 0; width: 4px;
+            background-color: var(--dirty-red);
+            z-index: 10;
+        }
+
+        .info-panel {
+            padding: 15px 20px;
+            background-color: white;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            min-height: 100px;
+            border-top: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <button id="btn-static" class="active" onclick="toggleLoopView('static', this)">1. System Blueprint Overview</button>
+        <button id="btn-animated" onclick="toggleLoopView('animated', this)">2. Run Continuous Reprocessing Loop</button>
+    </div>
+
+    <div class="floorplan">
+        
+        <div class="zone decon-zone">
+            <div class="zone-title" style="color: var(--dirty-red);">1. Decontamination Core (Dirty)</div>
+            <div class="station-block" id="station-decon">Receiving &amp; Sorting<br><span style="font-weight:normal; font-size:0.7rem;">Manual Bioburden Strip</span></div>
+            <div class="station-block" id="station-washer">Mechanical Washers<br><span style="font-weight:normal; font-size:0.7rem;">Thermal Disinfection</span></div>
+        </div>
+
+        <div class="zone clean-assembly-zone">
+            <div class="zone-title" style="color: #b58900;">2. Clean Assembly Suite</div>
+            <div class="station-block" id="station-assembly">Inspection &amp; Setup<br><span style="font-weight:normal; font-size:0.7rem;">Microscopic Quality Verification</span></div>
+            <div class="station-block" id="station-sterilize">Terminal Sterilization<br><span style="font-weight:normal; font-size:0.7rem;">Autoclave / Gas Plasma</span></div>
+        </div>
+
+        <div class="zone sterile-storage-zone">
+            <div class="zone-title" style="color: var(--storage-green);">3. Sterile Core Storage</div>
+            <div class="station-block" id="station-storage">FIFO Grid Shelving<br><span style="font-weight:normal; font-size:0.7rem;">Event-Related Security</span></div>
+            <div class="station-block" id="station-shipping">Case Cart Dispatch<br><span style="font-weight:normal; font-size:0.7rem;">OR Delivery Manifest</span></div>
+        </div>
+
+    </div>
+
+    <div class="info-panel" id="info-text">
+        <strong>The Instrument Reprocessing Lifecycle:</strong> Medical Device Reprocessing functions as a continuous circular economy loop. Reprocessed devices follow a rigid, one-way path through the department to eliminate the risk of cross-contamination. Click the controls above to trace the path from unsterile to terminally sterile payload delivery.
+    </div>
+</div>
+
+<script>
+    let automatedLoopInterval;
+    let currentActiveStepIndex = 0;
+
+    const pipelineChronology = [
+        {
+            id: "station-decon",
+            highlightClass: "highlight-decon",
+            text: "<strong>Step 1: Decontamination Receiving & Sorting (Dirty Side)</strong><br>Instruments arrive directly from surgical procedure points covered in organic soil and bioburden. Technicians don heavy fluid-resistant PPE to sort, dismantle, and manually scrub items, ensuring gross soil cannot dry into an un-sterilizable biofilm."
+        },
+        {
+            id: "station-washer",
+            highlightClass: "highlight-decon",
+            text: "<strong>Step 2: Mechanical Automated Washers</strong><br>Scrubbed parts enter ultrasonic cleaners or automated washer-disinfectors. These machines apply cascading enzyme treatments, neutralizers, and high-temperature pure water rinses to achieve multi-tier thermal disinfection, making items safe to handle without protective gloves."
+        },
+        {
+            id: "station-assembly",
+            highlightClass: "highlight-assembly",
+            text: "<strong>Step 3: Clean Side Inspection & Assembly</strong><br>Instruments exit pass-through washers into the clean assembly clean room. Technicians perform an absolute structural audit under lit magnifying lenses, test tool spring functions, add friction-point lubrication, and package trays using validated wrapping arrays or rigid container boxes."
+        },
+        {
+            id: "station-sterilize",
+            highlightClass: "highlight-sterilize",
+            text: "<strong>Step 4: Terminal Sterilization Chambers</strong><br>The sealed packages are loaded into pre-vacuum steam autoclaves or low-temperature hydrogen peroxide gas plasma chambers. High-pressure steam or radical vapor saturates the packs, destroying all living microbial endospores to achieve a validated Sterility Assurance Level."
+        },
+        {
+            id: "station-storage",
+            highlightClass: "highlight-storage",
+            text: "<strong>Step 5: Sterile Storage & Core Maintenance</strong><br>Following precise cooling delays, sterile trays are slotted onto open wire racks or high-density rolling storage tracks. Technicians enforce event-related sterility parameters, keeping items uncompressed under positive air pressure and strict climate bounds (below 24°C, 30%-70% humidity)."
+        },
+        {
+            id: "station-shipping",
+            highlightClass: "highlight-storage",
+            text: "<strong>Step 6: Case Cart Picking & Surgical Distribution</strong><br>Technicians cross-check real-time OR operating manifests to build precision case carts based on surgeon preference card criteria. Trays are packed cleanly and routed out the doors or up clean logistics elevators to complete the cycle and support the next surgical slate."
+        }
+    ];
+
+    function toggleLoopView(modeId, buttonEl) {
+        // Clear buttons and styling logs cleanly
+        document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        buttonEl.classList.add('active');
+
+        clearInterval(automatedLoopInterval);
+        resetStationBlocksToBaseline();
+
+        const info = document.getElementById('info-text');
+
+        if (modeId === 'static') {
+            info.innerHTML = "<strong>The Instrument Reprocessing Lifecycle:</strong> Medical Device Reprocessing functions as a continuous circular economy loop. Reprocessed devices follow a rigid, one-way path through the department to eliminate the risk of cross-contamination. Click the controls above to trace the path from unsterile to terminally sterile payload delivery.";
+        } else if (modeId === 'animated') {
+            currentActiveStepIndex = 0;
+            executeStepHighlights();
+            automatedLoopInterval = setInterval(executeStepHighlights, 4500);
+        }
+    }
+
+    function executeStepHighlights() {
+        resetStationBlocksToBaseline();
+        
+        const data = pipelineChronology[currentActiveStepIndex];
+        const block = document.getElementById(data.id);
+        
+        if (block) {
+            block.classList.add('highlight-active', data.highlightClass);
+        }
+        
+        document.getElementById('info-text').innerHTML = data.text;
+
+        currentActiveStepIndex++;
+        if (currentActiveStepIndex >= pipelineChronology.length) {
+            currentActiveStepIndex = 0; // Loop seamlessly indefinitely
+        }
+    }
+
+    function resetStationBlocksToBaseline() {
+        pipelineChronology.forEach(node => {
+            const block = document.getElementById(node.id);
+            if (block) {
+                block.className = "station-block";
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
